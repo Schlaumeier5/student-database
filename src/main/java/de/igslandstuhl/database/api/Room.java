@@ -1,0 +1,61 @@
+package de.igslandstuhl.database.api;
+
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
+
+import de.igslandstuhl.database.server.Server;
+
+public class Room {
+    private static final String[] SQL_FIELDS = {"label", "minimum_level"};
+    private static final Map<String, Room> rooms = new HashMap<>();
+    private final String label;
+    private final int minimumLevel;
+
+    private Room(String label, int minimumLevel) {
+        this.label = label;
+        this.minimumLevel = minimumLevel;
+    }
+
+    private static Room fromSQL(String[] sqlResult) {
+        String label = sqlResult[0];
+        int minimumLevel = Integer.parseInt(sqlResult[1]);
+        return new Room(label, minimumLevel);
+    }
+
+    public static void fetchAll() throws SQLException {
+        Server.getInstance().processRequest((fields) -> {
+            Room room = fromSQL(fields);
+            rooms.put(room.getLabel(), room);
+        }, "get_all_rooms", SQL_FIELDS);
+    }
+
+    public static Map<String, Room> getRooms() {
+        return rooms;
+    }
+    public static Room getRoom(String label) {
+        if (rooms.keySet().contains(label)) {
+            return rooms.get(label);
+        } else {
+            try {
+                Room room = Server.getInstance().processSingleRequest(Room::fromSQL, "get_room_by_label", SQL_FIELDS, label);
+                rooms.put(label, room);
+                return room;
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return null;
+            }
+
+        }
+    }
+    public String getLabel() {
+        return label;
+    }
+    public int getMinimumLevel() {
+        return minimumLevel;
+    }
+    @Override
+    public String toString() {
+        return "{\"label\": \""+label+ "\", \"minimumLevel\": \"" + minimumLevel + "\"}";
+    }
+}

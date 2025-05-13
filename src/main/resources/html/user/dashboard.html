@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard – Lernsystem</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="dashboard">
+    <header>
+      <h1>Willkommen, <span id="student-name"></span></h1>
+      <p>Klasse: <span id="student-class"></span> | E-Mail: <span id="student-email"></span></p>
+    </header>
+
+    <section id="room-selection">
+      <label for="room">Aktueller Raum:</label>
+      <select id="room"></select>
+    </section>
+
+    <section id="subjects">
+      <h2>Fächer</h2>
+      <div id="subject-list"></div>
+    </section>
+  </div>
+
+  <script src="fetch_data.js"></script>
+</body>
+</html>

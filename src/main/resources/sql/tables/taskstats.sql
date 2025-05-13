@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS taskstats (
+    student INTEGER NOT NULL,
+    task INTEGER NOT NULL,
+    status INTEGER NOT NULL
+)

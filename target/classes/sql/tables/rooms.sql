@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS rooms (
+    label TEXT PRIMARY KEY,
+    minimum_level INTEGER NOT NULL
+)

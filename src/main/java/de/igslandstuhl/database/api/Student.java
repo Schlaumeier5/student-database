@@ -1,0 +1,146 @@
+package de.igslandstuhl.database.api;
+
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.commons.codec.digest.DigestUtils;
+
+import de.igslandstuhl.database.server.Server;
+import de.igslandstuhl.database.server.sql.SQLHelper;
+
+public class Student extends User {
+    private static final String[] SQL_FIELDS = new String[] {"id", "first_name", "last_name", "email", "password", "class", "graduation_level"};
+    private static final String[] INTERESTING_TASKSTAT_FIELDS = {"task"};
+    private static final Map<Integer, Student> students = new HashMap<>();
+
+    private final int id;
+    private final String firstName;
+    private final String lastName;
+    private final String email;
+    private final String passwordHash;
+    private final SchoolClass schoolClass;
+    private final int graduationLevel;
+
+    private final Set<Task> selectedTasks = new HashSet<>();
+    private final Set<Task> completedTasks = new HashSet<>();
+
+    private Room currentRoom = null;
+
+    private Student(int id, String firstName, String lastName, String email, String passwordHash, SchoolClass schoolClass,
+            int graduationLevel) {
+        this.id = id;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.passwordHash = passwordHash;
+        this.schoolClass = schoolClass;
+        this.graduationLevel = graduationLevel;
+    }
+
+    private static Student fromSQL(String[] fields) {
+        int id = Integer.parseInt(fields[0]);
+        String firstName = fields[1];
+        String lastName = fields[2];
+        String email = fields[3];
+        String password = fields[4];
+        SchoolClass schoolClass = SchoolClass.get(Integer.parseInt(fields[5]));
+        int graduationLevel = Integer.parseInt(fields[6]);
+        return new Student(id, firstName, lastName, email, password, schoolClass, graduationLevel);
+    }
+
+    public static Student get(int id) {
+        if (students.keySet().contains(id)) return students.get(id);
+        try {
+            Student student = Server.getInstance().processSingleRequest(Student::fromSQL, "get_student_by_id", SQL_FIELDS, String.valueOf(id));
+            students.put(id, student);
+            Server.getInstance().processRequest((t) -> student.selectedTasks.add(Task.get(Integer.parseInt(t[0]))), "get_selected_tasks_by_student", INTERESTING_TASKSTAT_FIELDS, String.valueOf(id));
+            Server.getInstance().processRequest((t) -> student.completedTasks.add(Task.get(Integer.parseInt(t[0]))), "get_completed_tasks_by_student", INTERESTING_TASKSTAT_FIELDS, String.valueOf(id));
+            return student;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+    public static Student fromEmail(String email) {
+        try {
+            Student student = Server.getInstance().processSingleRequest(Student::fromSQL, "get_student_by_email", SQL_FIELDS, email);
+            Server.getInstance().processRequest((t) -> student.selectedTasks.add(Task.get(Integer.parseInt(t[0]))), "get_selected_tasks_by_student", INTERESTING_TASKSTAT_FIELDS, String.valueOf(student.getId()));
+            Server.getInstance().processRequest((t) -> student.completedTasks.add(Task.get(Integer.parseInt(t[0]))), "get_completed_tasks_by_student", INTERESTING_TASKSTAT_FIELDS, String.valueOf(student.getId()));
+            return student;
+        } catch (NullPointerException e) {
+            return null;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static void registerStudentWithPassword(int id, String firstName, String lastName, String email, String password, SchoolClass schoolClass, int graduationLevel) throws SQLException {
+        Student student = new Student(id, firstName, lastName, email, User.passHash(password), schoolClass, graduationLevel);
+        Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getAddObjectProcess("student", String.valueOf(id), firstName, lastName, email, User.passHash(password), schoolClass != null ? String.valueOf(schoolClass.getId()) : "-1", String.valueOf(graduationLevel)));
+        students.put(id, student);
+    }
+
+    public int getId() {
+        return id;
+    }
+    public String getFirstName() {
+        return firstName;
+    }
+    public String getLastName() {
+        return lastName;
+    }
+    public String getEmail() {
+        return email;
+    }
+    @Override
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+    public SchoolClass getSchoolClass() {
+        return schoolClass;
+    }
+    public int getGraduationLevel() {
+        return graduationLevel;
+    }
+    @Override
+    public String toString() {
+        return toJSON();
+    }
+    @Override
+    public boolean isTeacher() {
+        return false;
+    }
+    @Override
+    public boolean isStudent() {
+        return true;
+    }
+    public Room getCurrentRoom() {
+        return currentRoom;
+    }
+
+    public void setCurrentRoom(Room currentRoom) {
+        this.currentRoom = currentRoom;
+    }
+
+    @Override
+    public String toJSON() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("{\n");
+        builder.append("\"id\": ");builder.append(id);builder.append(",\n");
+        builder.append("\"firstName\": \"");builder.append(firstName);builder.append("\",\n");
+        builder.append("\"lastName\": \"");builder.append(lastName);builder.append("\",\n");
+        builder.append("\"email\": \"");builder.append(email);builder.append("\",\n");
+        builder.append("\"schoolClass\": ");builder.append(String.valueOf(schoolClass));builder.append(",\n");
+        builder.append("\"graduationLevel\": ");builder.append(graduationLevel);builder.append(",\n");
+        builder.append("\"selectedTasks\": ");builder.append(selectedTasks);builder.append(",\n");
+        builder.append("\"completedTasks\": ");builder.append(completedTasks);builder.append(",\n");
+        builder.append("\"currentRoom\": ");builder.append(String.valueOf(currentRoom));builder.append("\n");
+        builder.append("}");
+        return builder.toString();
+    }
+    
+}
