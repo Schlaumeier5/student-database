@@ -33,7 +33,7 @@ public final class WebResourceHandler {
 
     public static ResourceLocation locationFromPath(String path) {
         if (isSQLWebResource(path)) {
-            return new ResourceLocation("virtual", "sql", path);
+            return new ResourceLocation("virtual", "sql", path.replaceFirst("/", ""));
         }
         if (path.equals("/")) {
             path = "/index.html";

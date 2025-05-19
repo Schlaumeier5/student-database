@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS classtopics (
+    grade INTEGER NOT NULL,
+    topic INTEGER NOT NULL
+)

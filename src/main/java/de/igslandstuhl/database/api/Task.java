@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import de.igslandstuhl.database.server.Server;
+import de.igslandstuhl.database.server.sql.SQLHelper;
 
 public class Task {
     private static final String[] SQL_FIELDS = {"id", "topic", "name", "niveau"};
@@ -57,5 +58,9 @@ public class Task {
     @Override
     public String toString() {
         return "{\"id\": " + id + ", \"topic\": " + topic + ", \"name\": \"" + name + "\", \"niveau\": " + niveau + "}";
+    }
+
+    public static void addTask(Topic topic, String name, Level niveau) throws SQLException {
+        Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getAddObjectProcess("task", topic == null ? "-1" : String.valueOf(topic.getId()), name, String.valueOf(niveau)));
     }
 }

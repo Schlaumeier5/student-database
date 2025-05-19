@@ -5,13 +5,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 import de.igslandstuhl.database.server.Server;
+import de.igslandstuhl.database.server.sql.SQLHelper;
 
 public class Subject {
     private static final Map<Integer, Subject> subjects = new HashMap<>();
     private static final String[] SQL_FIELDS = {"id", "name"};
     private final int id;
     private final String name;
-    private Subject(int id, String name) {
+    Subject(int id, String name) {
         this.id = id;
         this.name = name;
     }
@@ -43,6 +44,7 @@ public class Subject {
     public String toString() {
         return "{\"id\": " + id + ", \"name\": \"" + name + "\"}";
     }
-
-    
+    public static void addSubject(String name) throws SQLException {
+        Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getAddObjectProcess("subject", name));
+    }
 }

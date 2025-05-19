@@ -93,12 +93,13 @@ public final class Server implements AutoCloseable {
     }
 
     public String getSQLResource(String username, String resource) {
-        if (resource.equals("/mydata")) {
+        resource = resource.intern();
+        if (resource.equals("mydata")) {
             User user = User.getUser(username);
             return user.toJSON();
-        } else if (resource.equals("/rooms")) {
+        } else if (resource.equals("rooms")) {
             return new HashSet<>(Room.getRooms().values()).toString();
-        } else if (resource.equals("/mysubjects")) {
+        } else if (resource.equals("mysubjects")) {
             User user = User.getUser(username);
             if (user instanceof Student) {
                 Student student = (Student) user;

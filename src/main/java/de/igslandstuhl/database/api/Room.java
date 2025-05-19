@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import de.igslandstuhl.database.server.Server;
+import de.igslandstuhl.database.server.sql.SQLHelper;
 
 public class Room {
     private static final String[] SQL_FIELDS = {"label", "minimum_level"};
@@ -57,5 +58,10 @@ public class Room {
     @Override
     public String toString() {
         return "{\"label\": \""+label+ "\", \"minimumLevel\": \"" + minimumLevel + "\"}";
+    }
+    public static void addRoom(String label, int minimumLevel) throws SQLException {
+        Room room = new Room(label, minimumLevel);
+        Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getAddObjectProcess("room", label, String.valueOf(minimumLevel)));
+        rooms.put(label, room);
     }
 }

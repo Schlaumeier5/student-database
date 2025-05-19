@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import de.igslandstuhl.database.server.Server;
+import de.igslandstuhl.database.server.sql.SQLHelper;
 
 public class Topic {
     private static final Map<Integer, Topic> topics = new HashMap<>();
@@ -70,5 +71,8 @@ public class Topic {
                 + "}";
     }
     
+    public static void addTopic(String name, Subject subject, int ratio, int grade) throws SQLException {
+        Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getAddObjectProcess("topic", name, subject == null ? "-1" : String.valueOf(subject.getId()), String.valueOf(ratio), String.valueOf(grade)));
+    }
     
 }

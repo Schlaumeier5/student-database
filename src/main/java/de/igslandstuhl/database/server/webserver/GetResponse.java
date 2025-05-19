@@ -81,6 +81,7 @@ public class GetResponse {
                     resource = ResourceHelper.readResourceCompletely(resourceLocation);
                 } else {
                     resource = ResourceHelper.readVirtualResource(user, resourceLocation);
+                    if (resource == null) throw new NullPointerException();
                 }
             }
             out.print("HTTP/1.1 ");status.write(out);out.println();
