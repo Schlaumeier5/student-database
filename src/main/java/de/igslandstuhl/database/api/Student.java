@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import de.igslandstuhl.database.server.Server;
 import de.igslandstuhl.database.server.sql.SQLHelper;
@@ -24,6 +25,7 @@ public class Student extends User {
 
     private final Set<Task> selectedTasks = new HashSet<>();
     private final Set<Task> completedTasks = new HashSet<>();
+    private final Map<Integer, String> currentRequests = new ConcurrentHashMap<>();
 
     private Room currentRoom = null;
 
@@ -65,6 +67,9 @@ public class Student extends User {
     public static Student fromEmail(String email) {
         try {
             Student student = Server.getInstance().processSingleRequest(Student::fromSQL, "get_student_by_email", SQL_FIELDS, email);
+            if (student == null) return null;
+            if (students.containsKey(student.getId())) return students.get(student.getId());
+            students.put(student.getId(), student);
             Server.getInstance().processRequest((t) -> student.selectedTasks.add(Task.get(Integer.parseInt(t[0]))), "get_selected_tasks_by_student", INTERESTING_TASKSTAT_FIELDS, String.valueOf(student.getId()));
             Server.getInstance().processRequest((t) -> student.completedTasks.add(Task.get(Integer.parseInt(t[0]))), "get_completed_tasks_by_student", INTERESTING_TASKSTAT_FIELDS, String.valueOf(student.getId()));
             return student;
@@ -75,7 +80,6 @@ public class Student extends User {
             return null;
         }
     }
-
     public static void registerStudentWithPassword(int id, String firstName, String lastName, String email, String password, SchoolClass schoolClass, int graduationLevel) throws SQLException {
         Student student = new Student(id, firstName, lastName, email, User.passHash(password), schoolClass, graduationLevel);
         Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getAddObjectProcess("student", String.valueOf(id), firstName, lastName, email, User.passHash(password), schoolClass != null ? String.valueOf(schoolClass.getId()) : "-1", String.valueOf(graduationLevel)));
@@ -103,6 +107,12 @@ public class Student extends User {
     }
     public int getGraduationLevel() {
         return graduationLevel;
+    }
+    public Set<Task> getSelectedTasks() {
+        return new HashSet<>(selectedTasks);
+    }
+    public Set<Task> getCompletedTasks() {
+        return new HashSet<>(completedTasks);
     }
     @Override
     public String toString() {
@@ -140,5 +150,17 @@ public class Student extends User {
         builder.append("}");
         return builder.toString();
     }
-    
+
+    public void addSubjectRequest(int subjectId, String type) {
+        currentRequests.put(subjectId, type);
+    }
+
+    public Map<Integer, String> getCurrentRequests() {
+        return currentRequests;
+    }
+
+    // Optionally, a method to clear requests
+    public void clearSubjectRequest(int subjectId) {
+        currentRequests.remove(subjectId);
+    }
 }

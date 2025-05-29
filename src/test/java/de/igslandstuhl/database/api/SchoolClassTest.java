@@ -1,15 +1,12 @@
 package de.igslandstuhl.database.api;
 
-import static org.junit.Assert.assertNotNull;
-
+import static org.junit.Assert.*;
 import java.sql.SQLException;
-
 import org.junit.Before;
 import org.junit.Test;
-
 import de.igslandstuhl.database.server.Server;
 
-public class ClassTest {
+public class SchoolClassTest {
     Server server;
     @Before
     public void setupServer() throws SQLException {
@@ -19,9 +16,9 @@ public class ClassTest {
     @Test
     public void addClass() throws SQLException {
         SchoolClass.addClass("5a", 5);
-    }
-    @Test
-    public void accessClasses() {
-        assertNotNull(SchoolClass.get(1));
+        SchoolClass schoolClass = SchoolClass.get(1);
+        assertNotNull(schoolClass);
+        assertEquals("5a", schoolClass.getLabel());
+        assertEquals(5, schoolClass.getGrade());
     }
 }

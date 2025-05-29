@@ -3,6 +3,9 @@ package de.igslandstuhl.database.server;
 import java.io.*;
 import javax.net.ssl.*;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -13,9 +16,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import de.igslandstuhl.database.api.Student;
+import de.igslandstuhl.database.api.User;
 import de.igslandstuhl.database.server.resources.ResourceHelper;
 import de.igslandstuhl.database.server.webserver.GetRequest;
 import de.igslandstuhl.database.server.webserver.GetResponse;
+import de.igslandstuhl.database.server.webserver.PostResponse;
 
 public class WebServer implements Runnable {
     private static Map<String, String> sessionStore = new HashMap<>(); 
@@ -59,10 +65,10 @@ public class WebServer implements Runnable {
                 return;
             }
             try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
-                
+
                 String request = ResourceHelper.readResourceTillEmptyLine(in);
                 System.out.println("Anfrage erhalten: " + request);
-                
+
                 if (request.startsWith("GET")) {
                     String user = getSessionUser(request);
                     GetRequest get = new GetRequest(request);
@@ -70,6 +76,8 @@ public class WebServer implements Runnable {
                     response.respond(out);
                 } else if (request.startsWith("POST /login")) {
                     handleLogin(in, out, request);
+                } else if (request.startsWith("POST /subject_request")) {
+                    handleSubjectRequest(in, out, request);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -85,6 +93,40 @@ public class WebServer implements Runnable {
                     e.printStackTrace();
                 }
             }
+        }
+
+        private void handleSubjectRequest(BufferedReader in, PrintWriter out, String request) throws IOException {
+            int contentLength = 0;
+            for (String line : request.split("\n")) {
+                if (line.startsWith("Content-Length:")) {
+                    contentLength = Integer.parseInt(line.split(":")[1].trim());
+                }
+            }
+            if (contentLength <= 0) {
+                PostResponse.badRequest("Fehlende oder ungültige Content-Length!").respond(out);
+                return;
+            }
+            char[] bodyChars = new char[contentLength];
+            in.read(bodyChars, 0, contentLength);
+            String body = new String(bodyChars);
+
+            // Parse JSON body for subjectId and type using Gson
+            Gson gson = new Gson();
+            java.lang.reflect.Type mapType = new TypeToken<Map<String, Object>>(){}.getType();
+            Map<String, Object> json = gson.fromJson(body, mapType);
+            int subjectId = ((Number) json.get("subjectId")).intValue();
+            String type = (String) json.get("type");
+
+            String user = getSessionUser(request);
+            Student student = User.getUser(user) instanceof Student ? (Student) User.getUser(user) : null;
+            PostResponse response;
+            if (student != null) {
+                student.addSubjectRequest(subjectId, type);
+                response = PostResponse.ok("Saved request", "text/plain");
+            } else {
+                response = PostResponse.unauthorized("Not logged in or invalid session");
+            }
+            response.respond(out);
         }
         private void handleLogin(BufferedReader in, PrintWriter out, String request) throws IOException {
             int contentLength = 0;

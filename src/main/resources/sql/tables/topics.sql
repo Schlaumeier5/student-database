@@ -4,5 +4,6 @@ CREATE TABLE IF NOT EXISTS topics (
     subject INTEGER NOT NULL,
     ratio INTEGER NOT NULL,
     grade INTEGER NOT NULL,
-    resource TEXT
+    resource TEXT,
+    UNIQUE(name, subject, grade)
 )

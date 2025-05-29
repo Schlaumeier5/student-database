@@ -9,7 +9,7 @@ import de.igslandstuhl.database.server.sql.SQLHelper;
 
 public class Subject {
     private static final Map<Integer, Subject> subjects = new HashMap<>();
-    private static final String[] SQL_FIELDS = {"id", "name"};
+    static final String[] SQL_FIELDS = {"id", "name"};
     private final int id;
     private final String name;
     Subject(int id, String name) {
@@ -41,7 +41,9 @@ public class Subject {
         }
     }
     public void addToGrade(int grade) throws SQLException {
-        Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getAddObjectProcess("subject_to_grade", name, String.valueOf(grade)));
+        Server.getInstance().getConnection().executeVoidProcessSecure(
+            SQLHelper.getAddObjectProcess("subject_to_grade", String.valueOf(grade), String.valueOf(id))
+        );
     }
     @Override
     public String toString() {

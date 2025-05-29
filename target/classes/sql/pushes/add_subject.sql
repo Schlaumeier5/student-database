@@ -1,2 +1,3 @@
 INSERT INTO subjects (name)
-VALUES ("{1}")
+VALUES ("{0}")
+ON CONFLICT(name) DO NOTHING;

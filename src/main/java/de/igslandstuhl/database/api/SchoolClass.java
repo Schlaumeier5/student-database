@@ -34,7 +34,7 @@ public class SchoolClass {
         Server.getInstance().processRequest((fields) -> {
             Subject subject = Subject.fromSQLFields(fields);
             subjects.add(subject);
-        }, "get_subjects_by_grade", SQL_FIELDS, String.valueOf(grade));
+        }, "get_subjects_by_grade", Subject.SQL_FIELDS, String.valueOf(grade));
     }
     public void fetchAllSubjectsIfNotExists() throws SQLException {
         if (subjects.size() == 0) {
@@ -45,9 +45,25 @@ public class SchoolClass {
         try {
             fetchAllSubjectsIfNotExists();
         } catch (SQLException e) {
-            throw new IllegalStateException("Could not fetch rooms", e);
+            throw new IllegalStateException("Could not fetch subjects", e);
         }
         return subjects;
+    }
+
+    public List<Student> getStudents() {
+        List<Student> students = new ArrayList<>();
+        try {
+            Server.getInstance().processRequest(
+                fields -> {
+                    Student student = Student.get(Integer.parseInt(fields[0]));
+                    if (student != null) students.add(student);
+                },
+                "get_students_by_class", new String[] {"id"}, String.valueOf(id)
+            );
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return students;
     }
 
     private static SchoolClass fromSQL(String[] sqlResult) {

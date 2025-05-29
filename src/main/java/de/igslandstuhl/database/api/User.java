@@ -11,10 +11,10 @@ public abstract class User {
     public static User getUser(String username) {
         username = username.replace("%40", "@");
         Student student = Student.fromEmail(username);
-        if (student == null) {
-            return null;
-        }
-        return student;
+        if (student != null) return student;
+        Teacher teacher = Teacher.fromEmail(username);
+        if (teacher != null) return teacher;
+        return null;
     }
     public static String passHash(String password) {
         return DigestUtils.sha1Hex(password);
