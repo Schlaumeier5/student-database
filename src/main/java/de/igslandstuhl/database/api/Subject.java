@@ -23,7 +23,7 @@ public class Subject {
         return name;
     }
 
-    private static Subject fromSQLFields(String[] fields) {
+    static Subject fromSQLFields(String[] fields) {
         int id = Integer.parseInt(fields[0]);
         String name = fields[1];
         return new Subject(id, name);
@@ -39,6 +39,9 @@ public class Subject {
             e.printStackTrace();
             return null;
         }
+    }
+    public void addToGrade(int grade) throws SQLException {
+        Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getAddObjectProcess("subject_to_grade", name, String.valueOf(grade)));
     }
     @Override
     public String toString() {

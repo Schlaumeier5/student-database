@@ -9,7 +9,6 @@ import de.igslandstuhl.database.server.Server;
 
 public class StudentTest {
     Server server;
-    SchoolClass testClass;
     @Before
     public void setupServer() throws SQLException {
         server = Server.getInstance();
@@ -17,6 +16,6 @@ public class StudentTest {
     }
     @Test
     public void testPuttingStudent() throws SQLException {
-        Student.registerStudentWithPassword(0, "Max", "Mustermann", "max@muster.mann", "12345", testClass, 1);
+        Student.registerStudentWithPassword(0, "Max", "Mustermann", "max@muster.mann", "12345", SchoolClass.get(1), 1);
     }
 }

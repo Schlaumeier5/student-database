@@ -103,8 +103,7 @@ public final class Server implements AutoCloseable {
             User user = User.getUser(username);
             if (user instanceof Student) {
                 Student student = (Student) user;
-                // TODO
-                return null;
+                return student.getSchoolClass().getSubjects().toString();
             } else {
                 return null;
             }

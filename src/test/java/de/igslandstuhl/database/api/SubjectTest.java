@@ -18,4 +18,8 @@ public class SubjectTest {
     public void addSubject() throws SQLException {
         Subject.addSubject("Mathematik");
     }
+    @Test
+    public void addSubjectToGrade() throws SQLException {
+        Subject.get(1).addToGrade(5);
+    }
 }

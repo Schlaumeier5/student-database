@@ -18,7 +18,7 @@ public class Room {
         this.minimumLevel = minimumLevel;
     }
 
-    private static Room fromSQL(String[] sqlResult) {
+    private static Room fromSQLFields(String[] sqlResult) {
         String label = sqlResult[0];
         int minimumLevel = Integer.parseInt(sqlResult[1]);
         return new Room(label, minimumLevel);
@@ -26,12 +26,22 @@ public class Room {
 
     public static void fetchAll() throws SQLException {
         Server.getInstance().processRequest((fields) -> {
-            Room room = fromSQL(fields);
+            Room room = fromSQLFields(fields);
             rooms.put(room.getLabel(), room);
         }, "get_all_rooms", SQL_FIELDS);
     }
+    public static void fetchAllIfNotExists() throws SQLException {
+        if (rooms.size() == 0) {
+            fetchAll();
+        }
+    }
 
     public static Map<String, Room> getRooms() {
+        try {
+            fetchAllIfNotExists();
+        } catch (SQLException e) {
+            throw new IllegalStateException("Could not fetch rooms", e);
+        }
         return rooms;
     }
     public static Room getRoom(String label) {
@@ -39,7 +49,7 @@ public class Room {
             return rooms.get(label);
         } else {
             try {
-                Room room = Server.getInstance().processSingleRequest(Room::fromSQL, "get_room_by_label", SQL_FIELDS, label);
+                Room room = Server.getInstance().processSingleRequest(Room::fromSQLFields, "get_room_by_label", SQL_FIELDS, label);
                 rooms.put(label, room);
                 return room;
             } catch (SQLException e) {

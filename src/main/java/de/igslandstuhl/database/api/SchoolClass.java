@@ -1,12 +1,15 @@
 package de.igslandstuhl.database.api;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 import de.igslandstuhl.database.server.Server;
 import de.igslandstuhl.database.server.sql.SQLHelper;
 
 public class SchoolClass {
     private static final String[] SQL_FIELDS = {"id", "label", "grade"};
+    private final List<Subject> subjects = new ArrayList<>();
     private final int id;
     private final String label;
     private final int grade;
@@ -27,10 +30,30 @@ public class SchoolClass {
         return grade;
     }
 
+    public void fetchAllSubjects() throws SQLException {
+        Server.getInstance().processRequest((fields) -> {
+            Subject subject = Subject.fromSQLFields(fields);
+            subjects.add(subject);
+        }, "get_subjects_by_grade", SQL_FIELDS, String.valueOf(grade));
+    }
+    public void fetchAllSubjectsIfNotExists() throws SQLException {
+        if (subjects.size() == 0) {
+            fetchAllSubjects();
+        }
+    }
+    public List<Subject> getSubjects() {
+        try {
+            fetchAllSubjectsIfNotExists();
+        } catch (SQLException e) {
+            throw new IllegalStateException("Could not fetch rooms", e);
+        }
+        return subjects;
+    }
+
     private static SchoolClass fromSQL(String[] sqlResult) {
         int id = Integer.parseInt(sqlResult[0]);
         String label = sqlResult[1];
-        int grade = Integer.parseInt(sqlResult[3]);
+        int grade = Integer.parseInt(sqlResult[2]);
         return new SchoolClass(id, label, grade);
     }
 
@@ -45,7 +68,7 @@ public class SchoolClass {
 
     @Override
     public String toString() {
-        return "{\"id\": " + id + ", \"label\": \"" + label + ", \"grade\": " + grade + "}";
+        return "{\"id\": " + id + ", \"label\": \"" + label + "\", \"grade\": " + grade + "}";
     }
 
     public static void addClass(String label, int grade) throws SQLException {

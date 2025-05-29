@@ -6,8 +6,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.codec.digest.DigestUtils;
-
 import de.igslandstuhl.database.server.Server;
 import de.igslandstuhl.database.server.sql.SQLHelper;
 
