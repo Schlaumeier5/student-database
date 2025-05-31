@@ -4,15 +4,12 @@ import static org.junit.Assert.*;
 import java.sql.SQLException;
 import org.junit.Before;
 import org.junit.Test;
-import de.igslandstuhl.database.server.Server;
 
 public class TopicTest {
-    Server server;
     @Before
     public void setupServer() throws SQLException {
-        server = Server.getInstance();
-        server.getConnection().createTables();
-        Subject.addSubject("Mathematik");
+        PreConditions.setupDatabase();
+        PreConditions.addSampleSubject();
     }
     @Test
     public void addTopic() throws SQLException {

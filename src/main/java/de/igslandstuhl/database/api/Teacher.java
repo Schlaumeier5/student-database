@@ -146,7 +146,7 @@ public class Teacher extends User {
     public void addClass(int classId) throws SQLException {
         if (classIds.contains(classId)) return;
         Server.getInstance().getConnection().executeVoidProcessSecure(
-            SQLHelper.getAddObjectProcess("teacher_class", String.valueOf(id), String.valueOf(classId))
+            SQLHelper.getAddObjectProcess("teacher_to_class", String.valueOf(id), String.valueOf(classId))
         );
         classIds.add(classId);
     }

@@ -15,6 +15,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('student-name').textContent = `${studentData.firstName} ${studentData.lastName}`;
   document.getElementById('student-class').textContent = studentData.schoolClass.label;
   document.getElementById('student-email').textContent = studentData.email;
+  const graduationLevels = ["Neustarter", "Starter", "Durchstarter", "Lernprofi"];
+  document.getElementById('student-graduation').textContent = graduationLevels[studentData.graduationLevel];
 
   // Räume anzeigen
   const roomSelect = document.getElementById('room');
@@ -53,7 +55,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       panel.classList.add('loaded');
 
       // Lade aktuelles Thema für dieses Fach
-      const res = await fetch('/mysubject', {
+      const res = await fetch('/currenttopic', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ subjectId: subject.id })
@@ -72,10 +74,25 @@ document.addEventListener('DOMContentLoaded', async () => {
       const completedTasks = studentData.completedTasks.filter(
         task => task.topic.id === topic.id
       );
+      let allTasks = [];
+      if (Array.isArray(topic.tasks) && topic.tasks.length > 0) {
+        const tasksRes = await fetch('/tasks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids: topic.tasks })
+        });
+        allTasks = await tasksRes.json();
+      }
 
-      // Offene Lernjobs
+      const otherTasks = allTasks.filter(
+        task =>
+          !selectedTasks.some(t => t.id === task.id) &&
+          !completedTasks.some(t => t.id === task.id)
+      );
+
+      // Aktuelle Etappe
       const selectedLabel = document.createElement('h4');
-      selectedLabel.textContent = 'Offene Lernjobs';
+      selectedLabel.textContent = 'Aktuelle Etappe:';
       body.appendChild(selectedLabel);
 
       const selectedList = document.createElement('ul');
@@ -86,9 +103,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
       body.appendChild(selectedList);
 
-      // Abgeschlossene Lernjobs
+      // Abgeschlossene Etappen
       const completedLabel = document.createElement('h4');
-      completedLabel.textContent = 'Abgeschlossene Lernjobs';
+      completedLabel.textContent = 'Abgeschlossene Etappen:';
       body.appendChild(completedLabel);
 
       const completedList = document.createElement('ul');
@@ -98,14 +115,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         completedList.appendChild(li);
       });
       body.appendChild(completedList);
+
+      // Weitere Etappen
+      const otherLabel = document.createElement('h4');
+      otherLabel.textContent = 'Weitere Etappen:';
+      body.appendChild(otherLabel);
+
+      const otherList = document.createElement('ul');
+      otherTasks.forEach(task => {
+        const li = document.createElement('li');
+        li.textContent = `${task.name} (Niveau ${task.niveau})`;
+        otherList.appendChild(li);
+      });
+      body.appendChild(otherList);
     });
 
     // Anfrage-Buttons
-    ['hilfe', 'partner', 'betreuung'].forEach(type => {
+    ['hilfe', 'partner', 'betreuung', 'gelingensnachweis'].forEach(type => {
       const label = {
         hilfe: 'Ich brauche Hilfe',
         partner: 'Ich suche einen Partner',
-        betreuung: 'Ich brauche Betreuung für ein Experiment'
+        betreuung: 'Ich brauche Betreuung für ein Experiment',
+        gelingensnachweis: 'Ich bin bereit für den Gelingensnachweis'
       }[type];
 
       const btn = document.createElement('button');

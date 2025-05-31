@@ -1,7 +1,9 @@
 package de.igslandstuhl.database.api;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import de.igslandstuhl.database.server.Server;
@@ -15,6 +17,7 @@ public class Topic {
     private final Subject subject;
     private final int ratio;
     private final int grade;
+    private List<Task> tasks = new ArrayList<>();
 
     public Topic(int id, String name, Subject subject, int ratio, int grade) {
         this.id = id;
@@ -65,10 +68,40 @@ public class Topic {
         return grade;
     }
 
+    public List<Task> getTasks() {
+        if (tasks.isEmpty()) {
+            loadTasks();
+        }
+        return tasks;
+    }
+
+    public List<Integer> getTaskIds() {
+        List<Integer> taskIds = new ArrayList<>();
+        for (Task task : getTasks()) {
+            taskIds.add(task.getId());
+        }
+        return taskIds;
+    }
+
+    private void loadTasks() {
+        tasks.clear();
+        try {
+            Server.getInstance().processRequest(
+                fields -> {
+                    Task task = Task.get(Integer.parseInt(fields[0]));
+                    if (task != null) tasks.add(task);
+                },
+                "get_tasks_by_topic", new String[] {"id"}, String.valueOf(id)
+            );
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     @Override
     public String toString() {
         return "{\"id\":" + id + ", \"name\": \"" + name + "\", \"subject\": " + subject + ", \"ratio\": " + ratio + ", \"grade\": " + grade
-                + "}";
+                + ", \"tasks\": " + getTaskIds() + "}";
     }
     
     public static void addTopic(String name, Subject subject, int ratio, int grade) throws SQLException {

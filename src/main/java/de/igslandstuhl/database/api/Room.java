@@ -1,7 +1,9 @@
 package de.igslandstuhl.database.api;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import de.igslandstuhl.database.server.Server;
@@ -69,9 +71,20 @@ public class Room {
     public String toString() {
         return "{\"label\": \""+label+ "\", \"minimumLevel\": \"" + minimumLevel + "\"}";
     }
-    public static void addRoom(String label, int minimumLevel) throws SQLException {
+    public static Room addRoom(String label, int minimumLevel) throws SQLException {
         Room room = new Room(label, minimumLevel);
         Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getAddObjectProcess("room", label, String.valueOf(minimumLevel)));
         rooms.put(label, room);
+        return room;
+    }
+    public static List<Room> addAllRooms(List<String> labels, List<Integer> minimumLevels) throws SQLException {
+        if (labels.size() != minimumLevels.size()) {
+            throw new IllegalArgumentException("Labels and minimum levels must have the same size");
+        }
+        List<Room> rooms = new ArrayList<>();
+        for (int i = 0; i < labels.size(); i++) {
+            rooms.add(addRoom(labels.get(i), minimumLevels.get(i)));
+        }
+        return rooms;
     }
 }

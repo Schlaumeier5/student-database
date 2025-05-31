@@ -17,6 +17,9 @@ import java.util.Map;
 import java.util.UUID;
 
 import de.igslandstuhl.database.api.Student;
+import de.igslandstuhl.database.api.Subject;
+import de.igslandstuhl.database.api.Task;
+import de.igslandstuhl.database.api.Topic;
 import de.igslandstuhl.database.api.User;
 import de.igslandstuhl.database.server.resources.ResourceHelper;
 import de.igslandstuhl.database.server.webserver.GetRequest;
@@ -78,6 +81,10 @@ public class WebServer implements Runnable {
                     handleLogin(in, out, request);
                 } else if (request.startsWith("POST /subject_request")) {
                     handleSubjectRequest(in, out, request);
+                } else if (request.startsWith("POST /currenttopic")) {
+                    handleCurrentTopic(in, out, request);
+                } else if (request.startsWith("POST /tasks")) {
+                    handleTasks(in, out, request);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -174,6 +181,92 @@ public class WebServer implements Runnable {
                 out.println();
                 out.println("Falsche Anmeldedaten!");
             }
+        }
+
+        private void handleCurrentTopic(BufferedReader in, PrintWriter out, String request) throws IOException {
+            int contentLength = 0;
+            for (String line : request.split("\n")) {
+                if (line.startsWith("Content-Length:")) {
+                    contentLength = Integer.parseInt(line.split(":")[1].trim());
+                }
+            }
+            if (contentLength <= 0) {
+                PostResponse.badRequest("Fehlende oder ungültige Content-Length!").respond(out);
+                return;
+            }
+            char[] bodyChars = new char[contentLength];
+            in.read(bodyChars, 0, contentLength);
+            String body = new String(bodyChars);
+
+            // Parse JSON body for subjectId using Gson
+            Gson gson = new Gson();
+            java.lang.reflect.Type mapType = new TypeToken<Map<String, Object>>(){}.getType();
+            Map<String, Object> json = gson.fromJson(body, mapType);
+            int subjectId = ((Number) json.get("subjectId")).intValue();
+
+            String user = getSessionUser(request);
+            Student student = User.getUser(user) instanceof Student ? (Student) User.getUser(user) : null;
+            PostResponse response;
+            if (student != null) {
+                Subject subject = Subject.get(subjectId);
+                Topic topic = student.getCurrentTopic(subject);
+                if (topic != null) {
+                    response = PostResponse.ok(topic.toString(), "application/json");
+                } else {
+                    response = PostResponse.badRequest("No current topic for this subject.");
+                }
+            } else {
+                response = PostResponse.unauthorized("Not logged in or invalid session");
+            }
+            response.respond(out);
+        }
+
+        private void handleTasks(BufferedReader in, PrintWriter out, String request) throws IOException {
+            int contentLength = 0;
+            for (String line : request.split("\n")) {
+            if (line.startsWith("Content-Length:")) {
+                contentLength = Integer.parseInt(line.split(":")[1].trim());
+            }
+            }
+            if (contentLength <= 0) {
+            PostResponse.badRequest("Fehlende oder ungültige Content-Length!").respond(out);
+            return;
+            }
+            char[] bodyChars = new char[contentLength];
+            in.read(bodyChars, 0, contentLength);
+            String body = new String(bodyChars);
+
+            // Parse JSON body for ids (list of task ids) using Gson
+            Gson gson = new Gson();
+            java.lang.reflect.Type mapType = new TypeToken<Map<String, Object>>(){}.getType();
+            Map<String, Object> json = gson.fromJson(body, mapType);
+
+            // Expecting: { "ids": [1,2,3,...] }
+            java.util.List<Integer> ids = null;
+            if (json.get("ids") instanceof java.util.List<?> l) {
+                ids = new java.util.ArrayList<>();
+                for (Object o : l) {
+                    if (o instanceof Number n) {
+                        ids.add(n.intValue());
+                    }
+                }
+            }
+
+            String user = getSessionUser(request);
+            Student student = User.getUser(user) instanceof Student ? (Student) User.getUser(user) : null;
+            PostResponse response;
+            if (student != null && ids != null) {
+                // Assuming Student has a method getTasksByIds(List<Integer> ids)
+                // and returns a List<Task> or similar
+                java.util.List<Task> tasks = Task.getTasksByIds(ids);
+                String jsonResponse = tasks.toString();
+            response = PostResponse.ok(jsonResponse, "application/json");
+            } else if (ids == null) {
+            response = PostResponse.badRequest("Missing or invalid 'ids' in request body.");
+            } else {
+            response = PostResponse.unauthorized("Not logged in or invalid session");
+            }
+            response.respond(out);
         }
 
         private String getSessionUser(String request) {

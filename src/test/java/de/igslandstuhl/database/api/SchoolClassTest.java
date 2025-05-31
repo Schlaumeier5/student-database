@@ -10,8 +10,8 @@ public class SchoolClassTest {
     Server server;
     @Before
     public void setupServer() throws SQLException {
+        PreConditions.setupDatabase();
         server = Server.getInstance();
-        server.getConnection().createTables();
     }
     @Test
     public void addClass() throws SQLException {

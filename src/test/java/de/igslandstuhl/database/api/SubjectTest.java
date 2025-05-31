@@ -10,9 +10,9 @@ public class SubjectTest {
     Server server;
     @Before
     public void setupServer() throws SQLException {
+        PreConditions.setupDatabase();
         server = Server.getInstance();
-        server.getConnection().createTables();
-        SchoolClass.addClass("5a", 5);
+        PreConditions.addSampleClass(); // Ensure a class exists for testing
     }
     @Test
     public void addSubject() throws SQLException {
@@ -23,7 +23,7 @@ public class SubjectTest {
     }
     @Test
     public void addSubjectToGrade() throws SQLException {
-        Subject.addSubject("Mathematik"); // Ensure subject exists and gets ID 1
+        PreConditions.addSampleSubject();
         Subject.get(1).addToGrade(5);
         SchoolClass schoolClass = SchoolClass.get(1);
         assertTrue(

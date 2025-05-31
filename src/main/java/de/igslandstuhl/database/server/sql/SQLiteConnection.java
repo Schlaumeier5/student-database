@@ -17,6 +17,9 @@ import de.igslandstuhl.database.server.resources.ResourceHelper;
 public class SQLiteConnection implements AutoCloseable {
     private final String url;
     private final Connection conn;
+    public Connection getSQLConnection() {
+        return conn;
+    }
     private final List<Statement> pendingStatements = new ArrayList<>();
     private void createTables(Statement stmt) throws SQLException {
         for (BufferedReader in : ResourceHelper.openResourcesAsReader(Pattern.compile(".*tables.+\\.sql"))) {

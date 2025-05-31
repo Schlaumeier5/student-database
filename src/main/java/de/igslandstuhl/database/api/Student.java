@@ -26,6 +26,7 @@ public class Student extends User {
     private final Set<Task> selectedTasks = new HashSet<>();
     private final Set<Task> completedTasks = new HashSet<>();
     private final Map<Integer, String> currentRequests = new ConcurrentHashMap<>();
+    private final Map<Subject, Topic> currentTopics = new ConcurrentHashMap<>();
 
     private Room currentRoom = null;
 
@@ -48,7 +49,9 @@ public class Student extends User {
         String password = fields[4];
         SchoolClass schoolClass = SchoolClass.get(Integer.parseInt(fields[5]));
         int graduationLevel = Integer.parseInt(fields[6]);
-        return new Student(id, firstName, lastName, email, password, schoolClass, graduationLevel);
+        Student student = new Student(id, firstName, lastName, email, password, schoolClass, graduationLevel);
+        student.loadCurrentTopics();
+        return student;
     }
 
     public static Student get(int id) {
@@ -162,5 +165,58 @@ public class Student extends User {
     // Optionally, a method to clear requests
     public void clearSubjectRequest(int subjectId) {
         currentRequests.remove(subjectId);
+    }
+
+    private void loadCurrentTopics() {
+        currentTopics.clear();
+        try {
+            Server.getInstance().processRequest(
+                fields -> {
+                    int subjectId = Integer.parseInt(fields[1]);
+                    int topicId = Integer.parseInt(fields[2]);
+                    Subject subject = Subject.get(subjectId);
+                    Topic topic = Topic.get(topicId);
+                    if (subject != null && topic != null) {
+                        currentTopics.put(subject, topic);
+                    }
+                },
+                "get_current_topics_by_student",
+                new String[] {"student_id", "subject_id", "topic_id"},
+                String.valueOf(id)
+            );
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void setCurrentTopic(Subject subject, Topic topic) throws SQLException {
+        // Update in DB
+        Server.getInstance().getConnection().executeVoidProcessSecure(
+            SQLHelper.getAddObjectProcess("topic_to_student",
+                String.valueOf(id),
+                String.valueOf(topic.getId())
+            )
+        );
+        // Update in memory
+        currentTopics.put(subject, topic);
+    }
+    public void assignTopic(Topic topic) throws SQLException {
+        if (topic == null) {
+            throw new IllegalArgumentException("Topic cannot be null");
+        }
+        Subject subject = topic.getSubject();
+        if (subject == null) {
+            throw new IllegalArgumentException("Topic must have a subject");
+        }
+        setCurrentTopic(subject, topic);
+    }
+
+    public Map<Subject, Topic> getCurrentTopics() {
+        // Optionally reload from DB if needed
+        return new HashMap<>(currentTopics);
+    }
+
+    public Topic getCurrentTopic(Subject subject) {
+        return currentTopics.get(subject);
     }
 }

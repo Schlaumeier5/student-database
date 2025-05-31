@@ -10,9 +10,9 @@ public class StudentTest {
     Server server;
     @Before
     public void setupServer() throws SQLException {
+        PreConditions.setupDatabase();
         server = Server.getInstance();
-        server.getConnection().createTables();
-        SchoolClass.addClass("5a", 5);
+        PreConditions.addSampleClass();
     }
     @Test
     public void testPuttingStudent() throws SQLException {
@@ -24,5 +24,16 @@ public class StudentTest {
         assertEquals("max@muster.mann", student.getEmail());
         assertEquals(1, student.getGraduationLevel());
         assertEquals(1, student.getSchoolClass().getId());
+    }
+    @Test
+    public void testAssignTopicToStudent() throws SQLException {
+        PreConditions.addSampleStudent();
+        PreConditions.addSampleSubject();
+        PreConditions.addSampleTopic();
+        Student student = Student.get(0);
+        Topic topic = Topic.get(1);
+        assertNotNull(topic);
+        student.assignTopic(topic);
+        assertEquals(topic, student.getCurrentTopic(topic.getSubject()));
     }
 }

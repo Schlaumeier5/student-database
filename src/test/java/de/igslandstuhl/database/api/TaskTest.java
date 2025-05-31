@@ -4,16 +4,13 @@ import static org.junit.Assert.*;
 import java.sql.SQLException;
 import org.junit.Before;
 import org.junit.Test;
-import de.igslandstuhl.database.server.Server;
 
 public class TaskTest {
-    Server server;
     @Before
     public void setupServer() throws SQLException {
-        server = Server.getInstance();
-        server.getConnection().createTables();
-        Subject.addSubject("Mathematik");
-        Topic.addTopic("Bruchrechnung", Subject.get(1), 100, 5);
+        PreConditions.setupDatabase();
+        PreConditions.addSampleSubject();
+        PreConditions.addSampleTopic();
     }
     @Test
     public void addTask() throws SQLException {

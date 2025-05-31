@@ -3,6 +3,8 @@ package de.igslandstuhl.database.api;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
 
 import de.igslandstuhl.database.server.Server;
 import de.igslandstuhl.database.server.sql.SQLHelper;
@@ -62,5 +64,16 @@ public class Task {
 
     public static void addTask(Topic topic, String name, Level niveau) throws SQLException {
         Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getAddObjectProcess("task", topic == null ? "-1" : String.valueOf(topic.getId()), name, String.valueOf(niveau)));
+    }
+
+    public static List<Task> getTasksByIds(List<Integer> ids) {
+        List<Task> tasks = new ArrayList<>();
+        for (Integer id : ids) {
+            Task task = Task.get(id);
+            if (task != null) {
+                tasks.add(task);
+            }
+        }
+        return tasks;
     }
 }
