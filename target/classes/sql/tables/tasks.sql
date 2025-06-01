@@ -1,7 +1,0 @@
-CREATE TABLE IF NOT EXISTS tasks (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    topic INTEGER NOT NULL,
-    name TEXT NOT NULL,
-    niveau INTEGER NOT NULL,
-    UNIQUE(topic, name)
-)
