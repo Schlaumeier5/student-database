@@ -8,8 +8,6 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
-import de.igslandstuhl.database.server.Server;
-
 public class TeacherTest {
 
     @Before
