@@ -1,2 +1,7 @@
 target
 *.jks
+*.db
+.vscode
+*.iml
+.idea
+bin
