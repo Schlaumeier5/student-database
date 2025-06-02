@@ -1,5 +1,7 @@
 CREATE TABLE IF NOT EXISTS taskstats (
     student INTEGER NOT NULL,
     task INTEGER NOT NULL,
-    status INTEGER NOT NULL
+    status INTEGER NOT NULL,
+    last_updated TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (student, task)
 )
