@@ -76,4 +76,8 @@ public class Task {
         }
         return tasks;
     }
+
+    public double getRatio() {
+        return niveau.getRatio() * topic.getRatio() / (100.0 * topic.getTasksByLevel(niveau).size());
+    }
 }

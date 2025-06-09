@@ -18,6 +18,9 @@ public class Topic {
     private final int ratio;
     private final int grade;
     private List<Task> tasks = new ArrayList<>();
+    private List<Task> tasksLevel1 = new ArrayList<>();
+    private List<Task> tasksLevel2 = new ArrayList<>();
+    private List<Task> tasksLevel3 = new ArrayList<>();
 
     public Topic(int id, String name, Subject subject, int ratio, int grade) {
         this.id = id;
@@ -83,6 +86,44 @@ public class Topic {
         return taskIds;
     }
 
+    public List<Task> getTasksLevel1() {
+        if (tasks.isEmpty()) {
+            loadTasks();
+        }
+        return tasksLevel1;
+    }
+    public List<Task> getTasksLevel2() {
+        if (tasks.isEmpty()) {
+            loadTasks();
+        }
+        return tasksLevel2;
+    }
+    public List<Task> getTasksLevel3() {
+        if (tasks.isEmpty()) {
+            loadTasks();
+        }
+        return tasksLevel3;
+    }
+    public List<Task> getTasksByLevel(Level level) {
+        if (tasks.isEmpty()) {
+            loadTasks();
+        }
+        switch (level) {
+            case LEVEL1:
+                return getTasksLevel1();
+            case LEVEL2:
+                return getTasksLevel2();
+            case LEVEL3:
+                return getTasksLevel3();
+            default:
+                throw new IllegalArgumentException("Invalid level: " + level);
+        }
+    }
+    private List<Task> getTasksByLevel(List<Task> tasks, Level level) {
+        return tasks.stream()
+            .filter(task -> task.getNiveau() == level)
+            .toList();
+    }
     private void loadTasks() {
         tasks.clear();
         try {
@@ -93,6 +134,9 @@ public class Topic {
                 },
                 "get_tasks_by_topic", new String[] {"id"}, String.valueOf(id)
             );
+            tasksLevel1 = getTasksByLevel(tasks, Level.LEVEL1);
+            tasksLevel2 = getTasksByLevel(tasks, Level.LEVEL2);
+            tasksLevel3 = getTasksByLevel(tasks, Level.LEVEL3);
         } catch (SQLException e) {
             e.printStackTrace();
         }

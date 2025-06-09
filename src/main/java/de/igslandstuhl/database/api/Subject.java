@@ -1,7 +1,9 @@
 package de.igslandstuhl.database.api;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import de.igslandstuhl.database.server.Server;
@@ -51,5 +53,24 @@ public class Subject {
     }
     public static void addSubject(String name) throws SQLException {
         Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getAddObjectProcess("subject", name));
+    }
+
+    public List<Topic> getTopics(int grade) {
+        List<Topic> topics = new ArrayList<>();
+        try {
+            Server.getInstance().processRequest(
+                fields -> {
+                    Topic topic = Topic.get(Integer.parseInt(fields[0]));
+                    if (topic != null) topics.add(topic);
+                },
+                "get_topics_by_grade",
+                new String[] {"id"},
+                String.valueOf(grade),
+                String.valueOf(id)
+            );
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return topics;
     }
 }

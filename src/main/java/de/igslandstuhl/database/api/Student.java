@@ -3,6 +3,7 @@ package de.igslandstuhl.database.api;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -218,5 +219,30 @@ public class Student extends User {
 
     public Topic getCurrentTopic(Subject subject) {
         return currentTopics.get(subject);
+    }
+
+    public double getCurrentProgress(Subject subject) {
+        List<Topic> topics = subject.getTopics(schoolClass.getGrade());
+        return completedTasks.stream()
+            .filter(task -> topics.stream()
+                .anyMatch(topic -> task.getTopic() != null && task.getTopic().getId() == topic.getId()))
+            .mapToDouble(Task::getRatio)
+            .sum();
+    }
+    public int getCurrentlyAchievedGrade(Subject subject) {
+        double progress = getCurrentProgress(subject);
+        if (progress >= 0.85) {
+            return 1; // Excellent
+        } else if (progress >= 0.70) {
+            return 2; // Good
+        } else if (progress >= 0.55) {
+            return 3; // Satisfactory
+        } else if (progress >= 0.40) {
+            return 4; // Sufficient
+        } else if (progress >= 0.20) {
+            return 5; // Deficient
+        } else {
+            return 6; // Insufficient
+        }
     }
 }
