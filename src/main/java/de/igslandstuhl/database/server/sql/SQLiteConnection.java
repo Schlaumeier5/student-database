@@ -53,6 +53,11 @@ public class SQLiteConnection implements AutoCloseable {
             e.printStackTrace();
         }
     }
+    public void executeVoidProcessSecure(String sql) throws SQLException {
+        try (Statement stmt = conn.createStatement()) {
+            stmt.execute(sql);
+        }
+    }
     public void executeVoidProcessSecure(SQLVoidProcess p) throws SQLException {
         try (Statement stmt = conn.createStatement()) {
             p.execute(stmt);
