@@ -245,4 +245,28 @@ public class Student extends User {
             return 6; // Insufficient
         }
     }
+    public double getPredictedProgress(Subject subject) {
+        double progress = getCurrentProgress(subject);
+        SchoolYear currentYear = SchoolYear.getCurrentYear();
+        if (currentYear == null) {
+            return 0; // No current year available
+        }
+        return progress * currentYear.getWeekCount() / currentYear.getCurrentWeek();
+    }
+    public int getPredictedGrade(Subject subject) {
+        double predictedProgress = getPredictedProgress(subject);
+        if (predictedProgress >= 0.85) {
+            return 1; // Excellent
+        } else if (predictedProgress >= 0.70) {
+            return 2; // Good
+        } else if (predictedProgress >= 0.55) {
+            return 3; // Satisfactory
+        } else if (predictedProgress >= 0.40) {
+            return 4; // Sufficient
+        } else if (predictedProgress >= 0.20) {
+            return 5; // Deficient
+        } else {
+            return 6; // Insufficient
+        }
+    }
 }
