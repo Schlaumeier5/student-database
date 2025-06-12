@@ -11,23 +11,25 @@ import de.igslandstuhl.database.server.sql.SQLHelper;
 
 public class Topic {
     private static final Map<Integer, Topic> topics = new HashMap<>();
-    private static final String[] SQL_FIELDS = {"id", "name", "subject", "ratio", "grade"};
+    private static final String[] SQL_FIELDS = {"id", "name", "subject", "ratio", "grade", "number"};
     private final int id;
     private final String name;
     private final Subject subject;
     private final int ratio;
     private final int grade;
+    private final int number;
     private List<Task> tasks = new ArrayList<>();
     private List<Task> tasksLevel1 = new ArrayList<>();
     private List<Task> tasksLevel2 = new ArrayList<>();
     private List<Task> tasksLevel3 = new ArrayList<>();
 
-    public Topic(int id, String name, Subject subject, int ratio, int grade) {
+    public Topic(int id, String name, Subject subject, int ratio, int grade, int number) {
         this.id = id;
         this.name = name;
         this.subject = subject;
         this.ratio = ratio;
         this.grade = grade;
+        this.number = number;
     }
 
     private static Topic fromSQLFields(String[] fields) {
@@ -36,7 +38,8 @@ public class Topic {
         Subject subject = Subject.get(Integer.parseInt(fields[2]));
         int ratio = Integer.parseInt(fields[3]);
         int grade = Integer.parseInt(fields[4]);
-        return new Topic(id, name, subject, ratio, grade);
+        int number = Integer.parseInt(fields[5]);
+        return new Topic(id, name, subject, ratio, grade, number);
     }
 
     public static Topic get(int id) {
@@ -69,6 +72,10 @@ public class Topic {
 
     public int getGrade() {
         return grade;
+    }
+
+    public int getNumber() {
+        return number;
     }
 
     public List<Task> getTasks() {

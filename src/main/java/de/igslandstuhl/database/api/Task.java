@@ -36,6 +36,18 @@ public class Task {
     public Level getNiveau() {
         return niveau;
     }
+    public int getNumber() {
+        switch (niveau) {
+            case LEVEL1:
+                return topic.getTasksLevel1().indexOf(this) + 1;
+            case LEVEL2:
+                return topic.getTasksLevel2().indexOf(this) + 1 + topic.getTasksLevel1().size();
+            case LEVEL3:
+                return topic.getTasksLevel3().indexOf(this) + 1 + topic.getTasksLevel1().size() + topic.getTasksLevel2().size();
+            default:
+                throw new IllegalStateException("Unknown level: " + niveau);
+        }
+    }
 
     private static Task fromSQLFields(String[] fields) {
         int id = Integer.parseInt(fields[0]);
