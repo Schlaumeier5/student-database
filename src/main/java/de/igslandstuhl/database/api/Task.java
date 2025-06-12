@@ -36,14 +36,14 @@ public class Task {
     public Level getNiveau() {
         return niveau;
     }
-    public int getNumber() {
+    public String getNumber() {
         switch (niveau) {
             case LEVEL1:
-                return topic.getTasksLevel1().indexOf(this) + 1;
+                return topic.getNumber() + ".1." + (topic.getTasksLevel1().indexOf(this) + 1);
             case LEVEL2:
-                return topic.getTasksLevel2().indexOf(this) + 1 + topic.getTasksLevel1().size();
+                return topic.getNumber() + ".2." + (topic.getTasksLevel2().indexOf(this) + 1 + topic.getTasksLevel1().size());
             case LEVEL3:
-                return topic.getTasksLevel3().indexOf(this) + 1 + topic.getTasksLevel1().size() + topic.getTasksLevel2().size();
+                return topic.getNumber() + ".3." + (topic.getTasksLevel3().indexOf(this) + 1 + topic.getTasksLevel1().size() + topic.getTasksLevel2().size());
             default:
                 throw new IllegalStateException("Unknown level: " + niveau);
         }
@@ -71,7 +71,7 @@ public class Task {
 
     @Override
     public String toString() {
-        return "{\"id\": " + id + ", \"topic\": " + topic + ", \"name\": \"" + name + "\", \"niveau\": " + niveau + "}";
+        return "{\"id\": " + id + ", \"topic\": " + topic + ", \"name\": \"" + name + "\", \"niveau\": " + niveau + ", \"number\": \"" + getNumber() + "\", \"ratio\": " + getRatio() + "}";
     }
 
     public static void addTask(Topic topic, String name, Level niveau) throws SQLException {

@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const topic = await res.json();
 
       const topicTitle = document.createElement('p');
-      topicTitle.innerHTML = `<strong>Aktuelles Thema:</strong> ${topic.name}`;
+      topicTitle.innerHTML = `<strong>Aktuelles Thema:</strong> ${topic.name} (${topic.number})`;
       body.appendChild(topicTitle);
 
       // Lernjobs zum aktuellen Thema herausfiltern
@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const selectedList = document.createElement('ul');
       selectedTasks.forEach(task => {
         const li = document.createElement('li');
-        li.textContent = `${task.name} (Niveau ${task.niveau})`;
+        li.textContent = `${task.number} ${task.name} (Niveau ${task.niveau}, Gesamtanteil: ${task.ratio * 100}%)`;
         selectedList.appendChild(li);
       });
       body.appendChild(selectedList);
@@ -111,7 +111,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const completedList = document.createElement('ul');
       completedTasks.forEach(task => {
         const li = document.createElement('li');
-        li.textContent = `${task.name} (Niveau ${task.niveau})`;
+        li.textContent = `${task.number} ${task.name} (Niveau ${task.niveau}, Gesamtanteil: ${task.ratio * 100}%)`;
         completedList.appendChild(li);
       });
       body.appendChild(completedList);
@@ -124,7 +124,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const otherList = document.createElement('ul');
       otherTasks.forEach(task => {
         const li = document.createElement('li');
-        li.textContent = `${task.name} (Niveau ${task.niveau})`;
+        li.textContent = `${task.number} ${task.name} (Niveau ${task.niveau}, Gesamtanteil: ${task.ratio * 100}%)`;
         otherList.appendChild(li);
       });
       body.appendChild(otherList);

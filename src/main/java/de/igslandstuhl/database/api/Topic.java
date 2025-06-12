@@ -152,7 +152,7 @@ public class Topic {
     @Override
     public String toString() {
         return "{\"id\":" + id + ", \"name\": \"" + name + "\", \"subject\": " + subject + ", \"ratio\": " + ratio + ", \"grade\": " + grade
-                + ", \"tasks\": " + getTaskIds() + "}";
+                + ", \"tasks\": " + getTaskIds() + ", \"number\": " + number + "}";
     }
     
     public static void addTopic(String name, Subject subject, int ratio, int grade, int number) throws SQLException {
