@@ -155,8 +155,7 @@ public class Topic {
                 + ", \"tasks\": " + getTaskIds() + "}";
     }
     
-    public static void addTopic(String name, Subject subject, int ratio, int grade) throws SQLException {
-        Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getAddObjectProcess("topic", name, subject == null ? "-1" : String.valueOf(subject.getId()), String.valueOf(ratio), String.valueOf(grade)));
+    public static void addTopic(String name, Subject subject, int ratio, int grade, int number) throws SQLException {
+        Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getAddObjectProcess("topic", name, subject == null ? "-1" : String.valueOf(subject.getId()), String.valueOf(ratio), String.valueOf(grade), String.valueOf(number)));
     }
-    
 }

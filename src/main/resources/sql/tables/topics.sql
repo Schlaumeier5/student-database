@@ -6,5 +6,6 @@ CREATE TABLE IF NOT EXISTS topics (
     grade INTEGER NOT NULL,
     resource TEXT,
     number INTEGER NOT NULL,
-    UNIQUE(name, subject, grade)
+    UNIQUE(name, subject, grade),
+    UNIQUE(grade, subject, number)
 )
