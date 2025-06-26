@@ -1,33 +1,151 @@
 let studentData = null;
 
-document.addEventListener('DOMContentLoaded', async () => {
-  // Lade Basisdaten
-  const studentRes = await fetch('/mydata');
-  studentData = await studentRes.json();
+function createTaskList(tasks, labelText) {
+  const label = document.createElement('h4');
+  label.textContent = labelText;
+  const list = document.createElement('ul');
+  tasks.forEach(task => {
+    const li = document.createElement('li');
+    li.textContent = `${task.number} ${task.name} (Niveau ${task.niveau}, Gesamtanteil: ${task.ratio * 100}%)`;
+    list.appendChild(li);
+  });
+  return { label, list };
+}
 
-  const roomsRes = await fetch('/rooms');
-  const rooms = await roomsRes.json();
+function createRequestButton(subject, type, label) {
+  const btn = document.createElement('button');
+  btn.textContent = label;
+  btn.addEventListener('click', () => {
+    fetch('/subject_request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subjectId: subject.id, type })
+    }).then(() => {
+      btn.textContent = 'Anfrage gesendet';
+      btn.disabled = true;
+    });
+  });
+  return btn;
+}
 
-  const subjectsRes = await fetch('/mysubjects');
-  const subjects = await subjectsRes.json();
+async function fetchJson(url, options) {
+  const res = await fetch(url, options);
+  return await res.json();
+}
 
-  // Zeige Schülerdaten
+function setStudentInfo(studentData) {
   document.getElementById('student-name').textContent = `${studentData.firstName} ${studentData.lastName}`;
   document.getElementById('student-class').textContent = studentData.schoolClass.label;
   document.getElementById('student-email').textContent = studentData.email;
   const graduationLevels = ["Neustarter", "Starter", "Durchstarter", "Lernprofi"];
   document.getElementById('student-graduation').textContent = graduationLevels[studentData.graduationLevel];
+}
 
-  // Räume anzeigen
-  const roomSelect = document.getElementById('room');
+function populateRoomSelect(roomSelect, rooms, graduationLevel) {
   rooms.forEach(room => {
-    if (studentData.graduationLevel >= room.minimumLevel) {
+    if (graduationLevel >= room.minimumLevel) {
       const option = document.createElement('option');
       option.value = room.label;
       option.textContent = room.label;
       roomSelect.appendChild(option);
     }
   });
+}
+
+function createPanel(subject, studentData) {
+  const panel = document.createElement('div');
+  panel.className = 'subject-panel';
+
+  const header = document.createElement('h3');
+  header.textContent = subject.name;
+
+  const body = document.createElement('div');
+  body.className = 'panel-body';
+
+  header.addEventListener('click', async () => {
+    panel.classList.toggle('active');
+    if (panel.classList.contains('loaded')) return;
+    panel.classList.add('loaded');
+
+    // Load current topic for this subject
+    const topic = await fetchJson('/currenttopic', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subjectId: subject.id })
+    });
+
+    const topicTitle = document.createElement('p');
+    topicTitle.innerHTML = `<strong>Aktuelles Thema:</strong> ${topic.name} (${topic.number})`;
+    body.appendChild(topicTitle);
+
+    // Filter tasks for the current topic
+    const selectedTasks = studentData.selectedTasks.filter(
+      task => task.topic.id === topic.id
+    );
+    const completedTasks = studentData.completedTasks.filter(
+      task => task.topic.id === topic.id
+    );
+    let allTasks = [];
+    if (Array.isArray(topic.tasks) && topic.tasks.length > 0) {
+      allTasks = await fetchJson('/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: topic.tasks })
+      });
+    }
+
+    const otherTasks = allTasks.filter(
+      task =>
+        !selectedTasks.some(t => t.id === task.id) &&
+        !completedTasks.some(t => t.id === task.id)
+    );
+
+    // Current stage
+    const { label: selectedLabel, list: selectedList } = createTaskList(selectedTasks, 'Aktuelle Etappe:');
+    body.appendChild(selectedLabel);
+    body.appendChild(selectedList);
+
+    // Completed stages
+    const { label: completedLabel, list: completedList } = createTaskList(completedTasks, 'Abgeschlossene Etappen:');
+    body.appendChild(completedLabel);
+    body.appendChild(completedList);
+
+    // Other stages
+    const { label: otherLabel, list: otherList } = createTaskList(otherTasks, 'Weitere Etappen:');
+    body.appendChild(otherLabel);
+    body.appendChild(otherList);
+  });
+
+  // Request buttons
+  ['hilfe', 'partner', 'betreuung', 'gelingensnachweis'].forEach(type => {
+    const label = {
+      hilfe: 'Ich brauche Hilfe',
+      partner: 'Ich suche einen Partner',
+      betreuung: 'Ich brauche Betreuung für ein Experiment',
+      gelingensnachweis: 'Ich bin bereit für den Gelingensnachweis'
+    }[type];
+
+    const btn = createRequestButton(subject, type, label);
+    body.appendChild(btn);
+  });
+
+  panel.appendChild(header);
+  panel.appendChild(body);
+  return panel;
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  // Load base data
+  studentData = await fetchJson('/mydata');
+  const rooms = await fetchJson('/rooms');
+  const subjects = await fetchJson('/mysubjects');
+
+  // Show student info
+  setStudentInfo(studentData);
+
+  // Show rooms
+  const roomSelect = document.getElementById('room');
+  populateRoomSelect(roomSelect, rooms, studentData.graduationLevel);
 
   roomSelect.addEventListener('change', async () => {
     await fetch('/updateroom', {
@@ -37,126 +155,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  // Fächer anzeigen
+  // Show subjects
   const subjectList = document.getElementById('subject-list');
   subjects.forEach(subject => {
-    const panel = document.createElement('div');
-    panel.className = 'subject-panel';
-
-    const header = document.createElement('h3');
-    header.textContent = subject.name;
-
-    const body = document.createElement('div');
-    body.className = 'panel-body';
-
-    header.addEventListener('click', async () => {
-      panel.classList.toggle('active');
-      if (panel.classList.contains('loaded')) return;
-      panel.classList.add('loaded');
-
-      // Lade aktuelles Thema für dieses Fach
-      const res = await fetch('/currenttopic', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subjectId: subject.id })
-      });
-
-      const topic = await res.json();
-
-      const topicTitle = document.createElement('p');
-      topicTitle.innerHTML = `<strong>Aktuelles Thema:</strong> ${topic.name} (${topic.number})`;
-      body.appendChild(topicTitle);
-
-      // Lernjobs zum aktuellen Thema herausfiltern
-      const selectedTasks = studentData.selectedTasks.filter(
-        task => task.topic.id === topic.id
-      );
-      const completedTasks = studentData.completedTasks.filter(
-        task => task.topic.id === topic.id
-      );
-      let allTasks = [];
-      if (Array.isArray(topic.tasks) && topic.tasks.length > 0) {
-        const tasksRes = await fetch('/tasks', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ids: topic.tasks })
-        });
-        allTasks = await tasksRes.json();
-      }
-
-      const otherTasks = allTasks.filter(
-        task =>
-          !selectedTasks.some(t => t.id === task.id) &&
-          !completedTasks.some(t => t.id === task.id)
-      );
-
-      // Aktuelle Etappe
-      const selectedLabel = document.createElement('h4');
-      selectedLabel.textContent = 'Aktuelle Etappe:';
-      body.appendChild(selectedLabel);
-
-      const selectedList = document.createElement('ul');
-      selectedTasks.forEach(task => {
-        const li = document.createElement('li');
-        li.textContent = `${task.number} ${task.name} (Niveau ${task.niveau}, Gesamtanteil: ${task.ratio * 100}%)`;
-        selectedList.appendChild(li);
-      });
-      body.appendChild(selectedList);
-
-      // Abgeschlossene Etappen
-      const completedLabel = document.createElement('h4');
-      completedLabel.textContent = 'Abgeschlossene Etappen:';
-      body.appendChild(completedLabel);
-
-      const completedList = document.createElement('ul');
-      completedTasks.forEach(task => {
-        const li = document.createElement('li');
-        li.textContent = `${task.number} ${task.name} (Niveau ${task.niveau}, Gesamtanteil: ${task.ratio * 100}%)`;
-        completedList.appendChild(li);
-      });
-      body.appendChild(completedList);
-
-      // Weitere Etappen
-      const otherLabel = document.createElement('h4');
-      otherLabel.textContent = 'Weitere Etappen:';
-      body.appendChild(otherLabel);
-
-      const otherList = document.createElement('ul');
-      otherTasks.forEach(task => {
-        const li = document.createElement('li');
-        li.textContent = `${task.number} ${task.name} (Niveau ${task.niveau}, Gesamtanteil: ${task.ratio * 100}%)`;
-        otherList.appendChild(li);
-      });
-      body.appendChild(otherList);
-    });
-
-    // Anfrage-Buttons
-    ['hilfe', 'partner', 'betreuung', 'gelingensnachweis'].forEach(type => {
-      const label = {
-        hilfe: 'Ich brauche Hilfe',
-        partner: 'Ich suche einen Partner',
-        betreuung: 'Ich brauche Betreuung für ein Experiment',
-        gelingensnachweis: 'Ich bin bereit für den Gelingensnachweis'
-      }[type];
-
-      const btn = document.createElement('button');
-      btn.textContent = label;
-      btn.addEventListener('click', () => {
-        fetch('/subject_request', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ subjectId: subject.id, type })
-        }).then(() => {
-          btn.textContent = 'Anfrage gesendet';
-          btn.disabled = true;
-        });
-      });
-
-      body.appendChild(btn);
-    });
-
-    panel.appendChild(header);
-    panel.appendChild(body);
+    const panel = createPanel(subject, studentData);
     subjectList.appendChild(panel);
   });
 });
