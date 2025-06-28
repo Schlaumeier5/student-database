@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
@@ -118,7 +119,7 @@ public class ResourceHelper{
                     throw new IllegalStateException(e);
                 }
             } else {
-                readers.add(new BufferedReader(new InputStreamReader(ResourceHelper.class.getResourceAsStream(resource))));
+                readers.add(new BufferedReader(new InputStreamReader(ResourceHelper.class.getResourceAsStream(resource), StandardCharsets.UTF_8)));
             }
         }
         BufferedReader[] arr = new BufferedReader[readers.size()];
@@ -129,7 +130,7 @@ public class ResourceHelper{
         return ResourceHelper.class.getResourceAsStream(url);
     }
     public static String readResourceCompletely(ResourceLocation location) {
-        return readResourceCompletely(new BufferedReader(new InputStreamReader(openResourceAsStream(location))));
+        return readResourceCompletely(new BufferedReader(new InputStreamReader(openResourceAsStream(location), StandardCharsets.UTF_8)));
     }
     public static String readResourceCompletely(BufferedReader in) {
         StringBuilder builder = new StringBuilder();

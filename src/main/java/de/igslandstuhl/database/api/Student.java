@@ -150,7 +150,10 @@ public class Student extends User {
         builder.append("\"graduationLevel\": ");builder.append(graduationLevel);builder.append(",\n");
         builder.append("\"selectedTasks\": ");builder.append(selectedTasks);builder.append(",\n");
         builder.append("\"completedTasks\": ");builder.append(completedTasks);builder.append(",\n");
-        builder.append("\"currentRoom\": ");builder.append(String.valueOf(currentRoom));builder.append("\n");
+        builder.append("\"currentRoom\": ");builder.append(String.valueOf(currentRoom));builder.append(",\n");
+        builder.append("\"currentRequests\": {");builder.append(currentRequests.entrySet().stream()
+            .map(entry -> "\"" + entry.getKey() + "\": \"" + entry.getValue() + "\"")
+            .reduce((a, b) -> a + ", " + b).orElse("")).append("}\n");
         builder.append("}");
         return builder.toString();
     }

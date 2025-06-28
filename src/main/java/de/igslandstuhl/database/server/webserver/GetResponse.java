@@ -84,13 +84,13 @@ public class GetResponse {
                     if (resource == null) throw new NullPointerException();
                 }
             }
-            out.print("HTTP/1.1 ");status.write(out);out.println();
+            out.print("HTTP/1.1 "); status.write(out); out.println();
             if (contentType != null) {
                 out.print("Content-Type: "); out.print(contentType.getName());
                 out.print("; charset="); out.println(charset);
-                out.println();
-                out.println(resource);
             }
+            out.println(); // <--- Diese Zeile ist wichtig: trennt Header von Body!
+            out.println(resource);
         } catch (NullPointerException e) {
             notFound().respond(out);
         } catch (Exception e) {

@@ -2,8 +2,6 @@ package de.igslandstuhl.database.server.webserver;
 
 import java.io.PrintWriter;
 
-import de.igslandstuhl.database.server.resources.ResourceLocation;
-
 public class PostResponse {
     private final int statusCode;
     private final String statusMessage;
@@ -37,5 +35,9 @@ public class PostResponse {
 
     public static PostResponse unauthorized(String message) {
         return new PostResponse(401, "Unauthorized", message, "text/plain");
+    }
+
+    public static PostResponse internalServerError(String message) {
+        return new PostResponse(500, "Internal Server Error", message, "text/plain");
     }
 }

@@ -15,13 +15,21 @@ function createTaskList(tasks, labelText) {
 function createRequestButton(subject, type, label) {
   const btn = document.createElement('button');
   btn.textContent = label;
+
+  // Disable if there is already a current request for this subject and type
+  if (
+    studentData.currentRequests &&
+    studentData.currentRequests[subject.id] === type
+  ) {
+    btn.disabled = true;
+  }
+
   btn.addEventListener('click', () => {
     fetch('/subject_request', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ subjectId: subject.id, type })
     }).then(() => {
-      btn.textContent = 'Anfrage gesendet';
       btn.disabled = true;
     });
   });
@@ -42,6 +50,7 @@ function setStudentInfo(studentData) {
 }
 
 function populateRoomSelect(roomSelect, rooms, graduationLevel) {
+  roomSelect.innerHTML = ""; // clear previous options if any
   rooms.forEach(room => {
     if (graduationLevel >= room.minimumLevel) {
       const option = document.createElement('option');
@@ -146,6 +155,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Show rooms
   const roomSelect = document.getElementById('room');
   populateRoomSelect(roomSelect, rooms, studentData.graduationLevel);
+
+  // Wait for the browser to render (next tick)
+  setTimeout(() => {
+    if (studentData.currentRoom && studentData.currentRoom.label) {
+      roomSelect.value = studentData.currentRoom.label;
+    }
+  }, 0);
 
   roomSelect.addEventListener('change', async () => {
     await fetch('/updateroom', {

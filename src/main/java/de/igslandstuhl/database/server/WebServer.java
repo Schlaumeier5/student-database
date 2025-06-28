@@ -1,6 +1,8 @@
 package de.igslandstuhl.database.server;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+
 import javax.net.ssl.*;
 
 import com.google.gson.Gson;
@@ -16,6 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import de.igslandstuhl.database.api.Room;
 import de.igslandstuhl.database.api.Student;
 import de.igslandstuhl.database.api.Subject;
 import de.igslandstuhl.database.api.Task;
@@ -62,7 +65,7 @@ public class WebServer implements Runnable {
         public void run() {
             PrintWriter out;
             try {
-                out = new PrintWriter(clientSocket.getOutputStream(), true);
+                out = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8), true);
             } catch (IOException e) {
                 e.printStackTrace();
                 return;
@@ -85,6 +88,8 @@ public class WebServer implements Runnable {
                     handleCurrentTopic(in, out, request);
                 } else if (request.startsWith("POST /tasks")) {
                     handleTasks(in, out, request);
+                } else if (request.startsWith("POST /updateroom")) {
+                    handleUpdateRoom(in, out, request);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -265,6 +270,47 @@ public class WebServer implements Runnable {
             response = PostResponse.badRequest("Missing or invalid 'ids' in request body.");
             } else {
             response = PostResponse.unauthorized("Not logged in or invalid session");
+            }
+            response.respond(out);
+        }
+
+        private void handleUpdateRoom(BufferedReader in, PrintWriter out, String request) throws IOException {
+            int contentLength = 0;
+            for (String line : request.split("\n")) {
+                if (line.startsWith("Content-Length:")) {
+                    contentLength = Integer.parseInt(line.split(":")[1].trim());
+                }
+            }
+            if (contentLength <= 0) {
+                PostResponse.badRequest("Missing or invalid Content-Length!").respond(out);
+                return;
+            }
+            char[] bodyChars = new char[contentLength];
+            in.read(bodyChars, 0, contentLength);
+            String body = new String(bodyChars);
+
+            Gson gson = new Gson();
+            java.lang.reflect.Type mapType = new TypeToken<Map<String, Object>>(){}.getType();
+            Map<String, Object> json = gson.fromJson(body, mapType);
+            String roomLabel = (String) json.get("room");
+
+            String user = getSessionUser(request);
+            Student student = User.getUser(user) instanceof Student ? (Student) User.getUser(user) : null;
+            PostResponse response;
+            if (student != null && roomLabel != null) {
+                try {
+                    Room room = Room.getRoom(roomLabel);
+                    if (room != null) {
+                        student.setCurrentRoom(room);
+                        response = PostResponse.ok("{\"status\":\"ok\"}", "application/json");
+                    } else {
+                        response = PostResponse.badRequest("Room not found.");
+                    }
+                } catch (Exception e) {
+                    response = PostResponse.internalServerError(e.getMessage());
+                }
+            } else {
+                response = PostResponse.unauthorized("Not logged in or invalid session");
             }
             response.respond(out);
         }
