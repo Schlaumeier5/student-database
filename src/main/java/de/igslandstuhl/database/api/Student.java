@@ -267,7 +267,27 @@ public class Student extends User {
         builder.append("\"currentRoom\": ");builder.append(String.valueOf(currentRoom));builder.append(",\n");
         builder.append("\"currentRequests\": {");builder.append(currentRequests.entrySet().stream()
             .map(entry -> "\"" + entry.getKey() + "\": \"" + entry.getValue() + "\"")
-            .reduce((a, b) -> a + ", " + b).orElse("")).append("}\n");
+            .reduce((a, b) -> a + ", " + b).orElse("")).append("},\n");
+        builder.append("\"currentProgress\": {");
+        for (Map.Entry<Subject, Topic> entry : currentTopics.entrySet()) {
+            builder.append("\"").append(entry.getKey().getName()).append("\": ");
+            builder.append("{\"topic\": ").append(entry.getValue().getId()).append(", ");
+            builder.append("\"progress\": ").append(getCurrentProgress(entry.getKey())).append("}, ");
+        }
+        if (!currentTopics.isEmpty()) {
+            builder.setLength(builder.length() - 2); // Remove trailing comma and space
+        }
+        builder.append("},\n");
+        builder.append("\"predictedProgress\": {");
+        for (Map.Entry<Subject, Topic> entry : currentTopics.entrySet()) {
+            builder.append("\"").append(entry.getKey().getName()).append("\": ");
+            builder.append("{\"topic\": ").append(entry.getValue().getId()).append(", ");
+            builder.append("\"predictedProgress\": ").append(getPredictedProgress(entry.getKey())).append("}, ");
+        }
+        if (!currentTopics.isEmpty()) {
+            builder.setLength(builder.length() - 2); // Remove trailing comma and space
+        }
+        builder.append("}\n");
         builder.append("}");
         return builder.toString();
     }

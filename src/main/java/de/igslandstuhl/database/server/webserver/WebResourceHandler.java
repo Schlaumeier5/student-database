@@ -11,7 +11,7 @@ import de.igslandstuhl.database.server.resources.ResourceLocation;
  */
 public final class WebResourceHandler {
     private static final String[] SQL_WEB_RESOURCES = {"/mydata", "/rooms", "/mysubjects"};
-    private static String[] userOnlySpace = {"dashboard", "fetch_data.js"};
+    private static String[] userOnlySpace = {"dashboard", "build_dashboard.js", "results", "build_results.js"};
     private static String[] teacherOnlySpace = {};
     private WebResourceHandler(){}
 
