@@ -5,62 +5,99 @@ import java.io.PrintWriter;
 import de.igslandstuhl.database.server.resources.ResourceHelper;
 import de.igslandstuhl.database.server.resources.ResourceLocation;
 
+/**
+ * Represents a response to a GET request in the web server.
+ */
 public class GetResponse {
-    public enum Status {
-        OK (200, "OK"),
-        BAD_REQUEST(400, "Bad Request"),
-        UNAUTHORIZED(401, "Unauthorized"),
-        FORBIDDEN (403, "Forbidden"),
-        NOT_FOUND(404, "Not Found"),
-        METHOD_NOT_ALLOWED(405, "Method Not Allowed"),
-        I_AM_A_TEAPOT(418, "I'm a teapot"),
-        INTERNAL_SERVER_ERROR(500, "Internal Server Error")
-        ;
-        private final int code;
-        private final String name;
-        private Status(int code, String name) {
-            this.code = code;
-            this.name = name;
-        }
-        public int getCode() {
-            return code;
-        }
-        public String getName() {
-            return name;
-        }
-        public void write(PrintWriter out) {
-            out.print(code);out.print(" ");out.print(name);
-        }
-    }
-
+    /**
+     * Represents a response for a GET request that was not found.
+     */
     private static final GetResponse NOT_FOUND = new GetResponse(Status.NOT_FOUND, new ResourceLocation("html", "errors", "404.html"), ContentType.HTML, "");
+    /**
+     * Returns a response for a GET request that was not found.
+     * @return the GetResponse object
+     */
     public static GetResponse notFound() {
         return NOT_FOUND;
     }
+    /**
+     * Represents a response for a GET request that resulted in an internal error.
+     */
     private static final GetResponse INTERNAL_ERROR = new GetResponse(Status.INTERNAL_SERVER_ERROR, new ResourceLocation("html", "errors", "500.html"), ContentType.HTML, "");
+    /**
+     * Returns a response for a GET request that resulted in an internal error.
+     * @return the GetResponse object
+     */
     public static GetResponse internalServerError() {
         return INTERNAL_ERROR;
     }
+    /**
+     * Represents a response for a GET request the user has no access to.
+     */
     private static final GetResponse FORBIDDEN = new GetResponse(Status.FORBIDDEN, new ResourceLocation("html", "errors", "403.html"), ContentType.HTML, "");
+    /**
+     * Returns a response for a GET request the user has no access to.
+     * @return the GetRequest object
+     */
     public static GetResponse forbidden() {
         return FORBIDDEN;
     }
+    /**
+     * Represents a response for a GET request the user must be logged in for.
+     */
     private static final GetResponse UNAUTHORIZED = new GetResponse(Status.UNAUTHORIZED, new ResourceLocation("html", "errors", "401.html"), ContentType.HTML, "");
+    /**
+     * Returns a response for a GET request the user must be logged in for.
+     * @return the GetResponse object
+     */
     public static GetResponse unauthorized() {
         return UNAUTHORIZED;
     }
+    /**
+     * The HTTP status of this response
+     * @see Status
+     */
     private final Status status;
+    /**
+     * The location of the resource to be returned.
+     */
     private final ResourceLocation resourceLocation;
+    /**
+     * The HTTP content type of the resource.
+     * @see ContentType
+     */
     private final ContentType contentType;
+    /**
+     * The character set used for the response.
+     * This is always UTF-8.
+     */
     private final String charset = "UTF-8";
+    /**
+     * The user who made the request.
+     * This is used to check access permissions.
+     */
     private final String user;
+
+    /**
+     * Creates a new GetResponse with the given parameters.
+     * This constructor is used to create a response for a GET request.
+     * @param status the HTTP status of the response
+     * @param resourceLocation the location of the resource to be returned
+     * @param contentType the HTTP content type of the resource
+     * @param user the user who made the request
+     */
     public GetResponse(Status status, ResourceLocation resourceLocation, ContentType contentType, String user) {
         this.status = status;
         this.resourceLocation = resourceLocation;
         this.contentType = contentType;
         this.user = user;
     }
-
+    /**
+     * Returns a response for a GET request for the given resource.
+     * @param resourceLocation the location of the resource to be returned
+     * @param user the user who made the request
+     * @return the GetResponse object
+     */
     public static GetResponse getResource(ResourceLocation resourceLocation, String user) {
         try {
             if (AccessManager.hasAccess(user, resourceLocation)) {
@@ -73,6 +110,11 @@ public class GetResponse {
         }
     }
 
+    /**
+     * Responds to the GET request by writing the response to the given PrintWriter.
+     * This method formats the HTTP response header and body, including the status, content type, and resource.
+     * @param out the PrintWriter to write the response to
+     */
     public void respond(PrintWriter out) {
         try {
             String resource = "";

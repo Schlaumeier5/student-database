@@ -22,20 +22,17 @@ import java.util.zip.ZipFile;
 import de.igslandstuhl.database.server.Server;
 
 /**
- * list resources available from the classpath @ *
+ * Helper class for managing resources in the application.
  */
 public class ResourceHelper{
-
     /**
-     * for all elements of java.class.path get a Collection of resources Pattern
+     * For all elements of java.class.path get a Collection of resources Pattern
      * pattern = Pattern.compile(".*"); gets all resources
-     * 
-     * @param pattern
-     *            the pattern to match
+     *
+     * @param pattern the pattern to match
      * @return the resources in the order they are found
      */
-    public static Collection<String> getResources(
-        final Pattern pattern){
+    public static Collection<String> getResources(final Pattern pattern){
         final ArrayList<String> retval = new ArrayList<String>();
         final String classPath = System.getProperty("java.class.path", ".");
         final String[] classPathElements = classPath.split(System.getProperty("path.separator"));
@@ -44,10 +41,15 @@ public class ResourceHelper{
         }
         return retval;
     }
-
-    private static Collection<String> getResources(
-        final String element,
-        final Pattern pattern){
+    /**
+     * for a single element of java.class.path get a Collection of resources
+     * Pattern pattern = Pattern.compile(".*"); gets all resources
+     *
+     * @param element the class path element to search in
+     * @param pattern the pattern to match
+     * @return the resources in the order they are found
+     */
+    private static Collection<String> getResources(final String element, final Pattern pattern){
         final ArrayList<String> retval = new ArrayList<String>();
         final File file = new File(element);
         if(file.isDirectory()){
@@ -57,7 +59,13 @@ public class ResourceHelper{
         }
         return retval;
     }
-
+    /**
+     * Get all resources from a jar file or a directory that match the given pattern.
+     * 
+     * @param file the jar file or directory to search in
+     * @param pattern the pattern to match
+     * @return the resources in the order they are found
+     */
     private static Collection<String> getResourcesFromJarFile(
         final File file,
         final Pattern pattern){
@@ -86,7 +94,13 @@ public class ResourceHelper{
         }
         return retval;
     }
-
+    /**
+     * Get all resources from a directory that match the given pattern.
+     * 
+     * @param directory the directory to search in
+     * @param pattern the pattern to match
+     * @return the resources in the order they are found
+     */
     private static Collection<String> getResourcesFromDirectory(
         final File directory,
         final Pattern pattern){
@@ -109,6 +123,14 @@ public class ResourceHelper{
         }
         return retval;
     }
+    /**
+     * Opens resources that match the given pattern as BufferedReader.
+     * If the resource is a file on the local filesystem, it is opened using FileReader.
+     * If the resource is in a jar file or on the classpath, it is opened using InputStreamReader.
+     *
+     * @param pattern the pattern to match
+     * @return an array of BufferedReaders for the matching resources
+     */
     public static BufferedReader[] openResourcesAsReader(Pattern pattern) {
         List<BufferedReader> readers = new ArrayList<>();
         for (String resource : getResources(pattern)) {
@@ -125,13 +147,34 @@ public class ResourceHelper{
         BufferedReader[] arr = new BufferedReader[readers.size()];
         return readers.toArray(arr);
     }
+    /**
+     * Opens a resource as an InputStream.
+     * The resource is identified by its location, which includes context, namespace, and resource name.
+     *
+     * @param location the ResourceLocation object representing the resource
+     * @return an InputStream for the resource
+     */
     public static InputStream openResourceAsStream(ResourceLocation location) {
         String url = "/" + location.context() + "/" + location.namespace() + "/" + location.resource();
         return ResourceHelper.class.getResourceAsStream(url);
     }
+    /**
+     * Reads the content of a resource completely as a String.
+     * The resource is identified by its location, which includes context, namespace, and resource name.
+     *
+     * @param location the ResourceLocation object representing the resource
+     * @return the content of the resource as a String
+     */
     public static String readResourceCompletely(ResourceLocation location) {
         return readResourceCompletely(new BufferedReader(new InputStreamReader(openResourceAsStream(location), StandardCharsets.UTF_8)));
     }
+    /**
+     * Reads the content of a BufferedReader completely as a String.
+     * This method reads all lines from the BufferedReader and concatenates them into a single String.
+     *
+     * @param in the BufferedReader to read from
+     * @return the content of the BufferedReader as a String
+     */
     public static String readResourceCompletely(BufferedReader in) {
         StringBuilder builder = new StringBuilder();
         in.lines().forEach((s) -> {
@@ -139,6 +182,15 @@ public class ResourceHelper{
         });
         return builder.toString();
     }
+    /**
+     * Reads a resource until an empty line is encountered.
+     * This method reads lines from the BufferedReader until it encounters an empty line,
+     * and returns the content read so far as a String.
+     *
+     * @param in the BufferedReader to read from
+     * @return the content read until an empty line is encountered
+     * @throws IOException if an I/O error occurs
+     */
     public static String readResourceTillEmptyLine(BufferedReader in) throws IOException {
         StringBuilder builder = new StringBuilder();
         Stream<String> lines = in.lines();
@@ -151,6 +203,14 @@ public class ResourceHelper{
         }
         return builder.toString();
     }
+    /**
+     * Reads a virtual resource based on the user's context and location.
+     * If the resource is not virtual or does not match the expected namespace, it returns null.
+     *
+     * @param user the username of the user requesting the resource
+     * @param location the ResourceLocation object representing the virtual resource
+     * @return the content of the virtual resource as a String, or null if not applicable
+     */
     public static String readVirtualResource(String user, ResourceLocation location) {
         if (!location.isVirtual()) {
             return null;

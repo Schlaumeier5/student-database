@@ -5,19 +5,66 @@ import java.util.*;
 import de.igslandstuhl.database.server.Server;
 import de.igslandstuhl.database.server.sql.SQLHelper;
 
+/**
+ * Represents a teacher in the student database.
+ * Teachers can teach multiple classes and have a unique ID, first name, last name, email, and password hash.
+ */
 public class Teacher extends User {
+    /**
+     * SQL fields for the Teacher table.
+     * Used for database queries to retrieve teacher information.
+     */
     private static final String[] SQL_FIELDS = new String[] {"id", "first_name", "last_name", "email", "password"};
+    /**
+     * SQL fields for the teacher-to-class relationship.
+     * Used to retrieve classes associated with a teacher.
+     */
     private static final String[] CLASS_FIELDS = new String[] {"class_id"};
+    /**
+     * A map to cache teachers by their unique identifier.
+     * This helps avoid repeated database queries for the same teacher.
+     */
     private static final Map<Integer, Teacher> teachers = new HashMap<>();
+    /**
+     * A map to cache teachers by their email address.
+     * This allows quick retrieval of a teacher by their email.
+     */
     private static final Map<String, Teacher> teachersByEmail = new HashMap<>();
 
+    /**
+     * The unique identifier for the teacher.
+     */
     private int id;
+    /**
+     * The first name of the teacher.
+     */
     private String firstName;
+    /**
+     * The last name of the teacher.
+     */
     private String lastName;
+    /**
+     * The email address of the teacher.
+     */
     private String email;
+    /**
+     * The password hash for the teacher's account.
+     */
     private String passwordHash;
+    /**
+     * The set of class IDs that this teacher is associated with.
+     */
     private Set<Integer> classIds = new HashSet<>(); // IDs of classes this teacher teaches
 
+    /**
+     * Constructs a new Teacher.
+     *
+     * @param id          the unique identifier for the teacher
+     * @param firstName   the first name of the teacher
+     * @param lastName    the last name of the teacher
+     * @param email       the email address of the teacher
+     * @param passwordHash the hashed password for the teacher's account
+     */
     public Teacher(int id, String firstName, String lastName, String email, String passwordHash) {
         this.id = id;
         this.firstName = firstName;
@@ -26,14 +73,53 @@ public class Teacher extends User {
         this.passwordHash = passwordHash;
     }
 
+    /**
+     * Returns the unique identifier of the teacher.
+     * This is used to identify the teacher in various operations.
+     *
+     * @return the unique identifier of the teacher
+     */
     public int getId() { return id; }
+    /**
+     * Returns the first name of the teacher.
+     *
+     * @return the first name of the teacher
+     */
     public String getFirstName() { return firstName; }
+    /**
+     * Returns the last name of the teacher.
+     *
+     * @return the last name of the teacher
+     */
     public String getLastName() { return lastName; }
+    /**
+     * Returns the email address of the teacher.
+     *
+     * @return the email address of the teacher
+     */
     public String getEmail() { return email; }
+    /**
+     * Returns the password hash of the teacher.
+     * This is used for authentication purposes.
+     *
+     * @return the password hash of the teacher
+     */
     @Override
     public String getPasswordHash() { return passwordHash; }
 
+    /**
+     * Returns the set of class IDs that this teacher is associated with.
+     * This allows retrieval of all classes taught by the teacher.
+     *
+     * @return a set of class IDs
+     */
     public Set<Integer> getClassIds() { return new HashSet<>(classIds); }
+    /**
+     * Adds a class ID to the set of classes this teacher teaches.
+     * This method is used to associate a new class with the teacher.
+     *
+     * @param classId the unique identifier of the class to add
+     */
     public void addClassId(int classId) { classIds.add(classId); }
 
     @Override
@@ -49,7 +135,12 @@ public class Teacher extends User {
         );
     }
 
-    // Get all students for this teacher (by class)
+    /**
+     * Retrieves all students taught by this teacher.
+     * This method iterates through all classes associated with the teacher
+     *
+     * @return a list of students taught by this teacher
+     */
     public List<Student> getMyStudents() {
         List<Student> students = new ArrayList<>();
         for (int classId : classIds) {
@@ -63,6 +154,13 @@ public class Teacher extends User {
 
     // --- Static DB logic ---
 
+    /**
+     * Creates a Teacher object from SQL query result fields.
+     * This method is used to convert database query results into a Teacher object.
+     *
+     * @param fields the fields retrieved from the database
+     * @return a Teacher object constructed from the provided fields
+     */
     private static Teacher fromSQL(String[] fields) {
         int id = Integer.parseInt(fields[0]);
         String firstName = fields[1];
@@ -71,7 +169,14 @@ public class Teacher extends User {
         String passwordHash = fields[4];
         return new Teacher(id, firstName, lastName, email, passwordHash);
     }
-
+    /**
+     * Retrieves a Teacher by their unique identifier.
+     * If the teacher is cached, it returns the cached version.
+     * Otherwise, it queries the database for the teacher.
+     *
+     * @param id the unique identifier of the teacher
+     * @return the Teacher object if found, or null if not found
+     */
     public static Teacher get(int id) {
         if (teachers.containsKey(id)) return teachers.get(id);
         try {
@@ -86,7 +191,14 @@ public class Teacher extends User {
             return null;
         }
     }
-
+    /**
+     * Retrieves a Teacher by their email address.
+     * If the teacher is cached, it returns the cached version.
+     * Otherwise, it queries the database for the teacher.
+     *
+     * @param email the email address of the teacher
+     * @return the Teacher object if found, or null if not found
+     */
     public static Teacher fromEmail(String email) {
         if (email == null) return null;
         if (teachersByEmail.containsKey(email)) return teachersByEmail.get(email);
@@ -102,7 +214,12 @@ public class Teacher extends User {
             return null;
         }
     }
-
+    /**
+     * Retrieves all teachers from the database.
+     * This method queries the database for all teachers and returns a list of Teacher objects.
+     *
+     * @return a list of all teachers
+     */
     public static List<Teacher> getAll() {
         List<Teacher> all = new ArrayList<>();
         try {
@@ -119,7 +236,17 @@ public class Teacher extends User {
         return all;
     }
 
-    // Register a new teacher
+    /**
+     * Registers a new teacher in the database.
+     * This method adds a new teacher with the provided details and returns the created Teacher object.
+     *
+     * @param firstName the first name of the teacher
+     * @param lastName  the last name of the teacher
+     * @param email     the email address of the teacher
+     * @param password  the password for the teacher's account
+     * @return the newly created Teacher object
+     * @throws SQLException if there is an error during database operations
+     */
     public static Teacher registerTeacher(String firstName, String lastName, String email, String password) throws SQLException {
         String passwordHash = User.passHash(password);
         Server.getInstance().getConnection().executeVoidProcessSecure(
@@ -129,7 +256,11 @@ public class Teacher extends User {
         return fromEmail(email);
     }
 
-    // Load classes this teacher teaches
+    /**
+     * Loads the classes taught by this teacher.
+     * This method retrieves all class IDs associated with the teacher from the database.
+     * It populates the classIds set with these IDs for further operations.
+     */
     private void loadClasses() {
         classIds.clear();
         try {
@@ -142,7 +273,12 @@ public class Teacher extends User {
         }
     }
 
-    // Add a class to this teacher
+    /**
+     * Adds a class to this teacher.
+     *
+     * @param classId the ID of the class to add
+     * @throws SQLException if there is an error during database operations
+     */
     public void addClass(int classId) throws SQLException {
         if (classIds.contains(classId)) return;
         Server.getInstance().getConnection().executeVoidProcessSecure(

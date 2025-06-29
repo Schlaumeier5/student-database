@@ -7,40 +7,104 @@ import java.util.List;
 import de.igslandstuhl.database.server.Server;
 import de.igslandstuhl.database.server.sql.SQLHelper;
 
+/**
+ * Represents a school class with its associated subjects and students.
+ * Provides methods to fetch subjects and students from the database.
+ */
 public class SchoolClass {
+    /**
+     * SQL fields for the SchoolClass table.
+     * Used for database queries to retrieve class information.
+     */
     private static final String[] SQL_FIELDS = {"id", "label", "grade"};
+    /**
+     * A list to store subjects associated with this class.
+     * Subjects are fetched from the database when needed.
+     */
     private final List<Subject> subjects = new ArrayList<>();
+    /**
+     * The unique identifier for the class.
+     */
     private final int id;
+    /**
+     * The label of the class, which is a human-readable name.
+     */
     private final String label;
+    /**
+     * The grade level of the class, indicating the year or level of education.
+     */
     private final int grade;
 
+    /**
+     * Constructs a SchoolClass instance with the specified id, label, and grade.
+     *
+     * @param id    The unique identifier for the class.
+     * @param label The label of the class.
+     * @param grade The grade level of the class.
+     */
     private SchoolClass(int id, String label, int grade) {
         this.id = id;
         this.label = label;
         this.grade = grade;
     }
 
+    /**
+     * Returns the unique identifier of the class.
+     * This is used to identify the class in various operations.
+     *
+     * @return the id of the class
+     */
     public int getId() {
         return id;
     }
+    /**
+     * Returns the label of the class.
+     * This is used to display the class name in user interfaces.
+     *
+     * @return the label of the class
+     */
     public String getLabel() {
         return label;
     }
+    /**
+     * Returns the grade level of the class.
+     * This is used to determine the educational level of the class.
+     *
+     * @return the grade level of the class
+     */
     public int getGrade() {
         return grade;
     }
 
+    /**
+     * Fetches all subjects associated with this class from the database.
+     * This method retrieves subjects based on the class's grade level.
+     *
+     * @throws SQLException if there is an error accessing the database
+     */
     public void fetchAllSubjects() throws SQLException {
         Server.getInstance().processRequest((fields) -> {
             Subject subject = Subject.fromSQLFields(fields);
             subjects.add(subject);
         }, "get_subjects_by_grade", Subject.SQL_FIELDS, String.valueOf(grade));
     }
+    /**
+     * Checks if subjects have already been fetched; if not, fetches them.
+     * This method ensures that subjects are loaded only once and avoids unnecessary database calls.
+     *
+     * @throws SQLException if there is an error accessing the database
+     */
     public void fetchAllSubjectsIfNotExists() throws SQLException {
         if (subjects.size() == 0) {
             fetchAllSubjects();
         }
     }
+    /**
+     * Returns a list of subjects associated with this class.
+     * If subjects have not been fetched yet, it fetches them from the database.
+     *
+     * @return a list of subjects for this class
+     */
     public List<Subject> getSubjects() {
         try {
             fetchAllSubjectsIfNotExists();
@@ -50,6 +114,12 @@ public class SchoolClass {
         return subjects;
     }
 
+    /**
+     * Retrieves a list of students enrolled in this class from the database.
+     * This method queries the database for students associated with the class's id.
+     *
+     * @return a list of students in this class
+     */
     public List<Student> getStudents() {
         List<Student> students = new ArrayList<>();
         try {
@@ -66,13 +136,26 @@ public class SchoolClass {
         return students;
     }
 
+    /**
+     * Converts a SQL result array into a SchoolClass object.
+     * This method is used to create a SchoolClass instance from the database query results.
+     *
+     * @param sqlResult the result of a SQL query as an array of strings
+     * @return a SchoolClass object constructed from the SQL result
+     */
     private static SchoolClass fromSQL(String[] sqlResult) {
         int id = Integer.parseInt(sqlResult[0]);
         String label = sqlResult[1];
         int grade = Integer.parseInt(sqlResult[2]);
         return new SchoolClass(id, label, grade);
     }
-
+    /**
+     * Retrieves a SchoolClass by its unique identifier from the database.
+     * This method queries the database for a class with the specified id.
+     *
+     * @param id the unique identifier of the class
+     * @return a SchoolClass object if found, or null if not found
+     */
     public static SchoolClass get(int id) {
         try {
             return Server.getInstance().processSingleRequest(SchoolClass::fromSQL, "get_class_by_id", SQL_FIELDS, String.valueOf(id));
@@ -86,7 +169,14 @@ public class SchoolClass {
     public String toString() {
         return "{\"id\": " + id + ", \"label\": \"" + label + "\", \"grade\": " + grade + "}";
     }
-
+/**
+     * Adds a new class to the database with the specified label and grade.
+     * This method constructs a SQL insert statement to add a new class record.
+     *
+     * @param label the label of the class
+     * @param grade the grade level of the class
+     * @throws SQLException if there is an error accessing the database
+     */
     public static void addClass(String label, int grade) throws SQLException {
         Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getAddObjectProcess("class", label, String.valueOf(grade)));
     }

@@ -4,6 +4,11 @@ import java.util.Arrays;
 
 import de.igslandstuhl.database.server.resources.ResourceLocation;
 
+/**
+ * Handles the mapping of web resource paths to resource locations.
+ * This class provides methods to determine if a path is a SQL web resource,
+ * and to convert paths into ResourceLocation objects.
+ */
 public final class WebResourceHandler {
     private static final String[] SQL_WEB_RESOURCES = {"/mydata", "/rooms", "/mysubjects"};
     private static String[] userOnlySpace = {"dashboard", "fetch_data.js"};

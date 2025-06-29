@@ -8,10 +8,32 @@ import de.igslandstuhl.database.server.Server;
 import de.igslandstuhl.database.server.resources.ResourceHelper;
 import de.igslandstuhl.database.server.resources.ResourceLocation;
 
+/**
+ * Helper class for SQL operations.
+ */
 public class SQLHelper {
+    /**
+     * Context for SQL resources.
+     * This is used to identify the context of SQL queries and pushes.
+     */
     public static final String CONTEXT = "sql";
+    /**
+     * Subdirectory for SQL queries.
+     * This is used to organize SQL query files.
+     */
     public static final String QUERIES = "queries";
+    /**
+     * Subdirectory for SQL pushes.
+     * This is used to organize SQL push files.
+     */
     public static final String PUSHES = "pushes";
+    /**
+     * Gets an SQL query by its name and replaces placeholders with provided arguments.
+     *
+     * @param queryName the name of the SQL query file (without extension)
+     * @param args      the arguments to replace in the query
+     * @return the SQL query as a String with placeholders replaced
+     */
     public static String getSQLQuery(String queryName, String... args) {
         ResourceLocation location = new ResourceLocation(CONTEXT, QUERIES, queryName + ".sql");
         String query = ResourceHelper.readResourceCompletely(location);
@@ -20,15 +42,37 @@ public class SQLHelper {
         }
         return query;
     }
+    /**
+     * Prepares an SQL query statement by its name and replaces placeholders with provided arguments.
+     *
+     * @param queryName the name of the SQL query file (without extension)
+     * @param args      the arguments to replace in the query
+     * @return a PreparedStatement for the SQL query
+     * @throws SQLException if an error occurs while preparing the statement
+     */
     public static PreparedStatement prepareSQLQuery(String queryName, String... args) throws SQLException {
         String query = getSQLQuery(queryName, args);
         return Server.getInstance().getConnection().prepareStatement(query);
     }
+    /**
+     * Gets an SQL query process by its name and replaces placeholders with provided arguments.
+     *
+     * @param queryName the name of the SQL query file (without extension)
+     * @param args      the arguments to replace in the query
+     * @return a SQLProcess that executes the query
+     */
     public static SQLProcess getQueryProcess(String queryName, String... args) {
         String query = getSQLQuery(queryName, args);
         return (stmt) -> stmt.executeQuery(query);
     }
 
+    /**
+     * Gets an SQL add statement for a specific object and replaces placeholders with provided arguments.
+     *
+     * @param object the name of the object to add (e.g., "student", "course")
+     * @param args   the arguments to replace in the SQL statement
+     * @return the SQL add statement as a String with placeholders replaced
+     */
     public static String getSQLAddStatement(String object, String... args) {
         ResourceLocation location = new ResourceLocation(CONTEXT, PUSHES, "add_" + object + ".sql");
         String statement = ResourceHelper.readResourceCompletely(location);
@@ -37,6 +81,13 @@ public class SQLHelper {
         }
         return statement;
     }
+    /**
+     * Gets an SQL process for adding an object to the database.
+     *
+     * @param object the name of the object to add (e.g., "student", "course")
+     * @param args   the arguments to replace in the SQL statement
+     * @return a SQLVoidProcess that executes the add statement
+     */
     public static SQLVoidProcess getAddObjectProcess(String object, String... args) {
         return (stmt) -> stmt.executeUpdate(getSQLAddStatement(object, args));
     }

@@ -6,11 +6,37 @@ import java.util.Map;
 
 import de.igslandstuhl.database.server.resources.ResourceLocation;
 
+/**
+ * Represents a GET request in the web server.
+ * It parses the request string to extract the path, query parameters, and context.
+ * The context is determined by the file extension of the requested resource.
+ */
 public class GetRequest {
+    /**
+     * Valid contexts for web resources.
+     * These contexts are used to determine the type of resource being requested.
+     */
     private static final String[] validContexts = {"html", "js", "css"};
+    /**
+     * The path of the requested resource.
+     * This is the part of the URL that comes after the domain and before any query parameters.
+     */
     private final String path;
+    /**
+     * The query parameters of the request.
+     * These are key-value pairs that come after the '?' in the URL.
+     */
     private final Map<String, String> args = new HashMap<>();
+    /**
+     * The context of the requested resource.
+     * This is determined by the file extension of the requested resource.
+     */
     private final String context;
+
+    /**
+     * Constructs a new GetRequest from the given request string.
+     * @param request the request string to parse
+     */
     public GetRequest(String request) {
         if (!request.startsWith("GET")){
             throw new IllegalArgumentException();
@@ -35,10 +61,20 @@ public class GetRequest {
         }
     }
 
+    /**
+     * Determines if the request is valid based on its context.
+     * A request is considered valid if its context is one of the predefined valid contexts.
+     * @return true if the request is valid, false otherwise
+     */
     public boolean isValid() {
         return Arrays.asList(validContexts).contains(context);
     }
-
+    /**
+     * Returns the resource location for this request, wrapped in a ResourceLocation object.
+     * The resource location is constructed from the path of the request.
+     * @return the ResourceLocation for this request
+     * @see de.igslandstuhl.database.server.resources.ResourceLocation
+     */
     public ResourceLocation toResourceLocation() {
         return WebResourceHandler.locationFromPath(path);
     }

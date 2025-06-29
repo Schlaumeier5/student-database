@@ -11,26 +11,86 @@ import java.util.concurrent.ConcurrentHashMap;
 import de.igslandstuhl.database.server.Server;
 import de.igslandstuhl.database.server.sql.SQLHelper;
 
+/**
+ * Represents a student in the system.
+ * Inherits from {@link User} and provides student-specific data and logic.
+ */
 public class Student extends User {
     private static final String[] SQL_FIELDS = new String[] {"id", "first_name", "last_name", "email", "password", "class", "graduation_level"};
     private static final String[] INTERESTING_TASKSTAT_FIELDS = {"task"};
     private static final Map<Integer, Student> students = new HashMap<>();
 
+    /**
+     * The unique ID of the student.
+     */
     private final int id;
+
+    /**
+     * The first name of the student.
+     */
     private final String firstName;
+
+    /**
+     * The last name of the student.
+     */
     private final String lastName;
+
+    /**
+     * The email address of the student.
+     */
     private final String email;
+
+    /**
+     * The hashed password of the student.
+     */
     private final String passwordHash;
+
+    /**
+     * The class the student belongs to.
+     */
     private final SchoolClass schoolClass;
+
+    /**
+     * The graduation level of the student.
+     */
     private final int graduationLevel;
 
+    /**
+     * The set of tasks currently selected by the student.
+     */
     private final Set<Task> selectedTasks = new HashSet<>();
+
+    /**
+     * The set of tasks completed by the student.
+     */
     private final Set<Task> completedTasks = new HashSet<>();
+
+    /**
+     * The current requests of the student, mapped by subject ID.
+     */
     private final Map<Integer, String> currentRequests = new ConcurrentHashMap<>();
+
+    /**
+     * The current topics of the student, mapped by subject.
+     */
     private final Map<Subject, Topic> currentTopics = new ConcurrentHashMap<>();
 
+    /**
+     * The current room of the student.
+     */
     private Room currentRoom = null;
 
+    /**
+     * Constructs a new Student.
+     *
+     * @param id The student ID.
+     * @param firstName The first name.
+     * @param lastName The last name.
+     * @param email The email address.
+     * @param passwordHash The hashed password.
+     * @param schoolClass The school class.
+     * @param graduationLevel The graduation level.
+     */
     private Student(int id, String firstName, String lastName, String email, String passwordHash, SchoolClass schoolClass,
             int graduationLevel) {
         this.id = id;
@@ -90,34 +150,95 @@ public class Student extends User {
         students.put(id, student);
     }
 
-    public int getId() {
-        return id;
+    /**
+     * Returns the student's ID.
+     * @return the ID
+     */
+    public int getId() { return id; }
+
+    /**
+     * Returns the student's first name.
+     * @return the first name
+     */
+    public String getFirstName() { return firstName; }
+
+    /**
+     * Returns the student's last name.
+     * @return the last name
+     */
+    public String getLastName() { return lastName; }
+
+    /**
+     * Returns the student's email address.
+     * @return the email
+     */
+    public String getEmail() { return email; }
+
+    /**
+     * Returns the student's graduation level.
+     * @return the graduation level
+     */
+    public int getGraduationLevel() { return graduationLevel; }
+
+    /**
+     * Returns the student's current room.
+     * @return the current room
+     */
+    public Room getCurrentRoom() { return currentRoom; }
+
+    /**
+     * Sets the student's current room.
+     * @param currentRoom the new room
+     */
+    public void setCurrentRoom(Room currentRoom) { this.currentRoom = currentRoom; }
+
+    /**
+     * Returns the set of selected tasks.
+     * @return selected tasks
+     */
+    public Set<Task> getSelectedTasks() { return new HashSet<>(selectedTasks); }
+
+    /**
+     * Returns the set of completed tasks.
+     * @return completed tasks
+     */
+    public Set<Task> getCompletedTasks() { return new HashSet<>(completedTasks); }
+
+    /**
+     * Returns the current requests.
+     * @return current requests
+     */
+    public Map<Integer, String> getCurrentRequests() { return currentRequests; }
+
+    /**
+     * Returns the student's password hash.
+     * @return password hash
+     */
+    public String getPasswordHash() { return passwordHash; }
+
+    /**
+     * Returns the student's school class.
+     * @return school class
+     */
+    public SchoolClass getSchoolClass() { return schoolClass; }
+
+    /**
+     * Adds a subject request for this student.
+     * @param subjectId the subject ID
+     * @param type the request type
+     */
+    public void addSubjectRequest(int subjectId, String type) {
+        currentRequests.put(subjectId, type);
     }
-    public String getFirstName() {
-        return firstName;
+
+    /**
+     * Removes a subject request for this student.
+     * @param subjectId the subject ID
+     */
+    public void clearSubjectRequest(int subjectId) {
+        currentRequests.remove(subjectId);
     }
-    public String getLastName() {
-        return lastName;
-    }
-    public String getEmail() {
-        return email;
-    }
-    @Override
-    public String getPasswordHash() {
-        return passwordHash;
-    }
-    public SchoolClass getSchoolClass() {
-        return schoolClass;
-    }
-    public int getGraduationLevel() {
-        return graduationLevel;
-    }
-    public Set<Task> getSelectedTasks() {
-        return new HashSet<>(selectedTasks);
-    }
-    public Set<Task> getCompletedTasks() {
-        return new HashSet<>(completedTasks);
-    }
+
     @Override
     public String toString() {
         return toJSON();
@@ -129,13 +250,6 @@ public class Student extends User {
     @Override
     public boolean isStudent() {
         return true;
-    }
-    public Room getCurrentRoom() {
-        return currentRoom;
-    }
-
-    public void setCurrentRoom(Room currentRoom) {
-        this.currentRoom = currentRoom;
     }
 
     @Override
@@ -156,19 +270,6 @@ public class Student extends User {
             .reduce((a, b) -> a + ", " + b).orElse("")).append("}\n");
         builder.append("}");
         return builder.toString();
-    }
-
-    public void addSubjectRequest(int subjectId, String type) {
-        currentRequests.put(subjectId, type);
-    }
-
-    public Map<Integer, String> getCurrentRequests() {
-        return currentRequests;
-    }
-
-    // Optionally, a method to clear requests
-    public void clearSubjectRequest(int subjectId) {
-        currentRequests.remove(subjectId);
     }
 
     private void loadCurrentTopics() {
@@ -193,6 +294,12 @@ public class Student extends User {
         }
     }
 
+    /**
+     * Sets the current topic for a given subject.
+     * @param subject the subject
+     * @param topic the topic to set
+     * @throws SQLException if an error occurs while updating the database
+     */
     public void setCurrentTopic(Subject subject, Topic topic) throws SQLException {
         // Update in DB
         Server.getInstance().getConnection().executeVoidProcessSecure(
@@ -204,6 +311,12 @@ public class Student extends User {
         // Update in memory
         currentTopics.put(subject, topic);
     }
+
+    /**
+     * Assigns a topic to the student.
+     * @param topic the topic to assign
+     * @throws SQLException if an error occurs while updating the database
+     */
     public void assignTopic(Topic topic) throws SQLException {
         if (topic == null) {
             throw new IllegalArgumentException("Topic cannot be null");
@@ -215,15 +328,29 @@ public class Student extends User {
         setCurrentTopic(subject, topic);
     }
 
+    /**
+     * Returns the current topics of the student, mapped by subject.
+     * @return a map of subjects to their current topics
+     */
     public Map<Subject, Topic> getCurrentTopics() {
         // Optionally reload from DB if needed
         return new HashMap<>(currentTopics);
     }
 
+    /**
+     * Returns the current topic for a given subject.
+     * @param subject the subject to get the current topic for
+     * @return the current topic, or null if not set
+     */
     public Topic getCurrentTopic(Subject subject) {
         return currentTopics.get(subject);
     }
 
+    /**
+     * Returns the current progress of the student for a given subject.
+     * @param subject the subject to get the current progress for
+     * @return the current progress as a percentage (0-100)
+     */
     public double getCurrentProgress(Subject subject) {
         List<Topic> topics = subject.getTopics(schoolClass.getGrade());
         return completedTasks.stream()
@@ -232,6 +359,11 @@ public class Student extends User {
             .mapToDouble(Task::getRatio)
             .sum();
     }
+    /**
+     * Returns the currently achieved grade for a given subject based on the current progress.
+     * @param subject the subject to evaluate
+     * @return the grade as an integer (1-6)
+     */
     public int getCurrentlyAchievedGrade(Subject subject) {
         double progress = getCurrentProgress(subject);
         if (progress >= 0.85) {
@@ -248,6 +380,11 @@ public class Student extends User {
             return 6; // Insufficient
         }
     }
+    /**
+     * Predicts the student's progress for a given subject based on the current week of the school year.
+     * @param subject the subject to predict progress for
+     * @return the predicted progress as a percentage (0-100)
+     */
     public double getPredictedProgress(Subject subject) {
         double progress = getCurrentProgress(subject);
         SchoolYear currentYear = SchoolYear.getCurrentYear();
@@ -256,6 +393,11 @@ public class Student extends User {
         }
         return progress * currentYear.getWeekCount() / currentYear.getCurrentWeek();
     }
+    /**
+     * Predicts the student's grade for a given subject based on the predicted progress.
+     * @param subject the subject to predict the grade for
+     * @return the predicted grade as an integer (1-6)
+     */
     public int getPredictedGrade(Subject subject) {
         double predictedProgress = getPredictedProgress(subject);
         if (predictedProgress >= 0.85) {

@@ -1,8 +1,20 @@
 package de.igslandstuhl.database.api;
 
+/**
+ * Represents different levels of difficulty for tasks.
+ * Each level has a specific ratio that indicates the proportion of the progress
+ * that can be achieved at that level.
+ */
 public enum Level {
     LEVEL1, LEVEL2, LEVEL3;
 
+    /**
+     * Returns the Level corresponding to the given number.
+     * @param number the level number (1-3)
+     * @return the corresponding Level
+     * @throws IllegalArgumentException if the number is out of range
+     *                                  (not between 1 and 3 inclusive)
+     */
     public static Level get(int number) {
         switch (number) {
             case 1:
@@ -16,6 +28,11 @@ public enum Level {
         }
     }
 
+    /**
+     * Returns the ratio associated with this level.
+     * The ratio indicates the proportion of progress that can be achieved at this level.
+     * @return the ratio as a double
+     */
     public double getRatio() {
         switch (this) {
             case LEVEL1:
@@ -28,7 +45,10 @@ public enum Level {
                 throw new IllegalStateException();
         }
     }
-
+    /**
+     * Returns a string representation of the level.
+     * This is useful for displaying the level in a user-friendly format.
+     */
     @Override
     public String toString() {
         switch (this) {
