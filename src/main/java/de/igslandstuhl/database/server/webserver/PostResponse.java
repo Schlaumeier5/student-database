@@ -15,11 +15,20 @@ public class PostResponse {
     private final Status statusCode;
     private final String body;
     private final ContentType contentType;
+    private final Cookie cookie;
 
-    public PostResponse(Status statusCode, String body, ContentType contentType) {
+    private PostResponse(Status statusCode, String body, ContentType contentType) {
         this.statusCode = statusCode;
         this.body = body;
         this.contentType = contentType;
+        this.cookie = null;
+    }
+
+    private PostResponse(Status statusCode, String body, ContentType contentType, Cookie cookie) {
+        this.statusCode = statusCode;
+        this.body = body;
+        this.contentType = contentType;
+        this.cookie = cookie;
     }
 
     public void respond(PrintWriter out) {
@@ -27,6 +36,9 @@ public class PostResponse {
         statusCode.write(out);
         out.print("\r\n");
         out.print("Content-Type: " + contentType + "; charset=UTF-8\r\n");
+        if (cookie != null) {
+            out.print("Set-Cookie: " + cookie + "; HttpOnly; Secure\r\n");
+        }
         out.print("\r\n");
         if (body != null) {
             out.print(body);
@@ -36,6 +48,9 @@ public class PostResponse {
 
     public static PostResponse ok(String body, ContentType contentType) {
         return new PostResponse(Status.OK, body, contentType);
+    }
+    public static PostResponse ok(String body, ContentType contentType, Cookie cookie) {
+        return new PostResponse(Status.OK, body, contentType, cookie);
     }
 
     public static PostResponse badRequest(String message) {
@@ -48,5 +63,9 @@ public class PostResponse {
 
     public static PostResponse internalServerError(String message) {
         return new PostResponse(Status.INTERNAL_SERVER_ERROR, message, ContentType.TEXT_PLAIN);
+    }
+
+    public static PostResponse notFound(String message) {
+        return new PostResponse(Status.NOT_FOUND, message, ContentType.TEXT_PLAIN);
     }
 }

@@ -25,7 +25,7 @@ function createRequestButton(subject, type, label) {
   }
 
   btn.addEventListener('click', () => {
-    fetch('/subject_request', {
+    fetch('/subject-request', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ subjectId: subject.id, type })
@@ -77,7 +77,7 @@ function createPanel(subject, studentData) {
     panel.classList.add('loaded');
 
     // Load current topic for this subject
-    const topic = await fetchJson('/currenttopic', {
+    const topic = await fetchJson('/current-topic', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ subjectId: subject.id })
@@ -164,7 +164,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }, 0);
 
   roomSelect.addEventListener('change', async () => {
-    await fetch('/updateroom', {
+    await fetch('/update-room', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ room: roomSelect.value })

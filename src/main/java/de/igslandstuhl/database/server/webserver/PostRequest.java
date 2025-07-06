@@ -1,7 +1,12 @@
 package de.igslandstuhl.database.server.webserver;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import de.igslandstuhl.database.server.resources.ResourceLocation;
 
@@ -20,34 +25,72 @@ public class PostRequest {
      * Represents the parameters of the POST request.
      * This is a map of key-value pairs extracted from the request body.
      */
-    private final Map<String, String> params = new HashMap<>();
+    private final String body;
     /**
      * Represents the context of the POST request.
      * This is derived from the path, typically indicating the type of resource (e.g., "html", "json").
      */
     private final String context;
+    /**
+     * Represents the content length of the POST request.
+     * This is used to determine the size of the request body.
+     */
+    private final int contentLength;
+    /**
+     * Represents the cookies associated with the POST request.
+     * This is an array of Cookie objects that may be included in the request.
+     */
+    private final Cookie[] cookies;
 
     /**
-     * Constructs a new PostRequest with the given request line and body.
-     * @param requestLine the request line of the POST request
+     * Constructs a new PostRequest with the given header and body.
+     * @param header the header of the POST request
      * @param body the body of the POST request
      */
-    public PostRequest(String requestLine, String body) {
+    public PostRequest(String header, String body) {
         // Example: "POST /login HTTP/1.1"
-        String[] parts = requestLine.split(" ");
+        String[] parts = header.split(" ");
         this.path = parts[1];
-
-        // Parse body as form data: key1=value1&key2=value2
-        if (body != null && !body.isEmpty()) {
-            String[] pairs = body.split("&");
-            for (String pair : pairs) {
-                String[] kv = pair.split("=");
-                if (kv.length == 2) {
-                    params.put(kv[0], kv[1]);
+        this.body = body != null ? body : "";
+        
+        int contentLength = 0;
+        Cookie[] cookies = new Cookie[0];
+        for (String line : header.split("\n")) {
+            if (line.startsWith("Content-Length:")) {
+                contentLength = Integer.parseInt(line.split(":")[1].trim());
+            } else if (line.startsWith("Cookie:")) {
+                String[] cookieData = line.substring(7).split("; ");
+                List<Cookie> cookieList = new ArrayList<>();
+                for (String cookie : cookieData) {
+                    String[] keyValue = cookie.split("=");
+                    if (keyValue.length == 2) {
+                        cookieList.add(new Cookie(keyValue[0].trim(), keyValue[1].trim()));
+                    }
                 }
+                cookies = cookieList.toArray(new Cookie[0]);
             }
         }
+        this.cookies = cookies;
+        this.contentLength = contentLength;
 
+        String[] extPts = path.split("\\.");
+        if (extPts.length > 1) {
+            context = extPts[1];
+        } else {
+            context = "html";
+        }
+    }
+    /**
+     * Constructs a new PostRequest with the given header and body.
+     * @param header the header of the POST request
+     * @param body the body of the POST request
+     */
+    public PostRequest(PostHeader header, String body) {
+        this.path = header.getPath();
+        this.body = body != null ? body : "";
+        this.contentLength = header.getContentLength();
+        this.cookies = header.getCookies();
+        
         String[] extPts = path.split("\\.");
         if (extPts.length > 1) {
             context = extPts[1];
@@ -65,20 +108,45 @@ public class PostRequest {
         return path;
     }
     /**
-     * Returns the parameters of the POST request.
-     * This is a map of key-value pairs extracted from the request body.
-     * @return a map containing the parameters of the POST request
-     */
-    public Map<String, String> getParams() {
-        return params;
-    }
-    /**
      * Returns the context of the POST request.
      * This is derived from the path, typically indicating the type of resource (e.g., "html", "json").
      * @return the context of the POST request
      */
     public String getContext() {
         return context;
+    }
+    /**
+     * Returns the content length of the POST request.
+     * This is used to determine the size of the request body.
+     * @return the content length of the POST request
+     */
+    public int getContentLength() {
+        return contentLength;
+    }
+
+    public Map<String, String> getFormData() {
+        Map<String, String> params = new HashMap<>();
+        // Parse body as form data: key1=value1&key2=value2
+        if (body != null && !body.isEmpty()) {
+            String[] pairs = body.split("&");
+            for (String pair : pairs) {
+                String[] kv = pair.split("=");
+                if (kv.length == 2) {
+                    params.put(kv[0], kv[1]);
+                }
+            }
+        }
+        return params;
+    }
+    public Map<String, Object> getJson() {
+        // Parse body as JSON
+        Gson gson = new Gson();
+        java.lang.reflect.Type mapType = new TypeToken<Map<String, Object>>(){}.getType();
+        Map<String, Object> json = gson.fromJson(body, mapType);
+        return json;
+    }
+    public Cookie[] getCookies() {
+        return cookies;
     }
 
     /**
