@@ -95,6 +95,28 @@ public class Subject {
             return null;
         }
     }
+    /**
+     * Retrieves a Subject by its name.
+     * This method searches the cached subjects first, and if not found, queries the database.
+     *
+     * @param name the name of the subject
+     * @return the Subject object if found, or null if not found
+     */
+    public static Subject get(String name) {
+        for (Subject subject : subjects.values()) {
+            if (subject.getName().equals(name)) {
+                return subject;
+            }
+        }
+        try {
+            Subject subject = Server.getInstance().processSingleRequest(Subject::fromSQLFields, "get_subject_by_name", SQL_FIELDS, name);
+            subjects.put(subject.getId(), subject);
+            return subject;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
     
     /**
      * Adds the subject to a specific grade.

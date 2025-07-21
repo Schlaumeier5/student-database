@@ -102,6 +102,12 @@ public class Student extends User {
         this.graduationLevel = graduationLevel;
     }
 
+    /**
+     * Creates a Student instance from SQL data.
+     *
+     * @param fields The fields retrieved from the database.
+     * @return A new Student instance.
+     */
     private static Student fromSQL(String[] fields) {
         int id = Integer.parseInt(fields[0]);
         String firstName = fields[1];
@@ -115,6 +121,12 @@ public class Student extends User {
         return student;
     }
 
+    /**
+     * Retrieves a Student by its unique identifier from the database.
+     *
+     * @param id the unique identifier of the student
+     * @return a Student object if found, or null if not found
+     */
     public static Student get(int id) {
         if (students.keySet().contains(id)) return students.get(id);
         try {
@@ -128,7 +140,13 @@ public class Student extends User {
             return null;
         }
     }
-    public static Student fromEmail(String email) {
+    /**
+     * Retrieves a Student by its email address from the database.
+     *
+     * @param email the email address of the student
+     * @return a Student object if found, or null if not found
+     */
+    public static Student getByEmail(String email) {
         try {
             Student student = Server.getInstance().processSingleRequest(Student::fromSQL, "get_student_by_email", SQL_FIELDS, email);
             if (student == null) return null;
@@ -144,10 +162,25 @@ public class Student extends User {
             return null;
         }
     }
-    public static void registerStudentWithPassword(int id, String firstName, String lastName, String email, String password, SchoolClass schoolClass, int graduationLevel) throws SQLException {
+    /**
+     * Registers a new student with a password.
+     * This method creates a new student in the database and returns the created Student object.
+     * 
+     * @param id the unique identifier for the student
+     * @param firstName the first name of the student
+     * @param lastName the last name of the student
+     * @param email the email address of the student
+     * @param password the password for the student
+     * @param schoolClass the school class of the student
+     * @param graduationLevel the graduation level of the student
+     * @return the created Student object
+     * @throws SQLException if there is an error creating the student
+     */
+    public static Student registerStudentWithPassword(int id, String firstName, String lastName, String email, String password, SchoolClass schoolClass, int graduationLevel) throws SQLException {
         Student student = new Student(id, firstName, lastName, email, User.passHash(password), schoolClass, graduationLevel);
         Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getAddObjectProcess("student", String.valueOf(id), firstName, lastName, email, User.passHash(password), schoolClass != null ? String.valueOf(schoolClass.getId()) : "-1", String.valueOf(graduationLevel)));
         students.put(id, student);
+        return student;
     }
 
     /**

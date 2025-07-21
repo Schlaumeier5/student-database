@@ -271,6 +271,26 @@ public class Topic {
             e.printStackTrace();
         }
     }
+    private static void addToCache(String[] fields) {
+        Topic topic = fromSQLFields(fields);
+        topics.put(topic.getId(), topic);
+    }
+    /**
+     * Retrieves a list of topics by their names.
+     * @param name the name of the topics
+     * @return a list of Topic objects if found, or an empty list if not found
+     */
+    public static List<Topic> getByName(String name) {
+        try {
+            Server.getInstance().processRequest(Topic::addToCache, "get_topics_by_name", SQL_FIELDS, name);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+        return topics.values().stream()
+                .filter(topic -> topic.getName().equalsIgnoreCase(name))
+                .toList();
+    }
 
     @Override
     public String toString() {
@@ -287,7 +307,12 @@ public class Topic {
      * @param number the number of the topic
      * @throws SQLException if a database error occurs
      */
-    public static void addTopic(String name, Subject subject, int ratio, int grade, int number) throws SQLException {
+    public static Topic addTopic(String name, Subject subject, int ratio, int grade, int number) throws SQLException {
         Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getAddObjectProcess("topic", name, subject == null ? "-1" : String.valueOf(subject.getId()), String.valueOf(ratio), String.valueOf(grade), String.valueOf(number)));
+        return getByName(name).stream()
+                .filter(t -> t.getSubject() == subject && t.getRatio() == ratio && t.getGrade() == grade && t.getNumber() == number)
+                .sorted((t1, t2) -> Integer.compare(t2.getId(), t1.getId())) // Sort by ID in descending order
+                .findFirst()
+                .orElse(null);
     }
 }

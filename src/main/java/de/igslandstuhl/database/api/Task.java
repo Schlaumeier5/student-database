@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Comparator;
 
 import de.igslandstuhl.database.server.Server;
 import de.igslandstuhl.database.server.sql.SQLHelper;
@@ -157,6 +158,26 @@ public class Task {
             return null;
         }
     }
+    private static void addToCache(String[] fields) {
+        Task task = fromSQLFields(fields);
+        tasks.put(task.getId(), task);
+    }
+    /**
+     * Retrieves a list of tasks by their names.
+     * * @param name the name of the tasks
+     * @return a list of Task objects if found, or an empty list if not found
+     */
+    public static List<Task> getByName(String name) {
+        try {
+            Server.getInstance().processRequest(Task::addToCache, "get_tasks_by_name", SQL_FIELDS, name);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+        return tasks.values().stream()
+                .filter(task -> task.getName().equalsIgnoreCase(name))
+                .toList();
+    }
     /**
      * Retrieves a list of tasks by their unique identifiers.
      * This method queries the database for each task ID and returns a list of Task objects.
@@ -188,8 +209,14 @@ public class Task {
      * @param name  the name of the task
      * @param niveau the level of difficulty for the task
      * @throws SQLException if there is an error accessing the database
+     * @return the newly created Task object, or null if the task could not be added
      */
-    public static void addTask(Topic topic, String name, Level niveau) throws SQLException {
+    public static Task addTask(Topic topic, String name, Level niveau) throws SQLException {
         Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getAddObjectProcess("task", topic == null ? "-1" : String.valueOf(topic.getId()), name, String.valueOf(niveau)));
+        return getByName(name).stream()
+                .filter(t -> t.getTopic() == topic && t.getNiveau() == niveau)
+                .sorted(Comparator.comparing(Task::getId, Comparator.reverseOrder()))
+                .findFirst()
+                .orElse(null);
     }
 }

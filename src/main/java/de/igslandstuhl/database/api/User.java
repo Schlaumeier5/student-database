@@ -42,7 +42,7 @@ public abstract class User {
      */
     public static User getUser(String username) {
         username = username.replace("%40", "@");
-        Student student = Student.fromEmail(username);
+        Student student = Student.getByEmail(username);
         if (student != null) return student;
         Teacher teacher = Teacher.fromEmail(username);
         if (teacher != null) return teacher;

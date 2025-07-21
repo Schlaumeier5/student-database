@@ -164,6 +164,21 @@ public class SchoolClass {
             return null;
         }
     }
+    /**
+     * Retrieves a SchoolClass by its label from the database.
+     * This method queries the database for a class with the specified label.
+     *
+     * @param label the label of the class
+     * @return a SchoolClass object if found, or null if not found
+     */
+    public static SchoolClass get(String label) {
+        try {
+            return Server.getInstance().processSingleRequest(SchoolClass::fromSQL, "get_class_by_label", SQL_FIELDS, label);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 
     @Override
     public String toString() {
@@ -177,7 +192,8 @@ public class SchoolClass {
      * @param grade the grade level of the class
      * @throws SQLException if there is an error accessing the database
      */
-    public static void addClass(String label, int grade) throws SQLException {
+    public static SchoolClass addClass(String label, int grade) throws SQLException {
         Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getAddObjectProcess("class", label, String.valueOf(grade)));
+        return get(label);
     }
 }
