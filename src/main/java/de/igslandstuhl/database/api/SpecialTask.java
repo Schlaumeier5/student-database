@@ -43,9 +43,9 @@ public class SpecialTask extends Task {
     @Override
     public String toString() {
         return "{" +
-                "'id':" + getId() +
-                ", 'name': '" + getName() + '\'' +
-                ", 'ratio':" + ratio +
+                "\"id\":" + getId() +
+                ", \"name\": \"" + getName() + '"' +
+                ", \"ratio\":" + ratio +
                 '}';
     }
 

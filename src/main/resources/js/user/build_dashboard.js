@@ -89,10 +89,10 @@ function createPanel(subject, studentData) {
 
     // Filter tasks for the current topic
     const selectedTasks = studentData.selectedTasks.filter(
-      task => task.topic.id === topic.id
+      task => task.topic && task.topic.id === topic.id
     );
     const completedTasks = studentData.completedTasks.filter(
-      task => task.topic.id === topic.id
+      task => task.topic && task.topic.id === topic.id
     );
     let allTasks = [];
     if (Array.isArray(topic.tasks) && topic.tasks.length > 0) {
