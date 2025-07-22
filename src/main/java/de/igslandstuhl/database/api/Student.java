@@ -3,7 +3,6 @@ package de.igslandstuhl.database.api;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -405,10 +404,8 @@ public class Student extends User {
      * @return the current progress as a percentage (0-100)
      */
     public double getCurrentProgress(Subject subject) {
-        List<Topic> topics = subject.getTopics(schoolClass.getGrade());
         return completedTasks.stream()
-            .filter(task -> topics.stream()
-                .anyMatch(topic -> task.getTopic() != null && task.getTopic().getId() == topic.getId()))
+            .filter(task -> task.getSubject() != null && task.getSubject().equals(subject))
             .mapToDouble(Task::getRatio)
             .sum();
     }

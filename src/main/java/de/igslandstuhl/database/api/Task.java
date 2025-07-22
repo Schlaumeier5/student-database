@@ -54,7 +54,7 @@ public class Task {
      * @param name  the name of the task
      * @param niveau the level of difficulty for the task
      */
-    private Task(int id, Topic topic, String name, Level niveau) {
+    protected Task(int id, Topic topic, String name, Level niveau) {
         this.id = id;
         this.topic = topic;
         this.name = name;
@@ -124,6 +124,16 @@ public class Task {
      */
     public double getRatio() {
         return niveau.getRatio() * topic.getRatio() / (100.0 * topic.getTasksByLevel(niveau).size());
+    }
+    /**
+     * Returns the subject associated with the task's topic.
+     * This is useful for retrieving the subject area to which the task belongs.
+     *
+     * @return the subject of the topic, or null if the topic is not set
+     */
+    public Subject getSubject() {
+        if (topic == null) return null;
+        return topic.getSubject();
     }
 
     /**

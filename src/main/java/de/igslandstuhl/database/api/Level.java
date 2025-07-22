@@ -6,7 +6,7 @@ package de.igslandstuhl.database.api;
  * that can be achieved at that level.
  */
 public enum Level {
-    LEVEL1, LEVEL2, LEVEL3;
+    LEVEL1, LEVEL2, LEVEL3, SPECIAL;
 
     /**
      * Returns the Level corresponding to the given number.
@@ -23,6 +23,8 @@ public enum Level {
                 return LEVEL2;
             case 3:
                 return LEVEL3;
+            case -1:
+                return SPECIAL;
             default:
                 throw new IllegalArgumentException(number + " out of range [1,3]");
         }
@@ -58,6 +60,8 @@ public enum Level {
                 return "2";
             case LEVEL3:
                 return "3";
+            case SPECIAL:
+                return "Special";
             default:
                 throw new IllegalStateException();
         }
