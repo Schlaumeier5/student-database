@@ -447,7 +447,8 @@ public class Student extends User {
         if (currentYear == null) {
             return 0; // No current year available
         }
-        return progress * currentYear.getWeekCount() / currentYear.getCurrentWeek();
+        double specials = completedTasks.stream().filter((t) -> (t instanceof SpecialTask)).mapToDouble(Task::getRatio).sum();
+        return Math.min(progress * currentYear.getWeekCount() / currentYear.getCurrentWeek(), 1 + specials);
     }
     /**
      * Predicts the student's grade for a given subject based on the predicted progress.
