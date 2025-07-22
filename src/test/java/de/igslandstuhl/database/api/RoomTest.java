@@ -24,11 +24,10 @@ public class RoomTest {
     }
     @Test
     public void getRoom() throws SQLException {
-        Room.addRoom("Gelingensnachweis", 0);
+        Room added = Room.addRoom("Gelingensnachweis", 0);
         Room room = Room.getRoom("Gelingensnachweis");
         assertNotNull(room);
-        assertEquals("Gelingensnachweis", room.getLabel());
-        assertEquals(0, room.getMinimumLevel());
+        assertEquals(added, room);
     }
     @Test
     public void addAllRooms() throws SQLException {

@@ -16,14 +16,9 @@ public class StudentTest {
     }
     @Test
     public void testPuttingStudent() throws SQLException {
-        Student.registerStudentWithPassword(0, "Max", "Mustermann", "max@muster.mann", "12345", SchoolClass.get(1), 1);
+        Student added = Student.registerStudentWithPassword(0, "Max", "Mustermann", "max@muster.mann", "12345", SchoolClass.get(1), 1);
         Student student = Student.get(0);
-        assertNotNull(student);
-        assertEquals("Max", student.getFirstName());
-        assertEquals("Mustermann", student.getLastName());
-        assertEquals("max@muster.mann", student.getEmail());
-        assertEquals(1, student.getGraduationLevel());
-        assertEquals(1, student.getSchoolClass().getId());
+        assertEquals(added, student);
     }
     @Test
     public void testAssignTopicToStudent() throws SQLException {

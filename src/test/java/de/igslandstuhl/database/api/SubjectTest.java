@@ -16,10 +16,10 @@ public class SubjectTest {
     }
     @Test
     public void addSubject() throws SQLException {
-        Subject.addSubject("Mathematik");
+        Subject added = Subject.addSubject("Mathematik");
         Subject subject = Subject.get(1);
         assertNotNull(subject);
-        assertEquals("Mathematik", subject.getName());
+        assertEquals(added, subject);
     }
     @Test
     public void addSubjectToGrade() throws SQLException {

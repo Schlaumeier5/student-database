@@ -15,10 +15,9 @@ public class SchoolClassTest {
     }
     @Test
     public void addClass() throws SQLException {
-        SchoolClass.addClass("5a", 5);
+        SchoolClass added = SchoolClass.addClass("5a", 5);
         SchoolClass schoolClass = SchoolClass.get(1);
         assertNotNull(schoolClass);
-        assertEquals("5a", schoolClass.getLabel());
-        assertEquals(5, schoolClass.getGrade());
+        assertEquals(added, schoolClass);
     }
 }

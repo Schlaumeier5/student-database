@@ -23,4 +23,13 @@ public class SpecialTaskTest {
         assertEquals(0.05, task.getRatio(), 0.0001);
         assertEquals(subject, task.getSubject());
     }
+    @Test
+    public void addSpecialTaskToStudent() throws SQLException {
+        PreConditions.addSampleSpecialTask();
+        PreConditions.addSampleStudent();
+        SpecialTask task = SpecialTask.get(1);
+        Student student = Student.get(1);
+        student.assignCompletedSpecialTask(task);
+        assertTrue(student.getCompletedTasks().contains(task));
+    }
 }

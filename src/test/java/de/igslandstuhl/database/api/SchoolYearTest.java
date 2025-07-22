@@ -25,15 +25,17 @@ public class SchoolYearTest {
 
         SchoolYear loaded = SchoolYear.get(year.getId());
         assertNotNull(loaded);
-        assertEquals(year.getLabel(), loaded.getLabel());
+        assertEquals(year, loaded);
     }
 
     @Test
     public void getAllSchoolYears() throws SQLException {
-        SchoolYear.addSchoolYear("2023/2024", 39, 39);
-        SchoolYear.addSchoolYear("2024/2025", 40, 1);
+        SchoolYear added1 = SchoolYear.addSchoolYear("2023/2024", 39, 39);
+        SchoolYear added2 = SchoolYear.addSchoolYear("2024/2025", 40, 1);
         List<SchoolYear> years = SchoolYear.getAll();
         assertTrue(years.size() >= 2);
+        assertTrue(years.contains(added1));
+        assertTrue(years.contains(added2));
     }
 
     @Test

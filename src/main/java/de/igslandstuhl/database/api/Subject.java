@@ -141,8 +141,9 @@ public class Subject {
      * @param name the name of the subject to be added
      * @throws SQLException if there is an error accessing the database
      */
-    public static void addSubject(String name) throws SQLException {
+    public static Subject addSubject(String name) throws SQLException {
         Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getAddObjectProcess("subject", name));
+        return get(name);
     }
 
     /**
@@ -170,4 +171,33 @@ public class Subject {
         }
         return topics;
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + id;
+        result = prime * result + ((name == null) ? 0 : name.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        Subject other = (Subject) obj;
+        if (id != other.id)
+            return false;
+        if (name == null) {
+            if (other.name != null)
+                return false;
+        } else if (!name.equals(other.name))
+            return false;
+        return true;
+    }
+    
 }

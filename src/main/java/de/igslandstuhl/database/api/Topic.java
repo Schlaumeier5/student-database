@@ -315,4 +315,72 @@ public class Topic {
                 .findFirst()
                 .orElse(null);
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + id;
+        result = prime * result + ((name == null) ? 0 : name.hashCode());
+        result = prime * result + ((subject == null) ? 0 : subject.hashCode());
+        result = prime * result + ratio;
+        result = prime * result + grade;
+        result = prime * result + number;
+        result = prime * result + ((tasks == null) ? 0 : tasks.hashCode());
+        result = prime * result + ((tasksLevel1 == null) ? 0 : tasksLevel1.hashCode());
+        result = prime * result + ((tasksLevel2 == null) ? 0 : tasksLevel2.hashCode());
+        result = prime * result + ((tasksLevel3 == null) ? 0 : tasksLevel3.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        Topic other = (Topic) obj;
+        if (id != other.id)
+            return false;
+        if (name == null) {
+            if (other.name != null)
+                return false;
+        } else if (!name.equals(other.name))
+            return false;
+        if (subject == null) {
+            if (other.subject != null)
+                return false;
+        } else if (!subject.equals(other.subject))
+            return false;
+        if (ratio != other.ratio)
+            return false;
+        if (grade != other.grade)
+            return false;
+        if (number != other.number)
+            return false;
+        if (tasks == null) {
+            if (other.tasks != null)
+                return false;
+        } else if (!tasks.equals(other.tasks))
+            return false;
+        if (tasksLevel1 == null) {
+            if (other.tasksLevel1 != null)
+                return false;
+        } else if (!tasksLevel1.equals(other.tasksLevel1))
+            return false;
+        if (tasksLevel2 == null) {
+            if (other.tasksLevel2 != null)
+                return false;
+        } else if (!tasksLevel2.equals(other.tasksLevel2))
+            return false;
+        if (tasksLevel3 == null) {
+            if (other.tasksLevel3 != null)
+                return false;
+        } else if (!tasksLevel3.equals(other.tasksLevel3))
+            return false;
+        return true;
+    }
+    
 }
