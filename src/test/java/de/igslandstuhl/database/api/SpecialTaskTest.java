@@ -28,7 +28,7 @@ public class SpecialTaskTest {
         PreConditions.addSampleSpecialTask();
         PreConditions.addSampleStudent();
         SpecialTask task = SpecialTask.get(1);
-        Student student = Student.get(1);
+        Student student = Student.get(0);
         student.assignCompletedSpecialTask(task);
         assertTrue(student.getCompletedTasks().contains(task));
     }

@@ -1,5 +1,6 @@
 package de.igslandstuhl.database.server.sql;
 
+import java.io.FileNotFoundException;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.regex.Pattern;
@@ -36,7 +37,12 @@ public class SQLHelper {
      */
     public static String getSQLQuery(String queryName, String... args) {
         ResourceLocation location = new ResourceLocation(CONTEXT, QUERIES, queryName + ".sql");
-        String query = ResourceHelper.readResourceCompletely(location);
+        String query;
+        try {
+            query = ResourceHelper.readResourceCompletely(location);
+        } catch (FileNotFoundException e) {
+            throw new SQLCommandNotFoundException(queryName, e);
+        }
         for (int i = 0; i < args.length; i++) {
             query = Pattern.compile("\\{" + i + "\\}").matcher(query).replaceAll(args[i]);
         }
@@ -75,7 +81,12 @@ public class SQLHelper {
      */
     public static String getSQLAddStatement(String object, String... args) {
         ResourceLocation location = new ResourceLocation(CONTEXT, PUSHES, "add_" + object + ".sql");
-        String statement = ResourceHelper.readResourceCompletely(location);
+        String statement;
+        try {
+            statement = ResourceHelper.readResourceCompletely(location);
+        } catch (FileNotFoundException e) {
+            throw new SQLCommandNotFoundException("add_" + object, e);
+        }
         for (int i = 0; i < args.length; i++) {
             statement = Pattern.compile("\\{" + i + "\\}").matcher(statement).replaceAll(args[i]);
         }

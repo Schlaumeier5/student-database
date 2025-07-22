@@ -153,10 +153,15 @@ public class ResourceHelper{
      *
      * @param location the ResourceLocation object representing the resource
      * @return an InputStream for the resource
+     * @throws FileNotFoundException if the resource is not found
      */
-    public static InputStream openResourceAsStream(ResourceLocation location) {
+    public static InputStream openResourceAsStream(ResourceLocation location) throws FileNotFoundException {
         String url = "/" + location.context() + "/" + location.namespace() + "/" + location.resource();
-        return ResourceHelper.class.getResourceAsStream(url);
+        InputStream stream = ResourceHelper.class.getResourceAsStream(url);
+        if (stream == null) {
+            throw new FileNotFoundException(url + " not found in classpath or resources.");
+        }
+        return stream;
     }
     /**
      * Reads the content of a resource completely as a String.
@@ -164,8 +169,9 @@ public class ResourceHelper{
      *
      * @param location the ResourceLocation object representing the resource
      * @return the content of the resource as a String
+     * @throws FileNotFoundException if the resource is not found
      */
-    public static String readResourceCompletely(ResourceLocation location) {
+    public static String readResourceCompletely(ResourceLocation location) throws FileNotFoundException {
         return readResourceCompletely(new BufferedReader(new InputStreamReader(openResourceAsStream(location), StandardCharsets.UTF_8)));
     }
     /**

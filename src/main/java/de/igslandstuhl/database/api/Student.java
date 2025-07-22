@@ -17,6 +17,7 @@ import de.igslandstuhl.database.server.sql.SQLHelper;
 public class Student extends User {
     private static final String[] SQL_FIELDS = new String[] {"id", "first_name", "last_name", "email", "password", "class", "graduation_level"};
     private static final String[] INTERESTING_TASKSTAT_FIELDS = {"task"};
+    private static final String[] INTERESTING_SPECIAL_TASK_STAT_FIELDS = {"special_task"};
     private static final Map<Integer, Student> students = new HashMap<>();
 
     /**
@@ -120,6 +121,13 @@ public class Student extends User {
         return student;
     }
 
+    private void fetchTasks() throws SQLException {
+        Server.getInstance().processRequest((t) -> selectedTasks.add(Task.get(Integer.parseInt(t[0]))), "get_selected_tasks_by_student", INTERESTING_TASKSTAT_FIELDS, String.valueOf(id));
+        Server.getInstance().processRequest((t) -> completedTasks.add(Task.get(Integer.parseInt(t[0]))), "get_completed_tasks_by_student", INTERESTING_TASKSTAT_FIELDS, String.valueOf(id));
+
+        Server.getInstance().processRequest((t) -> completedTasks.add(SpecialTask.get(Integer.parseInt(t[0]))), "get_completed_special_tasks_by_student", INTERESTING_SPECIAL_TASK_STAT_FIELDS, String.valueOf(id));
+    }
+
     /**
      * Retrieves a Student by its unique identifier from the database.
      *
@@ -131,8 +139,7 @@ public class Student extends User {
         try {
             Student student = Server.getInstance().processSingleRequest(Student::fromSQL, "get_student_by_id", SQL_FIELDS, String.valueOf(id));
             students.put(id, student);
-            Server.getInstance().processRequest((t) -> student.selectedTasks.add(Task.get(Integer.parseInt(t[0]))), "get_selected_tasks_by_student", INTERESTING_TASKSTAT_FIELDS, String.valueOf(id));
-            Server.getInstance().processRequest((t) -> student.completedTasks.add(Task.get(Integer.parseInt(t[0]))), "get_completed_tasks_by_student", INTERESTING_TASKSTAT_FIELDS, String.valueOf(id));
+            student.fetchTasks();
             return student;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -151,8 +158,7 @@ public class Student extends User {
             if (student == null) return null;
             if (students.containsKey(student.getId())) return students.get(student.getId());
             students.put(student.getId(), student);
-            Server.getInstance().processRequest((t) -> student.selectedTasks.add(Task.get(Integer.parseInt(t[0]))), "get_selected_tasks_by_student", INTERESTING_TASKSTAT_FIELDS, String.valueOf(student.getId()));
-            Server.getInstance().processRequest((t) -> student.completedTasks.add(Task.get(Integer.parseInt(t[0]))), "get_completed_tasks_by_student", INTERESTING_TASKSTAT_FIELDS, String.valueOf(student.getId()));
+            student.fetchTasks();
             return student;
         } catch (NullPointerException e) {
             return null;
