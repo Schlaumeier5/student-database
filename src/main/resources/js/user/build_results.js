@@ -22,13 +22,13 @@ function getTaskColorClass(level) {
   if (level === 1) return "level1";
   if (level === 2) return "level2";
   if (level === 3) return "level3";
-  return "";
+  return "special";
 }
 
 function createGradeScale() {
   const scale = document.createElement('div');
   scale.className = 'grade-scale';
-  [1,2,3,4,5,6].forEach(grade => {
+  [6,5,4,3,2,1].forEach(grade => {
     const label = document.createElement('span');
     label.className = 'grade-label';
     label.textContent = getGradeLabel(grade);
@@ -49,7 +49,7 @@ function createBarChart(subject, subjectName, studentData) {
   chart.appendChild(createGradeScale());
 
   // Get all tasks for this subject (from completed, selected, and topic.tasks)
-  const completed = studentData.completedTasks.filter(t => t.topic && t.topic.id && t.topic.subject && t.topic.subject.id === subject.id);
+  const completed = studentData.completedTasks.filter(t => (t.topic && t.topic.subject && t.topic.subject.id === subject.id) || (!t.topic && t.subject && t.subject == subject.id));
   const selected = studentData.selectedTasks.filter(t => t.topic && t.topic.id && t.topic.subject && t.topic.subject.id === subject.id);
   // For demo: If you have all tasks for the subject, fetch them here. Otherwise, use completed+selected as all tasks.
   let allTasks = [...completed, ...selected];
@@ -78,7 +78,7 @@ function createBarChart(subject, subjectName, studentData) {
     } else if (selected.some(t => t.id === task.id)) {
       div.classList.add('selected', 'hatched');
     }
-    div.style.width = (100 / allTasks.length) + '%';
+    div.style.width = (100 * task.ratio) + '%';
     // Optional: show task number or name
     const label = document.createElement('span');
     label.className = 'bar-task-label';

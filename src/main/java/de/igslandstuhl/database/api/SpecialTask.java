@@ -46,6 +46,7 @@ public class SpecialTask extends Task {
                 "\"id\":" + getId() +
                 ", \"name\": \"" + getName() + '"' +
                 ", \"ratio\":" + ratio +
+                ", \"subject\": \"" + subject.getName() + '"' +
                 '}';
     }
 
