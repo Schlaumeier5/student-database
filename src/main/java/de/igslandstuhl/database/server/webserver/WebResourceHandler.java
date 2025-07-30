@@ -11,10 +11,10 @@ import de.igslandstuhl.database.server.resources.ResourceLocation;
  * and to convert paths into ResourceLocation objects.
  */
 public final class WebResourceHandler {
-    private static final String[] SQL_WEB_RESOURCES = {"/mydata", "/rooms", "/mysubjects", "/myclasses", "/teachers", "/students"};
+    private static final String[] SQL_WEB_RESOURCES = {"/mydata", "/rooms", "/mysubjects", "/myclasses", "/teachers", "/students", "/subjects"};
     private static String[] userOnlySpace = {"dashboard", "build_dashboard.js", "results", "build_results.js"};
     private static String[] teacherOnlySpace = {"dashboard", "build_dashboard.js", "student", "build_student.js", "student-results", "build_results.js"};
-    private static String[] adminOnlySpace = {"dashboard", "build_dashboard.js", "manage_students", "manage_teachers", "manage_classes", "manage_subjects", "manage_rooms", "student", "student-results", "teacher", "build_teacher.js", "room", "build_room.js", "subject", "build_subject.js", "schoolclass", "build_schoolclass.js", "/teacher-classes"};
+    private static String[] adminOnlySpace = {"dashboard", "build_dashboard.js", "manage_students", "manage_teachers", "manage_classes", "manage_subjects", "manage_rooms", "student", "student-results", "teacher", "build_teacher.js", "room", "build_room.js", "subject", "build_subject.js", "schoolclass", "build_schoolclass.js", "teacher-classes", "teacher-subjects", "teacher-students", "teacher-results", "teacher-dashboard", "build_teacher_dashboard.js"};
 
     private WebResourceHandler(){}
 

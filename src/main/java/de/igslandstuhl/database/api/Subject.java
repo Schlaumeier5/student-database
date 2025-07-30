@@ -117,6 +117,29 @@ public class Subject {
             return null;
         }
     }
+    /**
+     * Retrieves all subjects from the database.
+     * This method queries the database to get a list of all subjects.
+     *
+     * @return a list of all Subject objects
+     */
+    public static List<Subject> getAll() {
+        List<Subject> allSubjects = new ArrayList<>();
+        try {
+            Server.getInstance().processRequest(
+                fields -> {
+                    Subject subject = Subject.fromSQLFields(fields);
+                    subjects.put(subject.getId(), subject);
+                    allSubjects.add(subject);
+                },
+                "get_all_subjects",
+                SQL_FIELDS
+            );
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return allSubjects;
+    }
     
     /**
      * Adds the subject to a specific grade.

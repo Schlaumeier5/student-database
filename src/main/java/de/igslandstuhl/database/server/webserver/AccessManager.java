@@ -31,7 +31,7 @@ public class AccessManager {
      * Public locations that are accessible without authentication.
      * These resources can be accessed by anyone, regardless of their authentication status.
      */
-    private static final String[] PUBLIC_LOCATIONS = {"rooms"};
+    private static final String[] PUBLIC_LOCATIONS = {"rooms", "subjects"};
     /**
      * Admin locations that are accessible only to authenticated admins.
      * These resources require admin privileges for access.

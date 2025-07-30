@@ -108,6 +108,27 @@ function createPanel(subject, studentData) {
   const body = document.createElement('div');
   body.className = 'panel-body';
 
+  function createRequestButtons() {
+    ['hilfe', 'partner', 'betreuung', 'gelingensnachweis'].forEach(type => {
+      const label = {
+        hilfe: 'Schüler braucht Hilfe',
+        partner: 'Schüler sucht einen Partner',
+        betreuung: 'Schüler braucht Betreuung für ein Experiment',
+        gelingensnachweis: 'Schüler ist bereit für den Gelingensnachweis'
+      }[type];
+
+      const btn = createRequestButton(subject, type, label);
+      body.appendChild(btn);
+    });
+  }
+  function refreshPanel() {
+    body.innerHTML = '';
+    header.click(); // Re-trigger the header click to close the panel
+    panel.classList.remove('loaded'); // Reset loaded state
+    createRequestButtons();
+    header.click(); // Re-trigger the header click to load tasks
+  }
+
   header.addEventListener('click', async () => {
     panel.classList.toggle('active');
     if (panel.classList.contains('loaded')) return;
@@ -149,11 +170,12 @@ function createPanel(subject, studentData) {
     // Current stage (selectedTasks)
     const { label: selectedLabel, list: selectedList } = createTaskList(selectedTasks, 'Aktuelle Etappe:', async (task) => {
       if (window.confirm(`Möchtest du die Etappe "${task.name}" wirklich abbrechen?`)) {
+        console.log(`Abbrechen der Etappe: ${task.name} (ID: ${task.id})`);
         // Cancel task
         await fetch('/cancel-task', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ taskId: task.id, studentId })
+          body: JSON.stringify({ taskId: task.id })
         });
         studentData.selectedTasks = studentData.selectedTasks.filter(t => t.id !== task.id);
         // No need to push to completedTasks or otherTasks, UI will refresh
@@ -176,26 +198,14 @@ function createPanel(subject, studentData) {
         body: JSON.stringify({ taskId: task.id })
       });
       studentData.selectedTasks.push(task);
-      body.innerHTML = '';
-      panel.classList.remove('loaded');
-      header.click();
+      refreshPanel(); // Refresh the panel to show updated tasks
     });
     body.appendChild(otherLabel);
     body.appendChild(otherList);
   });
 
   // Request buttons
-  ['hilfe', 'partner', 'betreuung', 'gelingensnachweis'].forEach(type => {
-    const label = {
-      hilfe: 'Ich brauche Hilfe',
-      partner: 'Ich suche einen Partner',
-      betreuung: 'Ich brauche Betreuung für ein Experiment',
-      gelingensnachweis: 'Ich bin bereit für den Gelingensnachweis'
-    }[type];
-
-    const btn = createRequestButton(subject, type, label);
-    body.appendChild(btn);
-  });
+  createRequestButtons();
 
   panel.appendChild(header);
   panel.appendChild(body);

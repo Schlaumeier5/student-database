@@ -2,12 +2,14 @@ package de.igslandstuhl.database.server.webserver;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import de.igslandstuhl.database.api.Room;
 import de.igslandstuhl.database.api.SchoolClass;
 import de.igslandstuhl.database.api.Student;
 import de.igslandstuhl.database.api.Subject;
+import de.igslandstuhl.database.api.SubjectRequest;
 import de.igslandstuhl.database.api.Task;
 import de.igslandstuhl.database.api.Teacher;
 import de.igslandstuhl.database.api.Topic;
@@ -76,6 +78,7 @@ public class PostRequestHandler {
             case "/student-subjects":
                 return handleStudentGetData(request);
             case "/teacher-classes":
+            case "/teacher-subjects":
                 return handleTeacherGetData(request);
             case "/student-list":
                 return handleStudentList(request);
@@ -87,6 +90,8 @@ public class PostRequestHandler {
                 return handleAddTeacher(request);
             case "/add-teachers":
                 return handleAddTeachers(request);
+            case "/teacher":
+                return handleAddSubjectToTeacher(request);
             default:
                 return PostResponse.notFound("Unknown POST request path: " + path);
         }
@@ -361,6 +366,8 @@ public class PostRequestHandler {
         String path = request.getPath();
         if (path.equals("/teacher-classes")) {
             path = "/myclasses";
+        } else if (path.equals("/teacher-subjects")) {
+            path = "/mysubjects";
         }
         if (!User.getUser(Server.getInstance().getWebServer().getUserManager().getSessionUser(request)).isAdmin()) {
             return PostResponse.unauthorized("Not logged in or invalid session");
@@ -396,8 +403,14 @@ public class PostRequestHandler {
                 .append(",\"name\":\"").append(student.getFirstName()).append(" ").append(student.getLastName()).append('"')
                 .append(", \"actionRequired\":").append(student.isActionRequired())
                 .append(", \"graduationLevel\":").append(student.getGraduationLevel())
-                .append(", \"room\":\"").append(student.getCurrentRoom() != null ? student.getCurrentRoom().getLabel() : "None").append("\"")
-                .append("}");
+                .append(", \"room\":\"").append(student.getCurrentRoom() != null ? student.getCurrentRoom().getLabel() : "None").append("\"");
+            if (request.getJson().containsKey("subjectId") && request.getJson().get("subjectId") instanceof Number subjectId) {
+                Set<SubjectRequest> subjectRequests = student.getCurrentRequests().keySet().contains(subjectId.intValue()) ? student.getCurrentRequests().get(subjectId.intValue()) : Set.of();
+                responseBuilder.append(", \"experiment\":").append(subjectRequests.stream().anyMatch(r -> r == SubjectRequest.EXPERIMENT))
+                .append(", \"help\":").append(subjectRequests.stream().anyMatch(r -> r == SubjectRequest.HELP))
+                .append(", \"test\":").append(subjectRequests.stream().anyMatch(r -> r == SubjectRequest.EXAM));
+            }
+            responseBuilder.append("}");
             if (i < students.size() - 1) {
                 responseBuilder.append(", ");
             }
@@ -550,6 +563,33 @@ public class PostRequestHandler {
             return PostResponse.internalServerError("Database error: " + e.getMessage());
         } catch (IllegalArgumentException e) {
             return PostResponse.badRequest("Invalid CSV format: " + e.getMessage());
+        }
+    }
+    private PostResponse handleAddSubjectToTeacher(PostRequest request) throws IOException {
+        // Test if current user is admin
+        User user = User.getUser(Server.getInstance().getWebServer().getUserManager().getSessionUser(request));
+        if (user == null || !user.isAdmin()) {
+            return PostResponse.unauthorized("Not logged in or invalid session");
+        }
+        int contentLength = request.getContentLength();
+        if (contentLength <= 0) {
+            return PostResponse.badRequest("Missing or invalid Content-Length!");
+        }
+        Map<String, String> data = request.getFormData();
+        int teacherId = Integer.parseInt(data.get("teacherId"));
+        int subjectId = Integer.parseInt(data.get("subject"));
+
+        Teacher teacher = Teacher.get(teacherId);
+        Subject subject = Subject.get(subjectId);
+        if (teacher == null || subject == null) {
+            return PostResponse.notFound("Teacher or subject not found");
+        }
+
+        try {
+            teacher.addSubject(subject);
+            return PostResponse.ok("Subject added to teacher successfully", ContentType.TEXT_PLAIN);
+        } catch (java.sql.SQLException e) {
+            return PostResponse.internalServerError("Database error: " + e.getMessage());
         }
     }
 }

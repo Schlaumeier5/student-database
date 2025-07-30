@@ -17,6 +17,15 @@ function populateClassSelect(classSelect, classes) {
     classSelect.appendChild(option);
   });
 }
+function populateSubjectSelect(subjectSelect, subjects) {
+  subjectSelect.innerHTML = ""; // clear previous options if any
+  subjects.forEach(subject => {
+    const option = document.createElement('option');
+    option.value = subject.subjectId || subject.id; // Use subjectId or id based on your API
+    option.textContent = subject.name;
+    subjectSelect.appendChild(option);
+  });
+}
 
 async function onClassChange(event) {
     const selectedClassId = event.target.value;
@@ -40,6 +49,39 @@ async function onClassChange(event) {
         studentTable.appendChild(row);
     });
 }
+async function populateSubjectStudentList(event) {
+  const subjectSelect = document.getElementById('subjectSelect');
+  const classSelect = document.getElementById('classSelect');
+  const selectedClassId = classSelect.value;
+
+  if (!selectedClassId) {
+    subjectSelect.innerHTML = ""; // clear previous options if no class is selected
+    return;
+  }
+
+  const students = await fetchJson("/student-list", {
+    method: 'POST',
+    body: JSON.stringify({ classId: Number(selectedClassId), subjectId: Number(subjectSelect.value) }),
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+
+  const studentTable = document.getElementById("subjectStudentTableBody");
+  studentTable.innerHTML = ""; // clear previous rows
+  students.forEach(student => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+          <td class="student-name">${student.name}</td>
+          <td class="student-help">${student.help ? "Ja" : "Nein"}</td>
+          <td class="student-experiment">${student.experiment ? "Ja" : "Nein"}</td>
+          <td class="student-test">${student.test ? "Ja" : "Nein"}</td>
+          <td class="student-action"><button onclick="viewStudent(${student.id})">Bearbeiten</button></td>
+      `;
+      studentTable.appendChild(row);
+  });
+}
+
 function viewStudent(studentId) {
     // Add studentId to session storage
     sessionStorage.setItem('selectedStudentId', studentId);
@@ -49,8 +91,16 @@ function viewStudent(studentId) {
 
 document.addEventListener('DOMContentLoaded', async () => {
   const classSelect = document.getElementById('classSelect');
+  const subjectClassSelect = document.getElementById('classSelectSubject');
   const classes = await fetchClasses();
   populateClassSelect(classSelect, classes);
+  populateClassSelect(subjectClassSelect, classes);
   classSelect.addEventListener('change', onClassChange);
+  subjectClassSelect.addEventListener('change', populateSubjectStudentList);
   onClassChange({ target: classSelect }); // Trigger initial load
+  const subjectSelect = document.getElementById('subjectSelect');
+  const subjects = await fetchJson('/mysubjects');
+  populateSubjectSelect(subjectSelect, subjects);
+  subjectSelect.addEventListener('change', populateSubjectStudentList);
+  populateSubjectStudentList({ target: subjectSelect }); // Trigger initial load
 });

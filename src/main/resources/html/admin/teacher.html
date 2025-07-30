@@ -12,6 +12,15 @@
                 <h1>Lehrerverwaltung - <span id="teacher-name"></span></h1>
             </header>
             <main>
+                <section id="edit-teacher">
+                    <h2>Lehrer bearbeiten</h2>
+                    <form id="addSubjectToTeacherForm" method="POST">
+                        <label for="editSubjectSelect">Fach auswählen:</label>
+                        <input type="hidden" name="teacherId" value="" id="teacherId">
+                        <select id="editSubjectSelect" name="subject" value="Mathematik"></select>
+                        <button type="submit">Fach hinzufügen</button>
+                    </form>
+                </section>
                 <section id="class-info">
                     <h2>Klassenübersicht</h2>
                     <section id="class-selection">
@@ -33,6 +42,29 @@
                         </table>
                     </section>
                 </section>
+                <section id="subject-info">
+                    <h2>Fächerübersicht</h2>
+                    <section id="subject-selection">
+                        <label for="subjectSelect">Wählen Sie ein Fach:</label>
+                        <select id="subjectSelect"></select>
+                        <label for="classSelectSubject">Wählen Sie eine Klasse:</label>
+                        <select id="classSelectSubject"></select>
+                    </section>
+                    <section id="subject-student-list">
+                        <h3>Schüler in der Klasse:</h3>
+                        <table id="subjectStudentTable">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Braucht Unterstützung</th>
+                                    <th>Braucht Betreuung für Experiment</th>
+                                    <th>Ist bereit für den Gelingensnachweis</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="subjectStudentTableBody"></tbody>
+                        </table>
+                </section>
             </main>
         </section>
         <script>
@@ -40,6 +72,7 @@
             console.log(teacher);
             document.getElementById("teacher-name").textContent = teacher.firstName + " " + teacher.lastName;
             teacherId = teacher.id;
+            document.getElementById("teacherId").value = teacherId;
         </script>
         <script src="build_teacher.js"></script>
     </body>

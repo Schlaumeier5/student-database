@@ -247,6 +247,28 @@ public class Teacher extends User {
             .collect(Collectors.toList());
     }
 
+    public List<Subject> getSubjects() {
+        List<Integer> subjectIds = new ArrayList<>();
+        try {
+            Server.getInstance().processRequest(
+                fields -> subjectIds.add(Integer.parseInt(fields[0])),
+                "get_subjects_by_teacher", Subject.SQL_FIELDS, String.valueOf(id)
+            );
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return subjectIds.stream()
+            .map(Subject::get)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
+    }
+    public void addSubject(Subject subject) throws SQLException {
+        if (subject == null || subject.getId() <= 0) return;
+        Server.getInstance().getConnection().executeVoidProcessSecure(
+            SQLHelper.getAddObjectProcess("subject_to_teacher", String.valueOf(id), String.valueOf(subject.getId()))
+        );
+    }
+
     /**
      * Registers a new teacher in the database.
      * This method adds a new teacher with the provided details and returns the created Teacher object.

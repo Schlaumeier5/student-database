@@ -14,6 +14,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import de.igslandstuhl.database.api.Room;
 import de.igslandstuhl.database.api.SchoolClass;
 import de.igslandstuhl.database.api.Student;
+import de.igslandstuhl.database.api.Subject;
 import de.igslandstuhl.database.api.Teacher;
 import de.igslandstuhl.database.api.User;
 import de.igslandstuhl.database.server.sql.SQLHelper;
@@ -193,6 +194,8 @@ public final class Server implements AutoCloseable {
             User user = User.getUser(username);
             if (user instanceof Student student) {
                 return student.getSchoolClass().getSubjects().toString();
+            } else if (user instanceof Teacher teacher) {
+                return teacher.getSubjects().toString();
             } else {
                 return null;
             }
@@ -212,6 +215,8 @@ public final class Server implements AutoCloseable {
             return new HashSet<>(Teacher.getAll()).toString();
         } else if (resource.equals("students")) {
             return new HashSet<>(Student.getAll()).toString();
+        } else if (resource.equals("subjects")) {
+            return new HashSet<>(Subject.getAll()).toString();
         } else {
             return null;
         }
