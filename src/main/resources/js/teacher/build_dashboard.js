@@ -33,7 +33,7 @@ async function onClassChange(event) {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td class="student-name">${student.name}</td>
-            <td class="student-action-required">${student.actionRequired ? 'y' : 'n'}</td>
+            <td class="student-action-required">${student.actionRequired ? 'Ja' : 'Nein'}</td>
             <td class="student-action"><button onclick="viewStudent(${student.id})">View</button></td>
         `;
         studentTable.appendChild(row);

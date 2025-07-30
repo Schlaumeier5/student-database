@@ -313,7 +313,7 @@ public class PostRequestHandler {
             Student student = students.get(i);
             responseBuilder.append("{\"id\":").append(student.getId())
                 .append(",\"name\":\"").append(student.getFirstName()).append(" ").append(student.getLastName()).append('"')
-                .append(", \"actionRequired\":\"").append(student.isActionRequired()).append("\"}");
+                .append(", \"actionRequired\":").append(student.isActionRequired()).append("}");
             if (i < students.size() - 1) {
                 responseBuilder.append(", ");
             }
