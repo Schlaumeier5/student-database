@@ -68,7 +68,7 @@ public class Student extends User {
     /**
      * The current requests of the student, mapped by subject ID.
      */
-    private final Map<Integer, String> currentRequests = new ConcurrentHashMap<>();
+    private final Map<Integer, Set<SubjectRequest>> currentRequests = new ConcurrentHashMap<>();
 
     /**
      * The current topics of the student, mapped by subject.
@@ -246,7 +246,7 @@ public class Student extends User {
      * Returns the current requests.
      * @return current requests
      */
-    public Map<Integer, String> getCurrentRequests() { return currentRequests; }
+    public Map<Integer, Set<SubjectRequest>> getCurrentRequests() { return currentRequests; }
 
     /**
      * Returns the student's password hash.
@@ -266,7 +266,22 @@ public class Student extends User {
      * @param type the request type
      */
     public void addSubjectRequest(int subjectId, String type) {
-        currentRequests.put(subjectId, type);
+        currentRequests.computeIfPresent(subjectId, (key, value) -> {
+            value.add(SubjectRequest.fromGermanTranslation(type));
+            return value;
+        });
+        currentRequests.computeIfAbsent(subjectId, key -> new HashSet<>()).add(SubjectRequest.fromGermanTranslation(type));
+    }
+    /**
+     * Removes a subject request for this student.
+     * @param subjectId the subject ID
+     * @param type the request type to remove
+     */
+    public void removeSubjectRequest(int subjectId, String type) {
+        currentRequests.computeIfPresent(subjectId, (key, value) -> {
+            value.remove(SubjectRequest.fromGermanTranslation(type));
+            return value;
+        });
     }
 
     /**
@@ -293,20 +308,20 @@ public class Student extends User {
     @Override
     public String toJSON() {
         StringBuilder builder = new StringBuilder();
-        builder.append("{\n");
-        builder.append("\"id\": ");builder.append(id);builder.append(",\n");
-        builder.append("\"firstName\": \"");builder.append(firstName);builder.append("\",\n");
-        builder.append("\"lastName\": \"");builder.append(lastName);builder.append("\",\n");
-        builder.append("\"email\": \"");builder.append(email);builder.append("\",\n");
-        builder.append("\"schoolClass\": ");builder.append(String.valueOf(schoolClass));builder.append(",\n");
-        builder.append("\"graduationLevel\": ");builder.append(graduationLevel);builder.append(",\n");
-        builder.append("\"selectedTasks\": ");builder.append(selectedTasks);builder.append(",\n");
-        builder.append("\"completedTasks\": ");builder.append(completedTasks);builder.append(",\n");
-        builder.append("\"currentRoom\": ");builder.append(String.valueOf(currentRoom));builder.append(",\n");
-        builder.append("\"currentRequests\": {");builder.append(currentRequests.entrySet().stream()
-            .map(entry -> "\"" + entry.getKey() + "\": \"" + entry.getValue() + "\"")
-            .reduce((a, b) -> a + ", " + b).orElse("")).append("},\n");
-        builder.append("\"currentProgress\": {");
+        builder.append("{\n")
+        .append("\"id\": ").append(id).append(",\n")
+        .append("\"firstName\": \"").append(firstName).append("\",\n")
+        .append("\"lastName\": \"").append(lastName).append("\",\n")
+        .append("\"email\": \"").append(email).append("\",\n")
+        .append("\"schoolClass\": ").append(String.valueOf(schoolClass)).append(",\n")
+        .append("\"graduationLevel\": ").append(graduationLevel).append(",\n")
+        .append("\"selectedTasks\": ").append(selectedTasks).append(",\n")
+        .append("\"completedTasks\": ").append(completedTasks).append(",\n")
+        .append("\"currentRoom\": ").append(String.valueOf(currentRoom)).append(",\n")
+        .append("\"currentRequests\": {").append(currentRequests.entrySet().stream()
+            .map(entry -> "\"" + entry.getKey() + "\": " + entry.getValue().stream().map((r) -> '"' + r.getGermanTranslation() + '"').toList())
+            .reduce((a, b) -> a + ", " + b).orElse("")).append("},\n")
+        .append("\"currentProgress\": {");
         for (Map.Entry<Subject, Topic> entry : currentTopics.entrySet()) {
             builder.append("\"").append(entry.getKey().getName()).append("\": ");
             builder.append("{\"topic\": ").append(entry.getValue().getId()).append(", ");
@@ -481,7 +496,7 @@ public class Student extends User {
         return teacher != null && schoolClass != null && teacher.getClassIds().contains(schoolClass.getId());
     }
     public boolean isActionRequired() {
-        return currentRequests.entrySet().size() > 0;
+        return currentRequests.entrySet().stream().anyMatch((set) -> !set.getValue().isEmpty());
     }
 
     public void assignCompletedSpecialTask(SpecialTask task) throws SQLException {

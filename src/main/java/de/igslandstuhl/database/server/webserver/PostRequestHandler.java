@@ -107,10 +107,16 @@ public class PostRequestHandler {
         String type = (String) json.get("type");
 
         Student student = getActualStudent(request);
+        boolean remove = json.containsKey("remove") && (boolean) json.get("remove");
         PostResponse response;
         if (student != null) {
-            student.addSubjectRequest(subjectId, type);
-            response = PostResponse.ok("Saved request", ContentType.TEXT_PLAIN);
+            if (remove) {
+                student.removeSubjectRequest(subjectId, type);
+                response = PostResponse.ok("Removed request", ContentType.TEXT_PLAIN);
+            } else {
+                student.addSubjectRequest(subjectId, type);
+                response = PostResponse.ok("Saved request", ContentType.TEXT_PLAIN);
+            }
         } else {
             response = PostResponse.unauthorized("Not logged in or invalid session");
         }

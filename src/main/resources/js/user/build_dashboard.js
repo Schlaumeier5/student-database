@@ -16,23 +16,56 @@ function createRequestButton(subject, type, label) {
   const btn = document.createElement('button');
   btn.textContent = label;
 
-  // Disable if there is already a current request for this subject and type
-  if (
-    studentData.currentRequests &&
-    studentData.currentRequests[subject.id] === type
-  ) {
-    btn.disabled = true;
+  // Helper to check if this request is active
+  function isActive() {
+    return (
+      studentData.currentRequests &&
+      studentData.currentRequests[subject.id] &&
+      studentData.currentRequests[subject.id].includes(type)
+    );
   }
 
-  btn.addEventListener('click', () => {
-    fetch('/subject-request', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ subjectId: subject.id, type })
-    }).then(() => {
-      btn.disabled = true;
-    });
+  // Set initial state
+  function updateButton() {
+    if (isActive()) {
+      btn.classList.add('active-request');
+    } else {
+      btn.classList.remove('active-request');
+    }
+  }
+  updateButton();
+
+  btn.addEventListener('click', async () => {
+    if (isActive()) {
+      // Remove request
+      await fetch('/subject-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subjectId: subject.id, type, remove: true })
+      });
+      // Update local state
+      if (studentData.currentRequests[subject.id]) {
+        studentData.currentRequests[subject.id] = studentData.currentRequests[subject.id].filter(t => t !== type);
+        if (studentData.currentRequests[subject.id].length === 0) {
+          delete studentData.currentRequests[subject.id];
+        }
+      }
+    } else {
+      // Add request
+      await fetch('/subject-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subjectId: subject.id, type })
+      });
+      // Update local state
+      if (!studentData.currentRequests[subject.id]) {
+        studentData.currentRequests[subject.id] = [];
+      }
+      studentData.currentRequests[subject.id].push(type);
+    }
+    updateButton();
   });
+
   return btn;
 }
 
