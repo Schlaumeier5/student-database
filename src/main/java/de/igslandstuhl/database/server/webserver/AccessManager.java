@@ -52,7 +52,7 @@ public class AccessManager {
             if (resource.namespace().equals(USER_SPACE) || resource.resource().startsWith("my")) {
                 return true;
             } else if (resource.namespace().equals(TEACHER_SPACE)) {
-                return User.getUser(user).isTeacher();
+                return User.getUser(user).isTeacher() || User.getUser(user).isAdmin();
             } else if (resource.namespace().equals(ADMIN_SPACE) || Arrays.asList(ADMIN_LOCATIONS).contains(resource.resource())) {
                 return User.getUser(user).isAdmin();
             } else {

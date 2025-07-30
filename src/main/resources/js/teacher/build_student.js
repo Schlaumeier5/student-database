@@ -274,7 +274,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await fetch('/update-room', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ room: roomSelect.value })
+      body: JSON.stringify({ room: roomSelect.value, studentId })
     });
   });
 
