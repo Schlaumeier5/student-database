@@ -346,6 +346,10 @@ public class Student extends User {
     public boolean isStudent() {
         return true;
     }
+    @Override
+    public boolean isAdmin() {
+        return false;
+    }
 
     @Override
     public String toJSON() {

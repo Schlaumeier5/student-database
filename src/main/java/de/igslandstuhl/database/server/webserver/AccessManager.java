@@ -24,6 +24,10 @@ public class AccessManager {
      */
     private static final String TEACHER_SPACE = "teacher";
     /**
+     * The admin space is restricted to authenticated admins.
+     */
+    private static final String ADMIN_SPACE = "admin";
+    /**
      * Public locations that are accessible without authentication.
      * These resources can be accessed by anyone, regardless of their authentication status.
      */
@@ -44,6 +48,8 @@ public class AccessManager {
                 return true;
             } else if (resource.namespace().equals(TEACHER_SPACE)) {
                 return User.getUser(user).isTeacher();
+            } else if (resource.namespace().equals(ADMIN_SPACE)) {
+                return User.getUser(user).isAdmin();
             } else {
                 return false;
             }

@@ -126,6 +126,8 @@ public class Teacher extends User {
     public boolean isTeacher() { return true; }
     @Override
     public boolean isStudent() { return false; }
+    @Override
+    public boolean isAdmin() { return false; }
 
     @Override
     public String toJSON() {

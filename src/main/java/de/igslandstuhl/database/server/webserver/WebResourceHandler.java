@@ -14,6 +14,8 @@ public final class WebResourceHandler {
     private static final String[] SQL_WEB_RESOURCES = {"/mydata", "/rooms", "/mysubjects", "/myclasses"};
     private static String[] userOnlySpace = {"dashboard", "build_dashboard.js", "results", "build_results.js"};
     private static String[] teacherOnlySpace = {"dashboard", "build_dashboard.js", "student", "build_student.js", "student-results", "build_results.js"};
+    private static String[] adminOnlySpace = {"dashboard", "build_dashboard.js"};
+
     private WebResourceHandler(){}
 
     private static boolean isSQLWebResource(String path) {
@@ -30,6 +32,14 @@ public final class WebResourceHandler {
     }
     private static boolean inTeacherOnlySpace(String path) {
         for (String userOnlyPaths : teacherOnlySpace) {
+            if (path.contains(userOnlyPaths)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    private static boolean inAdminOnlySpace(String path) {
+        for (String userOnlyPaths : adminOnlySpace) {
             if (path.contains(userOnlyPaths)) {
                 return true;
             }
@@ -67,7 +77,9 @@ public final class WebResourceHandler {
             namespace = parts[1];
             resource = parts[2];
         } else {
-            if (inTeacherOnlySpace(parts[1]) && (user == null || user.isTeacher())) {
+            if (inAdminOnlySpace(parts[1]) && (user == null || user.isAdmin())) {
+                namespace = "admin";
+            } else if (inTeacherOnlySpace(parts[1]) && (user == null || user.isTeacher())) {
                 namespace = "teacher";
             } else if (inUserOnlySpace(parts[1])) {
                 namespace = "user";

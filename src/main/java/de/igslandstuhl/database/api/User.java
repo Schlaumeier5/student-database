@@ -22,6 +22,13 @@ public abstract class User {
     public abstract boolean isStudent();
 
     /**
+     * Checks if the user is an admin.
+     * This method should be implemented by subclasses to determine if the user is an admin.
+     * @return true if the user is an admin, false otherwise
+     */
+    public abstract boolean isAdmin();
+
+    /**
      * Returns the password hash of the user.
      * This method should be implemented by subclasses to provide the user's password hash.
      * @return the password hash of the user
@@ -46,6 +53,8 @@ public abstract class User {
         if (student != null) return student;
         Teacher teacher = Teacher.fromEmail(username);
         if (teacher != null) return teacher;
+        Admin admin = Admin.get(username);
+        if (admin != null) return admin;
         return null;
     }
 
@@ -76,6 +85,17 @@ public abstract class User {
     public Student asStudent() {
         if (this instanceof Student) {
             return (Student) this;
+        }
+        return null;
+    }
+    /**
+     * Converts the user to an Admin object if possible.
+     * This method checks if the user is an instance of Admin and returns it.
+     * @return the Admin object if the user is an admin, or null if not
+     */
+    public Admin asAdmin() {
+        if (this instanceof Admin) {
+            return (Admin) this;
         }
         return null;
     }
