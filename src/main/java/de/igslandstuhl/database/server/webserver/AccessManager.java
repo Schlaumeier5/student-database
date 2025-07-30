@@ -2,6 +2,7 @@ package de.igslandstuhl.database.server.webserver;
 
 import java.util.Arrays;
 
+import de.igslandstuhl.database.api.User;
 import de.igslandstuhl.database.server.resources.ResourceLocation;
 
 /**
@@ -41,6 +42,8 @@ public class AccessManager {
         } else if (user != null) {
             if (resource.namespace().equals(USER_SPACE) || resource.resource().startsWith("my")) {
                 return true;
+            } else if (resource.namespace().equals(TEACHER_SPACE)) {
+                return User.getUser(user).isTeacher();
             } else {
                 return false;
             }

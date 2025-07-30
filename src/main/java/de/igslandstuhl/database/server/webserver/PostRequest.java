@@ -155,7 +155,7 @@ public class PostRequest {
      * which can be used for further processing or resource management.
      * @return a ResourceLocation object representing the path of the POST request
      */
-    public ResourceLocation toResourceLocation() {
-        return de.igslandstuhl.database.server.webserver.WebResourceHandler.locationFromPath(path);
+    public ResourceLocation toResourceLocation(String username) {
+        return de.igslandstuhl.database.server.webserver.WebResourceHandler.locationFromPath(path, username);
     }
 }

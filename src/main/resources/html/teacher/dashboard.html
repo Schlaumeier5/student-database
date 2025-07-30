@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="de">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Lehrer Dashboard</title>
+        <link rel="stylesheet" href="/style.css">
+    </head>
+    <body>
+        <div id="dashboard">
+            <header>
+                <h1>Willkommen, Lehrer</h1>
+            </header>
+            <section id="teacher-options">
+                <button id="show-student-dashboard">Schüler-Ansicht zeigen</button>
+            </section>
+        </div>
+        <script>
+            
+            document.getElementById('show-student-dashboard').addEventListener('click', function() {
+                window.location.href = 'student';
+            });
+        </script>
+    </body>
+</html>

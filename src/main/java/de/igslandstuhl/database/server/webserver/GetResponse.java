@@ -1,5 +1,6 @@
 package de.igslandstuhl.database.server.webserver;
 
+import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 
 import de.igslandstuhl.database.server.resources.ResourceHelper;
@@ -133,7 +134,7 @@ public class GetResponse {
             }
             out.println(); // <--- Diese Zeile ist wichtig: trennt Header von Body!
             out.println(resource);
-        } catch (NullPointerException e) {
+        } catch (FileNotFoundException e) {
             notFound().respond(out);
         } catch (Exception e) {
             e.printStackTrace();
@@ -143,5 +144,16 @@ public class GetResponse {
                 throw new IllegalStateException("Uncaught exception", e);
             }
         }
+    }
+
+    public String getResponseBody() throws FileNotFoundException {
+        if (resourceLocation != null) {
+            if (!resourceLocation.isVirtual()) {
+                return ResourceHelper.readResourceCompletely(resourceLocation);
+            } else {
+                return ResourceHelper.readVirtualResource(user, resourceLocation);
+            }
+        }
+        return "";
     }
 }

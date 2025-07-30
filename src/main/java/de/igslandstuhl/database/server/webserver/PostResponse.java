@@ -1,6 +1,9 @@
 package de.igslandstuhl.database.server.webserver;
 
+import java.io.FileNotFoundException;
 import java.io.PrintWriter;
+
+import de.igslandstuhl.database.server.resources.ResourceLocation;
 
 /**
  * Represents a response to a POST request in the web server.
@@ -13,17 +16,48 @@ public class PostResponse {
      * @see Status
      */
     private final Status statusCode;
+    /**
+     * The body of the response, which contains the content to be sent back to the client.
+     * This can be HTML, JSON, plain text, etc., depending on the request and response type.
+     */
     private final String body;
+    /**
+     * The content type of the response, indicating the type of data being sent back.
+     * This is used by the client to correctly interpret the response body.
+     * @see ContentType
+     */
     private final ContentType contentType;
+    /**
+     * The cookie to be set in the response, if any.
+     * This is used for session management or other purposes where cookies are required.
+     * If no cookie is needed, this can be null.
+     * @see Cookie
+     */
     private final Cookie cookie;
 
+    /**
+     * Constructs a PostResponse with the given status code, body, and content type.
+     * This constructor is used when no cookie is needed in the response.
+     *
+     * @param statusCode The HTTP status code of the response.
+     * @param body The body of the response.
+     * @param contentType The content type of the response.
+     */
     private PostResponse(Status statusCode, String body, ContentType contentType) {
         this.statusCode = statusCode;
         this.body = body;
         this.contentType = contentType;
         this.cookie = null;
     }
-
+    /**
+     * Constructs a PostResponse with the given status code, body, content type, and cookie.
+     * This constructor is used when a cookie needs to be set in the response.
+     *
+     * @param statusCode The HTTP status code of the response.
+     * @param body The body of the response.
+     * @param contentType The content type of the response.
+     * @param cookie The cookie to be set in the response, or null if no cookie is needed.
+     */
     private PostResponse(Status statusCode, String body, ContentType contentType, Cookie cookie) {
         this.statusCode = statusCode;
         this.body = body;
@@ -31,6 +65,13 @@ public class PostResponse {
         this.cookie = cookie;
     }
 
+    /**
+     * Responds to the POST request by writing the response to the provided PrintWriter.
+     * This method formats the response according to HTTP standards, including status code,
+     * content type, and any cookies.
+     *
+     * @param out The PrintWriter to write the response to.
+     */
     public void respond(PrintWriter out) {
         out.print("HTTP/1.1 ");
         statusCode.write(out);
@@ -46,26 +87,99 @@ public class PostResponse {
         out.flush();
     }
 
+    /**
+     * Returns a successful response for a POST request with the given body and content type.
+     * This is used when the request is processed successfully and a response body is needed.
+     *
+     * @param body The body of the response.
+     * @param contentType The content type of the response.
+     * @return A PostResponse object representing the successful response.
+     */
     public static PostResponse ok(String body, ContentType contentType) {
         return new PostResponse(Status.OK, body, contentType);
     }
+    /**
+     * Returns a successful response for a POST request with the given body, content type, and cookie.
+     * This is used when the request is processed successfully and a response body and cookie are needed.
+     *
+     * @param body The body of the response.
+     * @param contentType The content type of the response.
+     * @param cookie The cookie to be set in the response, or null if no cookie is needed.
+     * @return A PostResponse object representing the successful response with a cookie.
+     */
     public static PostResponse ok(String body, ContentType contentType, Cookie cookie) {
         return new PostResponse(Status.OK, body, contentType, cookie);
     }
+    /**
+     * Returns a response for a POST request for the given resource that can be accessed via GET (for example, a teacher can do a post request to student GET data with a specific ID).
+     * @param resourceLocation the location of the resource to be returned
+     * @param user the user who made the request
+     * @return the PostResponse object
+     */
+    public static PostResponse getResource(ResourceLocation resourceLocation, String user) {
+        try {
+            if (AccessManager.hasAccess(user, resourceLocation)) {
+                return new PostResponse(Status.OK, GetResponse.getResource(resourceLocation, user).getResponseBody(), ContentType.ofResourceLocation(resourceLocation));
+            } else {
+                return unauthorized("You have to be logged in to access this resource.");
+            }
+        } catch (NoWebResourceException e) {
+            return forbidden("You do not have permission to access this resource.");
+        } catch (FileNotFoundException e) {
+            return notFound("The requested resource was not found: " + resourceLocation);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return internalServerError("An error occurred while processing your request.");
+        }
+    }
 
+    /**
+     * Returns a response indicating a bad request.
+     * This is used when the request cannot be processed due to client error, such as malformed syntax or invalid request parameters.
+     * @param message The error message to include in the response.
+     * @return A PostResponse object representing the bad request response.
+     */
     public static PostResponse badRequest(String message) {
         return new PostResponse(Status.BAD_REQUEST, message, ContentType.TEXT_PLAIN);
     }
 
+    /**
+     * Returns a response indicating that the user is unauthorized to access the requested resource.
+     * This is used when the user is not authenticated or does not have permission to access the resource.
+     * @param message The error message to include in the response.
+     * @return A PostResponse object representing the unauthorized response.
+     */
     public static PostResponse unauthorized(String message) {
         return new PostResponse(Status.UNAUTHORIZED, message, ContentType.TEXT_PLAIN);
     }
 
+    /**
+     * Returns a response indicating that the server encountered an internal error while processing the request.
+     * This is used when an unexpected condition prevents the server from fulfilling the request.
+     * @param message The error message to include in the response.
+     * @return A PostResponse object representing the internal server error response.
+     */
     public static PostResponse internalServerError(String message) {
         return new PostResponse(Status.INTERNAL_SERVER_ERROR, message, ContentType.TEXT_PLAIN);
     }
 
+    /**
+     * Returns a response indicating that the requested resource was not found.
+     * This is used when the server cannot find the requested resource, such as a missing file or endpoint.
+     * @param message The error message to include in the response.
+     * @return A PostResponse object representing the not found response.
+     */
     public static PostResponse notFound(String message) {
         return new PostResponse(Status.NOT_FOUND, message, ContentType.TEXT_PLAIN);
+    }
+
+    /**
+     * Returns a response indicating that the user does not have permission to access the requested resource.
+     * This is used when the user is authenticated but does not have the necessary permissions for the resource.
+     * @param message The error message to include in the response.
+     * @return A PostResponse object representing the forbidden response.
+     */
+    public static PostResponse forbidden(String message) {
+        return new PostResponse(Status.FORBIDDEN, message, ContentType.TEXT_PLAIN);
     }
 }

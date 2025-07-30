@@ -103,7 +103,7 @@ public class WebServer implements Runnable {
          * @return A GetResponse containing the requested resource or an error response.
          */
         private GetResponse respond(GetRequest request, String user) {
-            return GetResponse.getResource(request.toResourceLocation(), user);
+            return GetResponse.getResource(request.toResourceLocation(user), user);
         }
 
         /**

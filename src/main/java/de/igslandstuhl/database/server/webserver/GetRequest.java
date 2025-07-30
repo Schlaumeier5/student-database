@@ -72,10 +72,11 @@ public class GetRequest {
     /**
      * Returns the resource location for this request, wrapped in a ResourceLocation object.
      * The resource location is constructed from the path of the request.
+     * @param user the username associated with the session, or null if not logged in
      * @return the ResourceLocation for this request
      * @see de.igslandstuhl.database.server.resources.ResourceLocation
      */
-    public ResourceLocation toResourceLocation() {
-        return WebResourceHandler.locationFromPath(path);
+    public ResourceLocation toResourceLocation(String user) {
+        return WebResourceHandler.locationFromPath(path, user);
     }
 }

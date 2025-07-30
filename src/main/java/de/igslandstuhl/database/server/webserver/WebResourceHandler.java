@@ -2,6 +2,7 @@ package de.igslandstuhl.database.server.webserver;
 
 import java.util.Arrays;
 
+import de.igslandstuhl.database.api.User;
 import de.igslandstuhl.database.server.resources.ResourceLocation;
 
 /**
@@ -12,7 +13,7 @@ import de.igslandstuhl.database.server.resources.ResourceLocation;
 public final class WebResourceHandler {
     private static final String[] SQL_WEB_RESOURCES = {"/mydata", "/rooms", "/mysubjects"};
     private static String[] userOnlySpace = {"dashboard", "build_dashboard.js", "results", "build_results.js"};
-    private static String[] teacherOnlySpace = {};
+    private static String[] teacherOnlySpace = {"dashboard", "student", "build_student.js", "student-results", "build_results.js"};
     private WebResourceHandler(){}
 
     private static boolean isSQLWebResource(String path) {
@@ -36,7 +37,7 @@ public final class WebResourceHandler {
         return false;
     }
 
-    public static ResourceLocation locationFromPath(String path) {
+    public static ResourceLocation locationFromPath(String path, String username) {
         if (isSQLWebResource(path)) {
             return new ResourceLocation("virtual", "sql", path.replaceFirst("/", ""));
         }
@@ -57,6 +58,8 @@ public final class WebResourceHandler {
             path += ".html";
         }
 
+        User user = username == null ? null : User.getUser(username);
+
         parts = path.split("/", 3);
         String namespace;
         String resource;
@@ -64,7 +67,7 @@ public final class WebResourceHandler {
             namespace = parts[1];
             resource = parts[2];
         } else {
-            if (inTeacherOnlySpace(parts[1])) {
+            if (inTeacherOnlySpace(parts[1]) && (user == null || user.isTeacher())) {
                 namespace = "teacher";
             } else if (inUserOnlySpace(parts[1])) {
                 namespace = "user";

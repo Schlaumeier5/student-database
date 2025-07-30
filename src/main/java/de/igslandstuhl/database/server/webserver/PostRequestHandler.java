@@ -59,9 +59,27 @@ public class PostRequestHandler {
                 return handleTasks(request);
             case "/update-room":
                 return handleUpdateRoom(request);
+            case "/student-data":
+            case "/rooms":
+            case "/student-subjects":
+                return handleStudentGetData(request);
             default:
                 return PostResponse.notFound("Unknown POST request path: " + path);
         }
+    }
+
+    private Student getActualStudent(PostRequest request) {
+        String user = Server.getInstance().getWebServer().getUserManager().getSessionUser(request);
+        if (user == null) {
+            return null; // User is not logged in
+        }
+        User u = User.getUser(user);
+        if (u instanceof Student student) {
+            return student;
+        } else if (u.isTeacher() && request.getJson().containsKey("studentId")) {
+            return Student.get(((Number) request.getJson().get("studentId")).intValue());
+        }
+        return null;
     }
 
     /**
@@ -84,8 +102,7 @@ public class PostRequestHandler {
         int subjectId = ((Number) json.get("subjectId")).intValue();
         String type = (String) json.get("type");
 
-        String user = Server.getInstance().getWebServer().getUserManager().getSessionUser(request);
-        Student student = User.getUser(user) instanceof Student ? (Student) User.getUser(user) : null;
+        Student student = getActualStudent(request);
         PostResponse response;
         if (student != null) {
             student.addSubjectRequest(subjectId, type);
@@ -144,8 +161,7 @@ public class PostRequestHandler {
         Map<String, Object> json = request.getJson();
         int subjectId = ((Number) json.get("subjectId")).intValue();
 
-        String user = Server.getInstance().getWebServer().getUserManager().getSessionUser(request);
-        Student student = User.getUser(user) instanceof Student ? (Student) User.getUser(user) : null;
+        Student student = getActualStudent(request);
         PostResponse response;
         if (student != null) {
             Subject subject = Subject.get(subjectId);
@@ -187,8 +203,7 @@ public class PostRequestHandler {
             }
         }
 
-        String user = Server.getInstance().getWebServer().getUserManager().getSessionUser(request);
-        Student student = User.getUser(user) instanceof Student ? (Student) User.getUser(user) : null;
+        Student student = getActualStudent(request);
         PostResponse response;
         if (student != null && ids != null) {
             // Assuming Student has a method getTasksByIds(List<Integer> ids)
@@ -219,8 +234,7 @@ public class PostRequestHandler {
         Map<String, Object> json = request.getJson();
         String roomLabel = (String) json.get("room");
 
-        String user = Server.getInstance().getWebServer().getUserManager().getSessionUser(request);
-        Student student = User.getUser(user) instanceof Student ? (Student) User.getUser(user) : null;
+        Student student = getActualStudent(request);
         PostResponse response;
         if (student != null && roomLabel != null) {
             try {
@@ -238,5 +252,22 @@ public class PostRequestHandler {
             response = PostResponse.unauthorized("Not logged in or invalid session");
         }
         return response;
+    }
+    private PostResponse handleStudentGetData(PostRequest request) {
+        String path = request.getPath();
+        if (path.equals("/student-data")) {
+            path = "/mydata";
+        } else if (path.equals("/student-subjects")) {
+            path = "/mysubjects";
+        }
+
+        int studentID = ((Number) request.getJson().get("studentId")).intValue();
+        Student student = Student.get(studentID);
+        if (student == null) {
+            return PostResponse.notFound("Student with ID " + studentID + " not found.");
+        }
+        String email = student.getEmail(); // Email is the username for the student
+
+        return PostResponse.getResource(WebResourceHandler.locationFromPath(path, email), email);
     }
 }
