@@ -1,9 +1,12 @@
 package de.igslandstuhl.database.api;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -186,6 +189,83 @@ public class Student extends User {
         Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getAddObjectProcess("student", String.valueOf(id), firstName, lastName, email, User.passHash(password), schoolClass != null ? String.valueOf(schoolClass.getId()) : "-1", String.valueOf(graduationLevel)));
         students.put(id, student);
         return student;
+    }
+
+    private static String generatePassword(int length, int seed) {
+        StringBuilder password = new StringBuilder();
+        Random random = new Random(seed);
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-+";
+        for (int i = 0; i < length; i++) {
+            password.append(chars.charAt(random.nextInt(chars.length())));
+        }
+        return password.toString();
+    }
+    public static String[] generatePasswords(int count, int length) {
+        String[] passwords = new String[count];
+        for (int i = 0; i < count; i++) {
+            int time = (int) System.currentTimeMillis();
+            passwords[i] = generatePassword(length, i + time + new Random().nextInt(1000));
+            try {
+                Thread.sleep(new Random().nextInt(1,10)); // Sleep to ensure different seeds
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        return passwords;
+    }
+    public static StudentGenerationResult generateStudentWithPassword(int id, String firstName, String lastName, String email, SchoolClass schoolClass, int graduationLevel) throws SQLException {
+        String password = generatePassword(12, id + (int) System.currentTimeMillis());
+        Student student = registerStudentWithPassword(id, firstName, lastName, email, password, schoolClass, graduationLevel);
+        return new StudentGenerationResult(student, password);
+    }
+    public static StudentGenerationResult[] generateStudentsWithPasswords(int[] ids, String[] firstNames, String[] lastNames, String[] emails, String[] schoolClassNames, int[] graduationLevels) throws SQLException {
+        if (ids.length != firstNames.length || ids.length != lastNames.length || ids.length != emails.length || ids.length != schoolClassNames.length || ids.length != graduationLevels.length) {
+            throw new IllegalArgumentException("All input arrays must have the same length");
+        }
+        StudentGenerationResult[] results = new StudentGenerationResult[ids.length];
+        String[] passwords = generatePasswords(ids.length, 12);
+        for (int i = 0; i < ids.length; i++) {
+            results[i] = new StudentGenerationResult(registerStudentWithPassword(ids[i], firstNames[i], lastNames[i], emails[i], passwords[i], SchoolClass.getOrCreate(schoolClassNames[i]), graduationLevels[i]), passwords[i]);
+        }
+        return results;
+    }
+    public static StudentGenerationResult[] generateStudentsFromCSV(String csv) throws SQLException {
+        String[] lines = csv.split("\n");
+        List<Integer> ids = new ArrayList<>();
+        List<String> firstNames = new ArrayList<>();
+        List<String> lastNames = new ArrayList<>();
+        List<String> emails = new ArrayList<>();
+        List<String> schoolClassNames = new ArrayList<>();
+        List<Integer> graduationLevels = new ArrayList<>();
+        for (int i = 0; i < lines.length; i++) {
+            String[] fields = lines[i].split(",");
+            if (fields.length != 6) {
+                throw new IllegalArgumentException("Invalid CSV format");
+            }
+            int id = Integer.parseInt(fields[0].trim());
+            String firstName = fields[1].trim();
+            String lastName = fields[2].trim();
+            String email = fields[5].trim();
+            String schoolClassName = fields[3].trim();
+            int graduationLevel = 0;
+            ids.add(id);
+            firstNames.add(firstName);
+            lastNames.add(lastName);
+            emails.add(email);
+            schoolClassNames.add(schoolClassName);
+            graduationLevels.add(graduationLevel);
+        }
+        int[] idArray = ids.stream().mapToInt(Integer::intValue).toArray();
+        String[] firstNameArray = new String[firstNames.size()];
+        String[] lastNameArray = new String[lastNames.size()];
+        String[] emailArray = new String[emails.size()];
+        String[] schoolClassNameArray = new String[schoolClassNames.size()];
+        int[] graduationLevelArray = graduationLevels.stream().mapToInt(Integer::intValue).toArray();
+        firstNames.toArray(firstNameArray);
+        lastNames.toArray(lastNameArray);
+        emails.toArray(emailArray);
+        schoolClassNames.toArray(schoolClassNameArray);
+        return generateStudentsWithPasswords(idArray, firstNameArray, lastNameArray, emailArray, schoolClassNameArray, graduationLevelArray);
     }
 
     /**

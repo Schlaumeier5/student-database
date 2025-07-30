@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="de">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Schülerverwaltung</title>
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+        <section id="students">
+            <header>
+                <h1>Schülerverwaltung</h1>
+            </header>
+            <main>
+                <section id="add-students">
+                    <h2>Schüler hinzufügen aus edu.sys</h2>
+                    <form id="add-students-form" method="post" action="/add-students">
+                        <label for="csv-input">CSV-Datei:</label>
+                        <textarea id="csv-input" name="csv" rows="10" cols="50" placeholder="ID,Vorname,Nachname,E-Mail,Klasse,Abschlussstufe"></textarea>
+                        <button type="submit">Schüler hinzufügen</button>
+                    </form>
+                </section>
+                <section id="student-list">
+                    <h2>Schülerliste</h2>
+                    <table id="studentTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Vorname</th>
+                                <th>Nachname</th>
+                                <th>E-Mail</th>
+                                <th>Klasse</th>
+                                <th>Abschlussstufe</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Dynamically populated student rows will go here -->
+                        </tbody>
+                    </table>
+                </section>
+            </main>
+        </section>
+        <script>
+            document.getElementById('add-students-form').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const form = e.target;
+                const csv = form['csv'].value;
+
+                const response = await fetch('/add-students', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: csv
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    // Try to get filename from Content-Disposition header
+                    let filename = "schüler.json";
+                    const disposition = response.headers.get('Content-Disposition');
+                    if (disposition && disposition.includes('filename=')) {
+                        filename = disposition.split('filename=')[1].replace(/["']/g, "");
+                    }
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                } else if (response.status === 401) {
+                    alert("Nicht autorisiert! Bitte melden Sie sich an.");
+                    window.location.href = "/login";
+                } else {
+                    alert("Fehler beim Hochladen der Datei!");
+                }
+            });
+        </script>
+    </body>
+</html>

@@ -179,6 +179,30 @@ public class SchoolClass {
             return null;
         }
     }
+    public static SchoolClass getOrCreate(String label) {
+        // grade is the first characters of the label that are digits
+        int grade = 0;
+        StringBuilder gradeStr = new StringBuilder();
+        for (char c : label.toCharArray()) {
+            if (Character.isDigit(c)) {
+                gradeStr.append(c);
+            } else {
+                break;
+            }
+        }
+        if (gradeStr.length() > 0) {
+            grade = Integer.parseInt(gradeStr.toString());
+        }
+        SchoolClass schoolClass = get(label);
+        if (schoolClass == null) {
+            try {
+                schoolClass = addClass(label, grade);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return schoolClass;
+    }
 
     @Override
     public String toString() {

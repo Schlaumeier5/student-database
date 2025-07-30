@@ -138,6 +138,10 @@ public class PostRequest {
         }
         return params;
     }
+
+    public String getBodyAsString() {
+        return body;
+    }
     public Map<String, Object> getJson() {
         // Parse body as JSON
         Gson gson = new Gson();

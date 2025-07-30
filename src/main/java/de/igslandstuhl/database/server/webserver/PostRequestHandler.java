@@ -7,6 +7,7 @@ import java.util.UUID;
 import de.igslandstuhl.database.api.Room;
 import de.igslandstuhl.database.api.SchoolClass;
 import de.igslandstuhl.database.api.Student;
+import de.igslandstuhl.database.api.StudentGenerationResult;
 import de.igslandstuhl.database.api.Subject;
 import de.igslandstuhl.database.api.Task;
 import de.igslandstuhl.database.api.Teacher;
@@ -75,6 +76,10 @@ public class PostRequestHandler {
                 return handleStudentGetData(request);
             case "/student-list":
                 return handleStudentList(request);
+            case "/add-students":
+                return handleAddStudents(request);
+            case "/add-rooms":
+                return handleAddRooms(request);
             default:
                 return PostResponse.notFound("Unknown POST request path: " + path);
         }
@@ -92,6 +97,60 @@ public class PostRequestHandler {
             return Student.get(((Number) request.getJson().get("studentId")).intValue());
         }
         return null;
+    }
+    private String prepare(String webInput) {
+        webInput = webInput.replaceAll("%20", " ")
+                .replaceAll("%0A", "\n")
+                .replaceAll("%0D", "\r")
+                .replaceAll("%2C", ",")
+                .replaceAll("%40", "@")
+                .replaceAll("%3A", ":")
+                .replaceAll("%3B", ";")
+                .replaceAll("%3D", "=")
+                .replaceAll("%3F", "?")
+                .replaceAll("%23", "#")
+                .replaceAll("%26", "&")
+                .replaceAll("%2F", "/")
+                .replaceAll("%5B", "[")
+                .replaceAll("%5D", "]")
+                .replaceAll("%7B", "{")
+                .replaceAll("%7D", "}")
+                .replaceAll("%3C", "<")
+                .replaceAll("%3E", ">")
+                .replaceAll("%C3%A4", "ä")
+                .replaceAll("ÃŸ", "ß")
+                .replaceAll("Ã¤", "ä")
+                .replaceAll("Ã¶", "ö")
+                .replaceAll("Ã¼", "ü")
+                .replaceAll("Ã„", "Ä")
+                .replaceAll("Ã–", "Ö")
+                .replaceAll("Ãœ", "Ü")
+                .replaceAll("%C3%BC", "ü")
+                .replaceAll("%C3%B6", "ö")
+                .replaceAll("%C3%9F", "ß")
+                .replaceAll("%C2%A0", " ")
+                ;
+        // Sanitize the input to prevent XSS attacks
+        webInput = webInput.replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll("\"", "&quot;")
+                .replaceAll("'", "&#39;")
+                .replaceAll("&", "&amp;");
+        // Remove any script tags
+        webInput = webInput.replaceAll("(?i)<script.*?>.*?</script>", "")
+                .replaceAll("(?i)<script.*?/>", "")
+                .replaceAll("(?i)<script.*?>", "")
+                .replaceAll("(?i)</script>", "");
+        // Remove any SQL injection attempts
+        webInput = webInput.replaceAll("(?i)select", "")
+                .replaceAll("(?i)insert", "")
+                .replaceAll("(?i)update", "")
+                .replaceAll("(?i)delete", "")
+                .replaceAll("(?i)drop", "")
+                .replaceAll("(?i)union", "")
+                .replaceAll("(?i)exec", "")
+                .replaceAll("(?i)execute", "");
+        return webInput;
     }
 
     /**
@@ -348,5 +407,66 @@ public class PostRequestHandler {
             response = PostResponse.unauthorized("Not logged in or invalid session");
         }
         return response;
+    }
+    private PostResponse handleAddStudents(PostRequest request) throws IOException {
+        // Test if current user is admin
+        User user = User.getUser(Server.getInstance().getWebServer().getUserManager().getSessionUser(request));
+        if (user == null || !user.isAdmin()) {
+            return PostResponse.unauthorized("Not logged in or invalid session");
+        }
+        int contentLength = request.getContentLength();
+        if (contentLength <= 0) {
+            return PostResponse.badRequest("Missing or invalid Content-Length!");
+        }
+        String csv = prepare(request.getBodyAsString().replaceFirst("csv=", ""));
+        try {
+            StudentGenerationResult[] results = Student.generateStudentsFromCSV(csv);
+            StringBuilder responseBuilder = new StringBuilder("[\n");
+            for (int i = 0; i < results.length; i++) {
+                StudentGenerationResult result = results[i];
+                responseBuilder.append("    {\"id\":").append(result.getStudent().getId())
+                    .append(",\"firstName\":\"").append(result.getStudent().getFirstName()).append('"')
+                    .append(",\"lastName\":\"").append(result.getStudent().getLastName()).append('"')
+                    .append(",\"email\":\"").append(result.getStudent().getEmail()).append('"')
+                    .append(",\"password\":\"").append(result.getPassword()).append("\"}");
+                if (i < results.length - 1) {
+                    responseBuilder.append(",\n");
+                }
+            }
+            responseBuilder.append("\n]");
+            return PostResponse.ok(responseBuilder.toString(), ContentType.JSON);
+        } catch (java.sql.SQLException e) {
+            return PostResponse.internalServerError("Database error: " + e.getMessage());
+        }
+    }
+    private PostResponse handleAddRooms(PostRequest request) throws IOException {
+        // Test if current user is admin
+        User user = User.getUser(Server.getInstance().getWebServer().getUserManager().getSessionUser(request));
+        if (user == null || !user.isAdmin()) {
+            return PostResponse.unauthorized("Not logged in or invalid session");
+        }
+        int contentLength = request.getContentLength();
+        if (contentLength <= 0) {
+            return PostResponse.badRequest("Missing or invalid Content-Length!");
+        }
+        String csv = prepare(request.getBodyAsString().replaceFirst("csv=", ""));
+        try {
+            Room[] rooms = Room.generateRoomsFromCSV(csv);
+            StringBuilder responseBuilder = new StringBuilder("[\n");
+            for (int i = 0; i < rooms.length; i++) {
+                Room room = rooms[i];
+                responseBuilder.append("    {\"label\":\"").append(room.getLabel()).append('"')
+                        .append(",\"minimumLevel\":").append(room.getMinimumLevel()).append('}');
+                if (i < rooms.length - 1) {
+                    responseBuilder.append(",\n");
+                }
+            }
+            responseBuilder.append("\n]");
+            return PostResponse.ok(responseBuilder.toString(), ContentType.JSON);
+        } catch (java.sql.SQLException e) {
+            return PostResponse.internalServerError("Database error: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return PostResponse.badRequest("Invalid CSV format: " + e.getMessage());
+        }
     }
 }

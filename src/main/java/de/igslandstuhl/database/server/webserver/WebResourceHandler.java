@@ -14,7 +14,7 @@ public final class WebResourceHandler {
     private static final String[] SQL_WEB_RESOURCES = {"/mydata", "/rooms", "/mysubjects", "/myclasses"};
     private static String[] userOnlySpace = {"dashboard", "build_dashboard.js", "results", "build_results.js"};
     private static String[] teacherOnlySpace = {"dashboard", "build_dashboard.js", "student", "build_student.js", "student-results", "build_results.js"};
-    private static String[] adminOnlySpace = {"dashboard", "build_dashboard.js"};
+    private static String[] adminOnlySpace = {"dashboard", "build_dashboard.js", "manage_students", "manage_teachers", "manage_classes", "manage_subjects", "manage_rooms", "student", "build_student.js", "student-results", "build_results.js", "teacher", "build_teacher.js", "room", "build_room.js", "subject", "build_subject.js", "schoolclass", "build_schoolclass.js"};
 
     private WebResourceHandler(){}
 

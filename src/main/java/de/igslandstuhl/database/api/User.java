@@ -48,6 +48,9 @@ public abstract class User {
      * @return the User object if found, or null if not found
      */
     public static User getUser(String username) {
+        if (username == null || username.isEmpty()) {
+            return null;
+        }
         username = username.replace("%40", "@");
         Student student = Student.getByEmail(username);
         if (student != null) return student;

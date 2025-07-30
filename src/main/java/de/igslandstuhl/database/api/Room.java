@@ -161,6 +161,35 @@ public class Room {
         }
         return rooms;
     }
+    /**
+     * Generates a list of Room objects from a CSV string.
+     * This method parses the CSV data and creates Room objects for each entry.
+     * @param csv the CSV string containing room data
+     * @return an array of Room objects created from the CSV data
+     */
+    public static Room[] generateRoomsFromCSV(String csv) throws SQLException, IllegalArgumentException {
+        String[] lines = csv.split("\n");
+        List<String> labels = new ArrayList<>();
+        List<Integer> minimumLevels = new ArrayList<>();
+        for (int i = 0; i < lines.length; i++) {
+            String[] parts = lines[i].split(",");
+            if (parts.length != 2) {
+                throw new IllegalArgumentException("Invalid CSV format for room: " + lines[i]);
+            }
+            String label = parts[0].trim();
+            int minimumLevel;
+            try {
+                minimumLevel = Integer.parseInt(parts[1].trim());
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("Invalid minimum level for room: " + lines[i], e);
+            }
+            labels.add(label);
+            minimumLevels.add(minimumLevel);
+        }
+        List<Room> rooms = Room.addAllRooms(labels, minimumLevels);
+        return rooms.toArray(new Room[rooms.size()]);
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;

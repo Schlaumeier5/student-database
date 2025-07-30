@@ -5,7 +5,7 @@ body {
   padding: 20px;
 }
 
-#dashboard, #results {
+#dashboard, #results, #students, #teachers, #classes, #subjects, #rooms {
   max-width: 900px;
   margin: auto;
   background: white;
@@ -83,7 +83,7 @@ button.active-request {
   color: #222;
 }
 
-#studentTable {
+#studentTable, #teacherTable, #classTable, #subjectTable, #roomTable {
   width: 100%;
   margin-top: 20px;
   border-collapse: collapse;
@@ -93,35 +93,43 @@ button.active-request {
   box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 
-#studentTable th, #studentTable td {
+#studentTable th, #studentTable td, #teacherTable th, #teacherTable td, #classTable th, #classTable td, #subjectTable th, #subjectTable td, #roomTable th, #roomTable td {
   padding: 12px 16px;
   text-align: left;
 }
 
-#studentTable th {
+#studentTable th, #teacherTable th, #classTable th, #subjectTable th, #roomTable th {
   background: #007bff;
   color: #fff;
   font-weight: 600;
   border-bottom: 2px solid #0056b3;
 }
 
-#studentTable tr:nth-child(even) {
+#studentTable tr:nth-child(even), #teacherTable tr:nth-child(even), #classTable tr:nth-child(even), #subjectTable tr:nth-child(even), #roomTable tr:nth-child(even) {
   background: #f4f6f9;
 }
 
-#studentTable tr:nth-child(odd) {
+#studentTable tr:nth-child(odd), #teacherTable tr:nth-child(odd), #classTable tr:nth-child(odd), #subjectTable tr:nth-child(odd), #roomTable tr:nth-child(odd) {
   background: #e9ecef;
 }
 
-#studentTable tr:hover {
+#studentTable tr:hover, #teacherTable tr:hover, #classTable tr:hover, #subjectTable tr:hover, #roomTable tr:hover {
   background: #d0e3ff;
   transition: background 0.2s;
 }
 
-#studentTable td {
+#studentTable td, #teacherTable td, #classTable td, #subjectTable td, #roomTable td {
   border-bottom: 1px solid #dee2e6;
 }
 
-#studentTable tr:last-child td {
+#studentTable tr:last-child td, #teacherTable tr:last-child td, #classTable tr:last-child td, #subjectTable tr:last-child td, #roomTable tr:last-child td {
   border-bottom: 0;
+}
+
+#csv-input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  box-sizing: border-box;
 }
