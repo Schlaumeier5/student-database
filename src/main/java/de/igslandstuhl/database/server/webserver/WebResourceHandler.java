@@ -11,9 +11,9 @@ import de.igslandstuhl.database.server.resources.ResourceLocation;
  * and to convert paths into ResourceLocation objects.
  */
 public final class WebResourceHandler {
-    private static final String[] SQL_WEB_RESOURCES = {"/mydata", "/rooms", "/mysubjects"};
+    private static final String[] SQL_WEB_RESOURCES = {"/mydata", "/rooms", "/mysubjects", "/myclasses"};
     private static String[] userOnlySpace = {"dashboard", "build_dashboard.js", "results", "build_results.js"};
-    private static String[] teacherOnlySpace = {"dashboard", "student", "build_student.js", "student-results", "build_results.js"};
+    private static String[] teacherOnlySpace = {"dashboard", "build_dashboard.js", "student", "build_student.js", "student-results", "build_results.js"};
     private WebResourceHandler(){}
 
     private static boolean isSQLWebResource(String path) {

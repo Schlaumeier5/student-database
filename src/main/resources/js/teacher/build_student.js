@@ -1,6 +1,6 @@
 let studentData = null;
 
-let studentId = 0; // TODO: This should be set dynamically based on the logged-in student
+let studentId = Number(sessionStorage.getItem('selectedStudentId'));
 
 function createTaskList(tasks, labelText) {
   const label = document.createElement('h4');
@@ -130,10 +130,10 @@ function createPanel(subject, studentData) {
   // Request buttons
   ['hilfe', 'partner', 'betreuung', 'gelingensnachweis'].forEach(type => {
     const label = {
-      hilfe: 'Ich brauche Hilfe',
-      partner: 'Ich suche einen Partner',
-      betreuung: 'Ich brauche Betreuung für ein Experiment',
-      gelingensnachweis: 'Ich bin bereit für den Gelingensnachweis'
+      hilfe: 'Schüler braucht Hilfe',
+      partner: 'Schüler sucht einen Partner',
+      betreuung: 'Schüler braucht Betreuung für ein Experiment',
+      gelingensnachweis: 'Schüler ist bereit für den Gelingensnachweis'
     }[type];
 
     const btn = createRequestButton(subject, type, label);

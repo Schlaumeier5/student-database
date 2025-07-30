@@ -1,4 +1,4 @@
-let studentId = 0; // Replace with actual student ID
+let studentId = Number(sessionStorage.getItem('selectedStudentId'));
 
 function getGrade(progress) {
   if (progress >= 0.85) return 1;

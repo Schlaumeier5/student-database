@@ -5,13 +5,16 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
 import de.igslandstuhl.database.api.Room;
+import de.igslandstuhl.database.api.SchoolClass;
 import de.igslandstuhl.database.api.Student;
+import de.igslandstuhl.database.api.Teacher;
 import de.igslandstuhl.database.api.User;
 import de.igslandstuhl.database.server.sql.SQLHelper;
 import de.igslandstuhl.database.server.sql.SQLiteConnection;
@@ -188,9 +191,20 @@ public final class Server implements AutoCloseable {
             return new HashSet<>(Room.getRooms().values()).toString();
         } else if (resource.equals("mysubjects")) {
             User user = User.getUser(username);
-            if (user instanceof Student) {
-                Student student = (Student) user;
+            if (user instanceof Student student) {
                 return student.getSchoolClass().getSubjects().toString();
+            } else {
+                return null;
+            }
+        } else if (resource.equals("myclasses")) {
+            User user = User.getUser(username);
+            if (user instanceof Teacher teacher) {
+                Set<Integer> classIDs = teacher.getClassIds();
+                Set<String> classes = new HashSet<>();
+                for (Integer classID : classIDs) {
+                    classes.add("{\"classId\": " + classID + ", \"name\": \"" + SchoolClass.get(classID).getLabel() + "\"}");
+                }
+                return classes.toString();
             } else {
                 return null;
             }

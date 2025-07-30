@@ -5,21 +5,33 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Lehrer Dashboard</title>
         <link rel="stylesheet" href="/style.css">
+        <script src="build_dashboard.js" defer></script>
     </head>
     <body>
         <div id="dashboard">
             <header>
                 <h1>Willkommen, Lehrer</h1>
             </header>
-            <section id="teacher-options">
-                <button id="show-student-dashboard">Schüler-Ansicht zeigen</button>
+            <section id="class-info">
+                <h2>Klassenübersicht</h2>
+                <section id="class-selection">
+                    <label for="classSelect">Wählen Sie eine Klasse:</label>
+                    <select id="classSelect"></select>
+                </section>
+                <section id="student-list">
+                    <h3>Schüler in der Klasse:</h3>
+                    <table id="studentTable">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Aktion erforderlich</th>
+                                <th>Aktion</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentTableBody"></tbody>
+                    </table>
+                </section>
             </section>
         </div>
-        <script>
-            
-            document.getElementById('show-student-dashboard').addEventListener('click', function() {
-                window.location.href = 'student';
-            });
-        </script>
     </body>
 </html>

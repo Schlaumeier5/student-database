@@ -57,4 +57,26 @@ public abstract class User {
     public static String passHash(String password) {
         return DigestUtils.sha1Hex(password);
     }
+
+    /**
+     * Converts the user to a Teacher object if possible.
+     * @return the Teacher object if the user is a teacher, or null if not
+     */
+    public Teacher asTeacher() {
+        if (this instanceof Teacher) {
+            return (Teacher) this;
+        }
+        return null;
+    }
+    /**
+     * Converts the user to a Student object if possible.
+     * This method checks if the user is an instance of Student and returns it.
+     * @return the Student object if the user is a student, or null if not
+     */
+    public Student asStudent() {
+        if (this instanceof Student) {
+            return (Student) this;
+        }
+        return null;
+    }
 }

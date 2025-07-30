@@ -472,6 +472,18 @@ public class Student extends User {
         }
     }
 
+    /**
+     * Checks if the student has a specific teacher.
+     * @param teacher the teacher to check
+     * @return true if the student has the teacher, false otherwise
+     */
+    public boolean hasTeacher(Teacher teacher) {
+        return teacher != null && schoolClass != null && teacher.getClassIds().contains(schoolClass.getId());
+    }
+    public boolean isActionRequired() {
+        return currentRequests.entrySet().size() > 0;
+    }
+
     public void assignCompletedSpecialTask(SpecialTask task) throws SQLException {
         if (task == null) {
             throw new IllegalArgumentException("Special task cannot be null");

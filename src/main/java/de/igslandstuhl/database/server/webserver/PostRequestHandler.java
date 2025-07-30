@@ -5,9 +5,11 @@ import java.util.Map;
 import java.util.UUID;
 
 import de.igslandstuhl.database.api.Room;
+import de.igslandstuhl.database.api.SchoolClass;
 import de.igslandstuhl.database.api.Student;
 import de.igslandstuhl.database.api.Subject;
 import de.igslandstuhl.database.api.Task;
+import de.igslandstuhl.database.api.Teacher;
 import de.igslandstuhl.database.api.Topic;
 import de.igslandstuhl.database.api.User;
 import de.igslandstuhl.database.server.Server;
@@ -63,6 +65,8 @@ public class PostRequestHandler {
             case "/rooms":
             case "/student-subjects":
                 return handleStudentGetData(request);
+            case "/student-list":
+                return handleStudentList(request);
             default:
                 return PostResponse.notFound("Unknown POST request path: " + path);
         }
@@ -263,11 +267,45 @@ public class PostRequestHandler {
 
         int studentID = ((Number) request.getJson().get("studentId")).intValue();
         Student student = Student.get(studentID);
+        Teacher teacher = User.getUser(Server.getInstance().getWebServer().getUserManager().getSessionUser(request)).asTeacher();
         if (student == null) {
             return PostResponse.notFound("Student with ID " + studentID + " not found.");
+        } else if (!student.hasTeacher(teacher)) {
+            return PostResponse.forbidden("You are not allowed to access this student's data.");
         }
         String email = student.getEmail(); // Email is the username for the student
 
         return PostResponse.getResource(WebResourceHandler.locationFromPath(path, email), email);
+    }
+    private PostResponse handleStudentList(PostRequest request) {
+        String path = request.getPath();
+        if (!path.equals("/student-list")) {
+            return PostResponse.notFound("Unknown POST request path: " + path);
+        }
+
+        Teacher teacher = User.getUser(Server.getInstance().getWebServer().getUserManager().getSessionUser(request)).asTeacher();
+        if (teacher == null) {
+            return PostResponse.unauthorized("Not logged in or invalid session");
+        }
+
+        SchoolClass schoolClass = SchoolClass.get(((Number) request.getJson().get("classId")).intValue());
+        if (schoolClass == null || !teacher.getClassIds().contains(schoolClass.getId())) {
+            return PostResponse.forbidden("You are not allowed to access this class's student list.");
+        }
+        // Get the list of students for given SchoolClass
+        java.util.List<Student> students = schoolClass.getStudents();
+        StringBuilder responseBuilder = new StringBuilder("[");
+        for (int i = 0; i < students.size(); i++) {
+            Student student = students.get(i);
+            responseBuilder.append("{\"id\":").append(student.getId())
+                .append(",\"name\":\"").append(student.getFirstName()).append(" ").append(student.getLastName()).append('"')
+                .append(", \"actionRequired\":\"").append(student.isActionRequired()).append("\"}");
+            if (i < students.size() - 1) {
+                responseBuilder.append(", ");
+            }
+        }
+        responseBuilder.append("]");
+
+        return PostResponse.ok(responseBuilder.toString(), ContentType.JSON);
     }
 }
