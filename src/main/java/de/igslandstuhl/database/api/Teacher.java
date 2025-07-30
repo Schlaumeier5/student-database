@@ -2,6 +2,9 @@ package de.igslandstuhl.database.api;
 
 import java.sql.SQLException;
 import java.util.*;
+import java.util.stream.Collectors;
+
+import de.igslandstuhl.database.api.results.TeacherGenerationResult;
 import de.igslandstuhl.database.server.Server;
 import de.igslandstuhl.database.server.sql.SQLHelper;
 
@@ -136,6 +139,10 @@ public class Teacher extends User {
             id, firstName, lastName, email, classIds.toString()
         );
     }
+    @Override
+    public String toString() {
+        return toJSON();
+    }
 
     /**
      * Retrieves all students taught by this teacher.
@@ -223,19 +230,21 @@ public class Teacher extends User {
      * @return a list of all teachers
      */
     public static List<Teacher> getAll() {
-        List<Teacher> all = new ArrayList<>();
+        List<Integer> teacherIDs = new ArrayList<>();
         try {
             Server.getInstance().processRequest(
                 fields -> {
-                    Teacher teacher = Teacher.get(Integer.parseInt(fields[0]));
-                    if (teacher != null) all.add(teacher);
+                    teacherIDs.add(Integer.parseInt(fields[0]));
                 },
                 "get_all_teachers", SQL_FIELDS
             );
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return all;
+        return teacherIDs.stream()
+            .map(Teacher::get)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
     }
 
     /**
@@ -256,6 +265,37 @@ public class Teacher extends User {
         );
         // Now fetch the teacher from DB to get the ID and cache it
         return fromEmail(email);
+    }
+
+    public static TeacherGenerationResult[] generateTeachersFromCSV(String csv) throws SQLException {
+        String[] lines = csv.split("\n");
+        List<String> firstNames = new ArrayList<>();
+        List<String> lastNames = new ArrayList<>();
+        List<String> emails = new ArrayList<>();
+        List<String> passwords = new ArrayList<>();
+
+        for (String line : lines) {
+            String[] fields = line.split(",");
+            if (fields.length != 3) {
+                throw new IllegalArgumentException("Invalid CSV format for teacher generation.");
+            }
+            firstNames.add(fields[0]);
+            lastNames.add(fields[1]);
+            emails.add(fields[2]);
+            passwords.add(User.generateRandomPassword(12, new Random().nextInt(10000)));
+            try {
+                Thread.sleep(new Random().nextInt(100)); // Sleep to ensure unique passwords
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        TeacherGenerationResult[] results = new TeacherGenerationResult[firstNames.size()];
+        for (int i = 0; i < firstNames.size(); i++) {
+            Teacher teacher = registerTeacher(firstNames.get(i), lastNames.get(i), emails.get(i), passwords.get(i));
+            results[i] = new TeacherGenerationResult(teacher, passwords.get(i));
+        }
+        return results;
     }
 
     /**

@@ -6,10 +6,13 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
+import de.igslandstuhl.database.api.results.StudentGenerationResult;
 import de.igslandstuhl.database.server.Server;
 import de.igslandstuhl.database.server.sql.SQLHelper;
 
@@ -169,6 +172,29 @@ public class Student extends User {
             e.printStackTrace();
             return null;
         }
+    }
+    /**
+     * Retrieves all students from the database.
+     * This method queries the database for all students and returns a list of Student objects.
+     *
+     * @return a list of all students
+     */
+    public static List<Student> getAll() {
+        List<Integer> studentIDs = new ArrayList<>();
+        try {
+            Server.getInstance().processRequest(
+                fields -> {
+                    studentIDs.add(Integer.parseInt(fields[0]));
+                },
+                "get_all_students", SQL_FIELDS
+            );
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return studentIDs.stream()
+            .map(Student::get)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
     }
     /**
      * Registers a new student with a password.

@@ -32,6 +32,11 @@ public class AccessManager {
      * These resources can be accessed by anyone, regardless of their authentication status.
      */
     private static final String[] PUBLIC_LOCATIONS = {"rooms"};
+    /**
+     * Admin locations that are accessible only to authenticated admins.
+     * These resources require admin privileges for access.
+     */
+    private static final String[] ADMIN_LOCATIONS = {"students", "teachers"};
     
     /**
      * Checks if a user has access to a specific resource.
@@ -48,7 +53,7 @@ public class AccessManager {
                 return true;
             } else if (resource.namespace().equals(TEACHER_SPACE)) {
                 return User.getUser(user).isTeacher();
-            } else if (resource.namespace().equals(ADMIN_SPACE)) {
+            } else if (resource.namespace().equals(ADMIN_SPACE) || Arrays.asList(ADMIN_LOCATIONS).contains(resource.resource())) {
                 return User.getUser(user).isAdmin();
             } else {
                 return false;

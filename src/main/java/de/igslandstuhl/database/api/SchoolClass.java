@@ -180,6 +180,8 @@ public class SchoolClass {
         }
     }
     public static SchoolClass getOrCreate(String label) {
+        // remove leading zeros from label
+        label = label.replaceFirst("^0+", "").toLowerCase();
         // grade is the first characters of the label that are digits
         int grade = 0;
         StringBuilder gradeStr = new StringBuilder();

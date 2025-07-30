@@ -4,7 +4,13 @@ async function fetchJson(url, options) {
 }
 
 async function fetchClasses() {
-  const classes = await fetchJson('/myclasses');
+  const classes = await fetchJson('/teacher-classes', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ teacherId })
+  });
   return classes;
 }
 

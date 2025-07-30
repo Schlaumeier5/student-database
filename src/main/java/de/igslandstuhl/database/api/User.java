@@ -1,5 +1,7 @@
 package de.igslandstuhl.database.api;
 
+import java.util.Random;
+
 import org.apache.commons.codec.digest.DigestUtils;
 
 /**
@@ -7,6 +9,28 @@ import org.apache.commons.codec.digest.DigestUtils;
  * This class provides methods to check user roles, retrieve password hashes, and convert user data to JSON format.
  */
 public abstract class User {
+    public static final User ANONYMOUS = new User() {
+        @Override
+        public boolean isTeacher() {
+            return false;
+        }
+        @Override
+        public boolean isStudent() {
+            return false;
+        }
+        @Override
+        public boolean isAdmin() {
+            return false;
+        }
+        @Override
+        public String getPasswordHash() {
+            throw new UnsupportedOperationException("Unimplemented method 'getPasswordHash'");
+        }
+        @Override
+        public String toJSON() {
+            throw new UnsupportedOperationException("Unimplemented method 'toJSON'");
+        }
+    };
     /**
      * Checks if the user is a teacher.
      * This method should be implemented by subclasses to determine if the user is a teacher.
@@ -49,7 +73,7 @@ public abstract class User {
      */
     public static User getUser(String username) {
         if (username == null || username.isEmpty()) {
-            return null;
+            return ANONYMOUS;
         }
         username = username.replace("%40", "@");
         Student student = Student.getByEmail(username);
@@ -59,6 +83,16 @@ public abstract class User {
         Admin admin = Admin.get(username);
         if (admin != null) return admin;
         return null;
+    }
+
+    public static String generateRandomPassword(int length, int seed) {
+        StringBuilder password = new StringBuilder();
+        Random random = new Random(seed);
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-+";
+        for (int i = 0; i < length; i++) {
+            password.append(chars.charAt(random.nextInt(chars.length())));
+        }
+        return password.toString();
     }
 
     /**

@@ -7,12 +7,13 @@ import java.util.UUID;
 import de.igslandstuhl.database.api.Room;
 import de.igslandstuhl.database.api.SchoolClass;
 import de.igslandstuhl.database.api.Student;
-import de.igslandstuhl.database.api.StudentGenerationResult;
 import de.igslandstuhl.database.api.Subject;
 import de.igslandstuhl.database.api.Task;
 import de.igslandstuhl.database.api.Teacher;
 import de.igslandstuhl.database.api.Topic;
 import de.igslandstuhl.database.api.User;
+import de.igslandstuhl.database.api.results.StudentGenerationResult;
+import de.igslandstuhl.database.api.results.TeacherGenerationResult;
 import de.igslandstuhl.database.server.Server;
 
 public class PostRequestHandler {
@@ -74,12 +75,18 @@ public class PostRequestHandler {
             case "/rooms":
             case "/student-subjects":
                 return handleStudentGetData(request);
+            case "/teacher-classes":
+                return handleTeacherGetData(request);
             case "/student-list":
                 return handleStudentList(request);
             case "/add-students":
                 return handleAddStudents(request);
             case "/add-rooms":
                 return handleAddRooms(request);
+            case "/add-teacher":
+                return handleAddTeacher(request);
+            case "/add-teachers":
+                return handleAddTeachers(request);
             default:
                 return PostResponse.notFound("Unknown POST request path: " + path);
         }
@@ -93,7 +100,7 @@ public class PostRequestHandler {
         User u = User.getUser(user);
         if (u instanceof Student student) {
             return student;
-        } else if (u.isTeacher() && request.getJson().containsKey("studentId")) {
+        } else if ((u.isTeacher() || u.isAdmin()) && request.getJson().containsKey("studentId")) {
             return Student.get(((Number) request.getJson().get("studentId")).intValue());
         }
         return null;
@@ -340,14 +347,29 @@ public class PostRequestHandler {
 
         int studentID = ((Number) request.getJson().get("studentId")).intValue();
         Student student = Student.get(studentID);
-        Teacher teacher = User.getUser(Server.getInstance().getWebServer().getUserManager().getSessionUser(request)).asTeacher();
+        User user = User.getUser(Server.getInstance().getWebServer().getUserManager().getSessionUser(request));
         if (student == null) {
             return PostResponse.notFound("Student with ID " + studentID + " not found.");
-        } else if (!student.hasTeacher(teacher)) {
+        } else if (!student.hasTeacher(user.asTeacher()) && !user.isAdmin()) {
             return PostResponse.forbidden("You are not allowed to access this student's data.");
         }
         String email = student.getEmail(); // Email is the username for the student
 
+        return PostResponse.getResource(WebResourceHandler.locationFromPath(path, email), email);
+    }
+    private PostResponse handleTeacherGetData(PostRequest request) {
+        String path = request.getPath();
+        if (path.equals("/teacher-classes")) {
+            path = "/myclasses";
+        }
+        if (!User.getUser(Server.getInstance().getWebServer().getUserManager().getSessionUser(request)).isAdmin()) {
+            return PostResponse.unauthorized("Not logged in or invalid session");
+        }
+
+        int id = ((Number) request.getJson().get("teacherId")).intValue();
+        Teacher teacher = Teacher.get(id);
+
+        String email = teacher.getEmail(); // Email is the username for the teacher
         return PostResponse.getResource(WebResourceHandler.locationFromPath(path, email), email);
     }
     private PostResponse handleStudentList(PostRequest request) {
@@ -356,13 +378,13 @@ public class PostRequestHandler {
             return PostResponse.notFound("Unknown POST request path: " + path);
         }
 
-        Teacher teacher = User.getUser(Server.getInstance().getWebServer().getUserManager().getSessionUser(request)).asTeacher();
-        if (teacher == null) {
+        User user = User.getUser(Server.getInstance().getWebServer().getUserManager().getSessionUser(request));
+        if (!user.isTeacher() && !user.isAdmin()) {
             return PostResponse.unauthorized("Not logged in or invalid session");
         }
 
         SchoolClass schoolClass = SchoolClass.get(((Number) request.getJson().get("classId")).intValue());
-        if (schoolClass == null || !teacher.getClassIds().contains(schoolClass.getId())) {
+        if (schoolClass == null || (user.isTeacher() && !user.asTeacher().getClassIds().contains(schoolClass.getId()))) {
             return PostResponse.forbidden("You are not allowed to access this class's student list.");
         }
         // Get the list of students for given SchoolClass
@@ -458,6 +480,64 @@ public class PostRequestHandler {
                 responseBuilder.append("    {\"label\":\"").append(room.getLabel()).append('"')
                         .append(",\"minimumLevel\":").append(room.getMinimumLevel()).append('}');
                 if (i < rooms.length - 1) {
+                    responseBuilder.append(",\n");
+                }
+            }
+            responseBuilder.append("\n]");
+            return PostResponse.ok(responseBuilder.toString(), ContentType.JSON);
+        } catch (java.sql.SQLException e) {
+            return PostResponse.internalServerError("Database error: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return PostResponse.badRequest("Invalid CSV format: " + e.getMessage());
+        }
+    }
+    private PostResponse handleAddTeacher(PostRequest request) throws IOException {
+        // Test if current user is admin
+        User user = User.getUser(Server.getInstance().getWebServer().getUserManager().getSessionUser(request));
+        if (user == null || !user.isAdmin()) {
+            return PostResponse.unauthorized("Not logged in or invalid session");
+        }
+        int contentLength = request.getContentLength();
+        if (contentLength <= 0) {
+            return PostResponse.badRequest("Missing or invalid Content-Length!");
+        }
+        Map<String, Object> json = request.getJson();
+        String firstName = (String) json.get("firstName");
+        String lastName = (String) json.get("lastName");
+        String email = (String) json.get("email");
+        String password = (String) json.get("password");
+
+        try {
+            Teacher teacher = Teacher.registerTeacher(firstName, lastName, email, password);
+            return PostResponse.ok(teacher.toString(), ContentType.JSON);
+        } catch (java.sql.SQLException e) {
+            return PostResponse.internalServerError("Database error: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return PostResponse.badRequest("Invalid input: " + e.getMessage());
+        }
+    }
+    private PostResponse handleAddTeachers(PostRequest request) throws IOException {
+        // Test if current user is admin
+        User user = User.getUser(Server.getInstance().getWebServer().getUserManager().getSessionUser(request));
+        if (user == null || !user.isAdmin()) {
+            return PostResponse.unauthorized("Not logged in or invalid session");
+        }
+        int contentLength = request.getContentLength();
+        if (contentLength <= 0) {
+            return PostResponse.badRequest("Missing or invalid Content-Length!");
+        }
+        String csv = prepare(request.getBodyAsString().replaceFirst("csv=", ""));
+        try {
+            TeacherGenerationResult[] teachers = Teacher.generateTeachersFromCSV(csv);
+            StringBuilder responseBuilder = new StringBuilder("[\n");
+            for (int i = 0; i < teachers.length; i++) {
+                TeacherGenerationResult result = teachers[i];
+                responseBuilder.append("    {\"id\":").append(result.getId())
+                        .append(",\"firstName\":\"").append(result.getFirstName()).append('"')
+                        .append(",\"lastName\":\"").append(result.getLastName()).append('"')
+                        .append(",\"email\":\"").append(result.getEmail()).append('"')
+                        .append(",\"password\":\"").append(result.getPassword()).append("\"}");
+                if (i < teachers.length - 1) {
                     responseBuilder.append(",\n");
                 }
             }

@@ -5,7 +5,7 @@ body {
   padding: 20px;
 }
 
-#dashboard, #results, #students, #teachers, #classes, #subjects, #rooms {
+#dashboard, #results, #students, #teachers, #classes, body > #subjects, #rooms {
   max-width: 900px;
   margin: auto;
   background: white;

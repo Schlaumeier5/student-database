@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="de">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Lehrerverwaltung</title>
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+        <section id="dashboard">
+            <header>
+                <h1>Lehrerverwaltung - <span id="teacher-name"></span></h1>
+            </header>
+            <main>
+                <section id="class-info">
+                    <h2>Klassenübersicht</h2>
+                    <section id="class-selection">
+                        <label for="classSelect">Wählen Sie eine Klasse:</label>
+                        <select id="classSelect"></select>
+                    </section>
+                    <section id="student-list">
+                        <h3>Schüler in der Klasse:</h3>
+                        <table id="studentTable">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Aktion erforderlich</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentTableBody"></tbody>
+                        </table>
+                    </section>
+                </section>
+            </main>
+        </section>
+        <script>
+            teacher = JSON.parse(sessionStorage.getItem("currentTeacher"));
+            console.log(teacher);
+            document.getElementById("teacher-name").textContent = teacher.firstName + " " + teacher.lastName;
+            teacherId = teacher.id;
+        </script>
+        <script src="build_teacher.js"></script>
+    </body>
+</html>
