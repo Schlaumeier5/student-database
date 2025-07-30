@@ -15,6 +15,10 @@ import de.igslandstuhl.database.server.sql.SQLHelper;
  * Tasks are associated with topics and have different levels of difficulty.
  */
 public class Task {
+    public static final int STATUS_NOT_STARTED = 0;
+    public static final int STATUS_IN_PROGRESS = 1;
+    public static final int STATUS_COMPLETED = 2;
+
     /**
      * SQL fields for the Task table.
      * Used for database queries to retrieve task information.

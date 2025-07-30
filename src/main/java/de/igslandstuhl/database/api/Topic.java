@@ -326,10 +326,6 @@ public class Topic {
         result = prime * result + ratio;
         result = prime * result + grade;
         result = prime * result + number;
-        result = prime * result + ((tasks == null) ? 0 : tasks.hashCode());
-        result = prime * result + ((tasksLevel1 == null) ? 0 : tasksLevel1.hashCode());
-        result = prime * result + ((tasksLevel2 == null) ? 0 : tasksLevel2.hashCode());
-        result = prime * result + ((tasksLevel3 == null) ? 0 : tasksLevel3.hashCode());
         return result;
     }
 

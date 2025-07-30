@@ -61,6 +61,14 @@ public class PostRequestHandler {
                 return handleTasks(request);
             case "/update-room":
                 return handleUpdateRoom(request);
+            case "/begin-task":
+                return handleTaskChange(request, Task.STATUS_IN_PROGRESS);
+            case "/complete-task":
+                return handleTaskChange(request, Task.STATUS_COMPLETED);
+            case "/cancel-task":
+                return handleTaskChange(request, Task.STATUS_NOT_STARTED);
+            case "/reopen-task":
+                return handleTaskChange(request, Task.STATUS_NOT_STARTED);
             case "/student-data":
             case "/rooms":
             case "/student-subjects":
@@ -313,5 +321,32 @@ public class PostRequestHandler {
         responseBuilder.append("]");
 
         return PostResponse.ok(responseBuilder.toString(), ContentType.JSON);
+    }
+    private PostResponse handleTaskChange(PostRequest request, int newStatus) throws IOException {
+        int contentLength = request.getContentLength();
+        if (contentLength <= 0) {
+            return PostResponse.badRequest("Missing or invalid Content-Length!");
+        }
+        Map<String, Object> json = request.getJson();
+        int taskId = ((Number) json.get("taskId")).intValue();
+
+        Student student = getActualStudent(request);
+        PostResponse response;
+        if (student != null) {
+            Task task = Task.get(taskId);
+            if (task != null) {
+                try {
+                    student.changeTaskStatus(task, newStatus);
+                    response = PostResponse.ok("Task status changed successfully", ContentType.TEXT_PLAIN);
+                } catch (java.sql.SQLException e) {
+                    response = PostResponse.internalServerError("Database error: " + e.getMessage());
+                }
+            } else {
+                response = PostResponse.notFound("Task not found");
+            }
+        } else {
+            response = PostResponse.unauthorized("Not logged in or invalid session");
+        }
+        return response;
     }
 }

@@ -49,12 +49,17 @@ function createBarChart(subject, subjectName, studentData) {
   chart.appendChild(createGradeScale());
 
   // Get all tasks for this subject (from completed, selected, and topic.tasks)
-  const completed = studentData.completedTasks.filter(t => (t.topic && t.topic.subject && t.topic.subject.id === subject.id) || (!t.topic && t.subject && t.subject == subject.id));
-  const selected = studentData.selectedTasks.filter(t => t.topic && t.topic.id && t.topic.subject && t.topic.subject.id === subject.id);
+  const completed = studentData.completedTasks.filter(t => (t.topic && t.topic.subject && t.topic.subject.name === subject.name) || (!t.topic && t.subject && t.subject == subject.name));
+  const selected = studentData.selectedTasks.filter(t => t.topic && t.topic.id && t.topic.subject && t.topic.subject.name === subject.name);
   // For demo: If you have all tasks for the subject, fetch them here. Otherwise, use completed+selected as all tasks.
   let allTasks = [...completed, ...selected];
+  console.log(`Creating bar chart for subject: ${subjectName}`, subject, {
+    completed: completed.length,
+    selected: selected.length,
+    allTasks: allTasks.length
+  });
   // Remove duplicates by id
-  allTasks = allTasks.filter((task, idx, arr) => arr.findIndex(t => t.id === task.id) === idx);
+  allTasks = allTasks.filter((task, idx, arr) => arr.findIndex(t => t.id === task.id && t.name === task.name) === idx);
 
   // Sort by completion: completed first (by completion order if available), then selected, then others
   allTasks.sort((a, b) => {
@@ -73,9 +78,9 @@ function createBarChart(subject, subjectName, studentData) {
   allTasks.forEach(task => {
     const div = document.createElement('div');
     div.className = 'bar-task ' + getTaskColorClass(task.niveau);
-    if (completed.some(t => t.id === task.id)) {
+    if (completed.some(t => t.id === task.id && t.name === task.name)) {
       div.classList.add('completed');
-    } else if (selected.some(t => t.id === task.id)) {
+    } else if (selected.some(t => t.id === task.id && t.name === task.name)) {
       div.classList.add('selected', 'hatched');
     }
     div.style.width = (100 * task.ratio) + '%';

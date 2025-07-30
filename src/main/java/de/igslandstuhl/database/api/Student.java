@@ -284,6 +284,48 @@ public class Student extends User {
         });
     }
 
+    public void beginTask(Task task) throws SQLException {
+        if (task == null) {
+            throw new IllegalArgumentException("Task cannot be null");
+        }
+        // Update in DB
+        Server.getInstance().getConnection().executeVoidProcessSecure(
+            SQLHelper.getAddObjectProcess("taskstat",
+                String.valueOf(id),
+                String.valueOf(task.getId()),
+                "1" // 1 indicates the task is in progress
+            )
+        );
+        // Update in memory
+        selectedTasks.add(task);
+    }
+    public void changeTaskStatus(Task task, int newStatus) throws SQLException {
+        if (task == null) {
+            throw new IllegalArgumentException("Task cannot be null");
+        }
+        // Update in memory
+        if (newStatus == Task.STATUS_COMPLETED) {
+            selectedTasks.remove(task);
+            completedTasks.add(task);
+        } else if (newStatus == Task.STATUS_IN_PROGRESS) {
+            completedTasks.remove(task);
+            selectedTasks.add(task);
+        } else if (newStatus == Task.STATUS_NOT_STARTED) {
+            selectedTasks.remove(task);
+            completedTasks.remove(task);
+        } else {
+            throw new IllegalArgumentException("Invalid task status: " + newStatus);
+        }
+        // Update in DB
+        Server.getInstance().getConnection().executeVoidProcessSecure(
+            SQLHelper.getAddObjectProcess("taskstat",
+                String.valueOf(id),
+                String.valueOf(task.getId()),
+                String.valueOf(newStatus)
+            )
+        );
+    }
+
     /**
      * Removes a subject request for this student.
      * @param subjectId the subject ID

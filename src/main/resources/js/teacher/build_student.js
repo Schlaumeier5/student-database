@@ -2,13 +2,17 @@ let studentData = null;
 
 let studentId = Number(sessionStorage.getItem('selectedStudentId'));
 
-function createTaskList(tasks, labelText) {
+function createTaskList(tasks, labelText, onClick) {
   const label = document.createElement('h4');
   label.textContent = labelText;
   const list = document.createElement('ul');
   tasks.forEach(task => {
     const li = document.createElement('li');
     li.textContent = `${task.number} ${task.name} (Niveau ${task.niveau}, Gesamtanteil: ${task.ratio * 100}%)`;
+    if (typeof onClick === 'function') {
+      li.style.cursor = 'pointer';
+      li.addEventListener('click', () => onClick(task, li));
+    }
     list.appendChild(li);
   });
   return { label, list };
@@ -106,6 +110,27 @@ function createPanel(subject, studentData) {
   const body = document.createElement('div');
   body.className = 'panel-body';
 
+  function createRequestButtons() {
+    ['hilfe', 'partner', 'betreuung', 'gelingensnachweis'].forEach(type => {
+      const label = {
+        hilfe: 'Schüler braucht Hilfe',
+        partner: 'Schüler sucht einen Partner',
+        betreuung: 'Schüler braucht Betreuung für ein Experiment',
+        gelingensnachweis: 'Schüler ist bereit für den Gelingensnachweis'
+      }[type];
+
+      const btn = createRequestButton(subject, type, label);
+      body.appendChild(btn);
+    });
+  }
+  function refreshPanel() {
+    body.innerHTML = '';
+    header.click(); // Re-trigger the header click to close the panel
+    panel.classList.remove('loaded'); // Reset loaded state
+    createRequestButtons();
+    header.click(); // Re-trigger the header click to load tasks
+  }
+
   header.addEventListener('click', async () => {
     panel.classList.toggle('active');
     if (panel.classList.contains('loaded')) return;
@@ -144,34 +169,69 @@ function createPanel(subject, studentData) {
         !completedTasks.some(t => t.id === task.id)
     );
 
-    // Current stage
-    const { label: selectedLabel, list: selectedList } = createTaskList(selectedTasks, 'Aktuelle Etappe:');
+    // Current stage (selectedTasks)
+    const { label: selectedLabel, list: selectedList } = createTaskList(selectedTasks, 'Aktuelle Etappe:', async (task) => {
+      const action = window.prompt(
+        'Was möchten Sie tun?\n1: Als abgeschlossen markieren\n2: Aufgabe abbrechen',
+        '1'
+      );
+      if (action === '1') {
+        // Move to completed
+        await fetch('/complete-task', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ taskId: task.id, studentId })
+        });
+        // Update local state
+        studentData.selectedTasks = studentData.selectedTasks.filter(t => t.id !== task.id);
+        studentData.completedTasks.push(task);
+      } else if (action === '2') {
+        // Cancel task
+        await fetch('/cancel-task', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ taskId: task.id, studentId })
+        });
+        studentData.selectedTasks = studentData.selectedTasks.filter(t => t.id !== task.id);
+        // No need to push to completedTasks or otherTasks, UI will refresh
+      }
+      refreshPanel(); // Refresh the panel to show updated tasks
+    });
     body.appendChild(selectedLabel);
     body.appendChild(selectedList);
 
     // Completed stages
-    const { label: completedLabel, list: completedList } = createTaskList(completedTasks, 'Abgeschlossene Etappen:');
+    const { label: completedLabel, list: completedList } = createTaskList(completedTasks, 'Abgeschlossene Etappen:', async (task) => {
+      if (window.confirm('Soll diese Aufgabe wirklich wieder in die offenen Aufgaben verschoben werden?')) {
+        await fetch('/reopen-task', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ taskId: task.id, studentId })
+        });
+        studentData.completedTasks = studentData.completedTasks.filter(t => t.id !== task.id);
+        // No need to push to otherTasks, UI will refresh
+        refreshPanel(); // Refresh the panel to show updated tasks
+      }
+    });
     body.appendChild(completedLabel);
     body.appendChild(completedList);
 
     // Other stages
-    const { label: otherLabel, list: otherList } = createTaskList(otherTasks, 'Weitere Etappen:');
+    const { label: otherLabel, list: otherList } = createTaskList(otherTasks, 'Weitere Etappen:', async (task) => {
+      await fetch('/begin-task', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ taskId: task.id, studentId })
+      });
+      studentData.selectedTasks.push(task);
+      refreshPanel(); // Refresh the panel to show updated tasks
+    });
     body.appendChild(otherLabel);
     body.appendChild(otherList);
   });
 
   // Request buttons
-  ['hilfe', 'partner', 'betreuung', 'gelingensnachweis'].forEach(type => {
-    const label = {
-      hilfe: 'Schüler braucht Hilfe',
-      partner: 'Schüler sucht einen Partner',
-      betreuung: 'Schüler braucht Betreuung für ein Experiment',
-      gelingensnachweis: 'Schüler ist bereit für den Gelingensnachweis'
-    }[type];
-
-    const btn = createRequestButton(subject, type, label);
-    body.appendChild(btn);
-  });
+  createRequestButtons();
 
   panel.appendChild(header);
   panel.appendChild(body);

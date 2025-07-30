@@ -1,12 +1,16 @@
 let studentData = null;
 
-function createTaskList(tasks, labelText) {
+function createTaskList(tasks, labelText, onClick) {
   const label = document.createElement('h4');
   label.textContent = labelText;
   const list = document.createElement('ul');
   tasks.forEach(task => {
     const li = document.createElement('li');
     li.textContent = `${task.number} ${task.name} (Niveau ${task.niveau}, Gesamtanteil: ${task.ratio * 100}%)`;
+    if (typeof onClick === 'function') {
+      li.style.cursor = 'pointer';
+      li.addEventListener('click', () => onClick(task, li));
+    }
     list.appendChild(li);
   });
   return { label, list };
@@ -142,8 +146,20 @@ function createPanel(subject, studentData) {
         !completedTasks.some(t => t.id === task.id)
     );
 
-    // Current stage
-    const { label: selectedLabel, list: selectedList } = createTaskList(selectedTasks, 'Aktuelle Etappe:');
+    // Current stage (selectedTasks)
+    const { label: selectedLabel, list: selectedList } = createTaskList(selectedTasks, 'Aktuelle Etappe:', async (task) => {
+      if (window.confirm(`Möchtest du die Etappe "${task.name}" wirklich abbrechen?`)) {
+        // Cancel task
+        await fetch('/cancel-task', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ taskId: task.id, studentId })
+        });
+        studentData.selectedTasks = studentData.selectedTasks.filter(t => t.id !== task.id);
+        // No need to push to completedTasks or otherTasks, UI will refresh
+        refreshPanel(); // Refresh the panel to show updated tasks
+      }
+    });
     body.appendChild(selectedLabel);
     body.appendChild(selectedList);
 
@@ -153,7 +169,17 @@ function createPanel(subject, studentData) {
     body.appendChild(completedList);
 
     // Other stages
-    const { label: otherLabel, list: otherList } = createTaskList(otherTasks, 'Weitere Etappen:');
+    const { label: otherLabel, list: otherList } = createTaskList(otherTasks, 'Weitere Etappen:', async (task) => {
+      await fetch('/begin-task', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ taskId: task.id })
+      });
+      studentData.selectedTasks.push(task);
+      body.innerHTML = '';
+      panel.classList.remove('loaded');
+      header.click();
+    });
     body.appendChild(otherLabel);
     body.appendChild(otherList);
   });
