@@ -36,7 +36,7 @@ public class AccessManager {
      * Admin locations that are accessible only to authenticated admins.
      * These resources require admin privileges for access.
      */
-    private static final String[] ADMIN_LOCATIONS = {"students", "teachers"};
+    private static final String[] ADMIN_LOCATIONS = {"students", "teachers", "classes"};
     
     /**
      * Checks if a user has access to a specific resource.

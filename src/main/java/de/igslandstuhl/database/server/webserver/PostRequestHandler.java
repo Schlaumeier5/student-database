@@ -95,6 +95,14 @@ public class PostRequestHandler {
                 return handleAddSubjectToTeacher(request);
             case "/add-subject":
                 return handleAddSubject(request);
+            case "/class-subjects":
+                return handleClassSubjects(request);
+            case "/delete-class":
+                return handleDeleteClass(request);
+            case "/add-class":
+                return handleAddClass(request);
+            case "/edit-class":
+                return handleEditClass(request);
             default:
                 return PostResponse.notFound("Unknown POST request path: " + path);
         }
@@ -609,8 +617,133 @@ public class PostRequestHandler {
         String name = data.get("name");
 
         try {
-            Subject subject = Subject.addSubject(name);
+            Subject.addSubject(name);
             return PostResponse.redirect("/manage_subjects");
+        } catch (java.sql.SQLException e) {
+            return PostResponse.internalServerError("Database error: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return PostResponse.badRequest("Invalid input: " + e.getMessage());
+        }
+    }
+    private PostResponse handleClassSubjects(PostRequest request) throws IOException {
+        // Test if current user is admin
+        User user = User.getUser(Server.getInstance().getWebServer().getUserManager().getSessionUser(request));
+        if (user == null || !user.isAdmin()) {
+            return PostResponse.unauthorized("Not logged in or invalid session");
+        }
+        int contentLength = request.getContentLength();
+        if (contentLength <= 0) {
+            return PostResponse.badRequest("Missing or invalid Content-Length!");
+        }
+        Map<String, Object> json = request.getJson();
+        int classId = ((Number) json.get("classId")).intValue();
+
+        SchoolClass schoolClass = SchoolClass.get(classId);
+        if (schoolClass == null) {
+            return PostResponse.notFound("Class not found");
+        }
+
+        java.util.List<Subject> subjects = schoolClass.getSubjects();
+        StringBuilder responseBuilder = new StringBuilder("[");
+        for (int i = 0; i < subjects.size(); i++) {
+            Subject subject = subjects.get(i);
+            responseBuilder.append("{\"id\":").append(subject.getId())
+                .append(",\"name\":\"").append(subject.getName()).append("\"}");
+            if (i < subjects.size() - 1) {
+                responseBuilder.append(",");
+            }
+        }
+        responseBuilder.append("]");
+        return PostResponse.ok(responseBuilder.toString(), ContentType.JSON);
+    }
+    private PostResponse handleDeleteClass(PostRequest request) throws IOException {
+        // Test if current user is admin
+        User user = User.getUser(Server.getInstance().getWebServer().getUserManager().getSessionUser(request));
+        if (user == null || !user.isAdmin()) {
+            return PostResponse.unauthorized("Not logged in or invalid session");
+        }
+        int contentLength = request.getContentLength();
+        if (contentLength <= 0) {
+            return PostResponse.badRequest("Missing or invalid Content-Length!");
+        }
+        Map<String, Object> json = request.getJson();
+        int classId = ((Number)json.get("id")).intValue();
+
+        SchoolClass schoolClass = SchoolClass.get(classId);
+        if (schoolClass == null) {
+            return PostResponse.notFound("Class not found");
+        }
+
+        try {
+            schoolClass.delete();
+            return PostResponse.ok("Class deleted successfully", ContentType.TEXT_PLAIN);
+        } catch (java.sql.SQLException e) {
+            return PostResponse.internalServerError("Database error: " + e.getMessage());
+        }
+    }
+    private PostResponse handleAddClass(PostRequest request) throws IOException {
+        // Test if current user is admin
+        User user = User.getUser(Server.getInstance().getWebServer().getUserManager().getSessionUser(request));
+        if (user == null || !user.isAdmin()) {
+            return PostResponse.unauthorized("Not logged in or invalid session");
+        }
+        int contentLength = request.getContentLength();
+        if (contentLength <= 0) {
+            return PostResponse.badRequest("Missing or invalid Content-Length!");
+        }
+        Map<String, String> data = request.getFormData();
+        String name = data.get("className");
+        int grade = Integer.parseInt(data.get("grade"));
+
+        try {
+            SchoolClass.addClass(name, grade);
+            return PostResponse.redirect("/manage_classes");
+        } catch (java.sql.SQLException e) {
+            return PostResponse.internalServerError("Database error: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return PostResponse.badRequest("Invalid input: " + e.getMessage());
+        }
+    }
+    /**
+     * Handles a POST request to edit an existing class.
+     * Only admins are allowed to perform this action.
+     *
+     * @param request The parsed POST request containing the class edit data.
+     * @throws IOException If an I/O error occurs while reading or writing.
+     */
+    private PostResponse handleEditClass(PostRequest request) throws IOException {
+        // Test if current user is admin
+        User user = User.getUser(Server.getInstance().getWebServer().getUserManager().getSessionUser(request));
+        if (user == null || !user.isAdmin()) {
+            return PostResponse.unauthorized("Not logged in or invalid session");
+        }
+        int contentLength = request.getContentLength();
+        if (contentLength <= 0) {
+            return PostResponse.badRequest("Missing or invalid Content-Length!");
+        }
+        Map<String, String> data = request.getFormData();
+        int classId;
+        try {
+            classId = Integer.parseInt(data.get("id"));
+        } catch (NumberFormatException | NullPointerException e) {
+            return PostResponse.badRequest("Invalid or missing classId.");
+        }
+        String name = data.get("name");
+        int grade;
+        try {
+            grade = Integer.parseInt(data.get("grade"));
+        } catch (NumberFormatException | NullPointerException e) {
+            return PostResponse.badRequest("Invalid or missing grade.");
+        }
+
+        SchoolClass schoolClass = SchoolClass.get(classId);
+        if (schoolClass == null) {
+            return PostResponse.notFound("Class not found");
+        }
+
+        try {
+            schoolClass.edit(name, grade);
+            return PostResponse.redirect("/manage_classes");
         } catch (java.sql.SQLException e) {
             return PostResponse.internalServerError("Database error: " + e.getMessage());
         } catch (IllegalArgumentException e) {

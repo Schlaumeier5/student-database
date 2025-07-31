@@ -3,6 +3,8 @@ package de.igslandstuhl.database.api;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import de.igslandstuhl.database.server.Server;
 import de.igslandstuhl.database.server.sql.SQLHelper;
@@ -136,6 +138,26 @@ public class SchoolClass {
         return students;
     }
 
+    public void delete() throws SQLException {
+        Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getDeleteObjectProcess("class", String.valueOf(id)));
+    }
+
+    /**
+     * Updates the label and grade of this SchoolClass in the database.
+     * Returns a new SchoolClass instance with the updated values.
+     *
+     * @param name  the new label for the class
+     * @param grade the new grade level for the class
+     * @return the updated SchoolClass instance
+     * @throws SQLException when a database error occurs
+     */
+    public SchoolClass edit(String name, int grade) throws SQLException {
+        Server.getInstance().getConnection().executeVoidProcessSecure(
+            SQLHelper.getAddObjectProcess("class_with_id", String.valueOf(id), name, String.valueOf(grade))
+        );
+        return get(id);
+    }
+
     /**
      * Converts a SQL result array into a SchoolClass object.
      * This method is used to create a SchoolClass instance from the database query results.
@@ -204,6 +226,22 @@ public class SchoolClass {
             }
         }
         return schoolClass;
+    }
+
+    public static List<SchoolClass> getAll() {
+        List<Integer> ids = new ArrayList<>();
+        try {
+            Server.getInstance().processRequest(
+                fields -> ids.add(Integer.parseInt(fields[0])),
+                "get_all_classes", new String[] {"id"}
+            );
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return ids.stream()
+            .map(SchoolClass::get)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
     }
 
     @Override

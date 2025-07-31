@@ -217,6 +217,8 @@ public final class Server implements AutoCloseable {
             return new HashSet<>(Student.getAll()).toString();
         } else if (resource.equals("subjects")) {
             return new HashSet<>(Subject.getAll()).toString();
+        } else if (resource.equals("classes")) {
+            return new HashSet<>(SchoolClass.getAll()).toString();
         } else {
             return null;
         }
