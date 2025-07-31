@@ -1,6 +1,10 @@
 async function fetchJson(url, options) {
   const res = await fetch(url, options);
-  return await res.json();
+  if (res.ok) {
+    return await res.json();
+  } else {
+    return []
+  }
 }
 
 async function fetchClasses() {
@@ -28,8 +32,8 @@ function populateClassSelect(classSelect, classes) {
   classSelect.innerHTML = ""; // clear previous options if any
   classes.forEach(cls => {
     const option = document.createElement('option');
-    option.value = cls.classId;
-    option.textContent = cls.name;
+    option.value = cls.classId || cls.id;
+    option.textContent = cls.name || cls.label;
     classSelect.appendChild(option);
   });
 }
@@ -124,4 +128,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const editSubjectSelect = document.getElementById('editSubjectSelect');
   const allSubjects = await fetchJson('/subjects');
   populateSubjectSelect(editSubjectSelect, allSubjects);
+
+  const editClassSelect = document.getElementById('editClassSelect')
+  const allClasses = await fetchJson('/classes')
+  populateClassSelect(editClassSelect, allClasses)
 });

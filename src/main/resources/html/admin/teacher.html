@@ -16,9 +16,15 @@
                     <h2>Lehrer bearbeiten</h2>
                     <form id="addSubjectToTeacherForm" method="POST">
                         <label for="editSubjectSelect">Fach auswählen:</label>
-                        <input type="hidden" name="teacherId" value="" id="teacherId">
-                        <select id="editSubjectSelect" name="subject" value="Mathematik"></select>
+                        <input type="hidden" name="teacherId" class="teacherId">
+                        <select id="editSubjectSelect" name="subject" required></select>
                         <button type="submit">Fach hinzufügen</button>
+                    </form>
+                    <form id="addClassToTeacherForm" method="POST" action="/add-class-to-teacher">
+                        <input type="hidden" name="teacherId" class="teacherId">
+                        <label for="classId">Klasse auswählen:</label>
+                        <select id="editClassSelect" name="class" required></select>
+                        <button type="submit">Klasse hinzufügen</button>
                     </form>
                 </section>
                 <section id="class-info">
@@ -72,7 +78,7 @@
             console.log(teacher);
             document.getElementById("teacher-name").textContent = teacher.firstName + " " + teacher.lastName;
             teacherId = teacher.id;
-            document.getElementById("teacherId").value = teacherId;
+            Array.from(document.getElementsByClassName("teacherId")).forEach(e => e.value = teacherId);
         </script>
         <script src="build_teacher.js"></script>
     </body>

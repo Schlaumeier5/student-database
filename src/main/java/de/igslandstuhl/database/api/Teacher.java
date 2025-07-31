@@ -350,6 +350,9 @@ public class Teacher extends User {
         );
         classIds.add(classId);
     }
+    public void addClass(SchoolClass schoolClass) throws SQLException {
+        addClass(schoolClass.getId());
+    }
 
     @Override
     public int hashCode() {

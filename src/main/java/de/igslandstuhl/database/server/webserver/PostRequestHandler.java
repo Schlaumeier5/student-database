@@ -117,6 +117,8 @@ public class PostRequestHandler {
                 return handleAddGradeToSubject(request);
             case "/delete-grade-from-subject":
                 return handleDeleteGradeFromSubject(request);
+            case "/add-class-to-teacher":
+                return addClassToTeacher(request);
             default:
                 return PostResponse.notFound("Unknown POST request path: " + path);
         }
@@ -623,7 +625,7 @@ public class PostRequestHandler {
 
         try {
             teacher.addSubject(subject);
-            return PostResponse.ok("Subject added to teacher successfully", ContentType.TEXT_PLAIN);
+            return PostResponse.redirect("/teacher");
         } catch (java.sql.SQLException e) {
             return PostResponse.internalServerError("Database error: " + e.getMessage());
         }
@@ -1045,6 +1047,46 @@ public class PostRequestHandler {
             return PostResponse.internalServerError("Database error: " + e.getMessage());
         } catch (IllegalArgumentException e) {
             return PostResponse.badRequest("Invalid input: " + e.getMessage());
+        }
+    }
+    /**
+     * Handles a POST request to add a class to a teacher.
+     * Only admins are allowed to perform this action.
+     *
+     * @param request The parsed POST request containing the teacher and class data.
+     * @throws IOException If an I/O error occurs while reading or writing.
+     */
+    private PostResponse addClassToTeacher(PostRequest request) throws IOException {
+        // Test if current user is admin
+        User user = User.getUser(Server.getInstance().getWebServer().getUserManager().getSessionUser(request));
+        if (user == null || !user.isAdmin()) {
+            return PostResponse.unauthorized("Not logged in or invalid session");
+        }
+        int contentLength = request.getContentLength();
+        if (contentLength <= 0) {
+            return PostResponse.badRequest("Missing or invalid Content-Length!");
+        }
+        Map<String, String> data = request.getFormData();
+        int teacherId;
+        int classId;
+        try {
+            teacherId = Integer.parseInt(data.get("teacherId"));
+            classId = Integer.parseInt(data.get("class"));
+        } catch (NumberFormatException | NullPointerException e) {
+            return PostResponse.badRequest("Invalid or missing teacherId or classId.");
+        }
+
+        Teacher teacher = Teacher.get(teacherId);
+        SchoolClass schoolClass = SchoolClass.get(classId);
+        if (teacher == null || schoolClass == null) {
+            return PostResponse.notFound("Teacher or class not found");
+        }
+
+        try {
+            teacher.addClass(schoolClass);
+            return PostResponse.redirect("/teacher");
+        } catch (java.sql.SQLException e) {
+            return PostResponse.internalServerError("Database error: " + e.getMessage());
         }
     }
 }
