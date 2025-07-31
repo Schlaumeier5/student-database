@@ -91,7 +91,10 @@ public class PostRequestHandler {
             case "/add-teachers":
                 return handleAddTeachers(request);
             case "/teacher":
+            case "/add-subject-to-teacher":
                 return handleAddSubjectToTeacher(request);
+            case "/add-subject":
+                return handleAddSubject(request);
             default:
                 return PostResponse.notFound("Unknown POST request path: " + path);
         }
@@ -590,6 +593,28 @@ public class PostRequestHandler {
             return PostResponse.ok("Subject added to teacher successfully", ContentType.TEXT_PLAIN);
         } catch (java.sql.SQLException e) {
             return PostResponse.internalServerError("Database error: " + e.getMessage());
+        }
+    }
+    private PostResponse handleAddSubject(PostRequest request) throws IOException {
+        // Test if current user is admin
+        User user = User.getUser(Server.getInstance().getWebServer().getUserManager().getSessionUser(request));
+        if (user == null || !user.isAdmin()) {
+            return PostResponse.unauthorized("Not logged in or invalid session");
+        }
+        int contentLength = request.getContentLength();
+        if (contentLength <= 0) {
+            return PostResponse.badRequest("Missing or invalid Content-Length!");
+        }
+        Map<String, String> data = request.getFormData();
+        String name = data.get("name");
+
+        try {
+            Subject subject = Subject.addSubject(name);
+            return PostResponse.redirect("/manage_subjects");
+        } catch (java.sql.SQLException e) {
+            return PostResponse.internalServerError("Database error: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return PostResponse.badRequest("Invalid input: " + e.getMessage());
         }
     }
 }

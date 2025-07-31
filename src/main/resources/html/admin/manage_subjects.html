@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="de">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Fächer verwalten</title>
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+        <section id="subjects">
+            <h1>Fächer verwalten</h1>
+            <form id="manage-subjects-form" method="post" action="/add-subject">
+                <label for="subject-name">Fachname:</label>
+                <input type="text" id="subject-name" name="name" required>
+                <button type="submit">Fach hinzufügen</button>
+            </form>
+            <div id="subject-list">
+                <h2>Vorhandene Fächer</h2>
+                <ul id="subjectList">
+                    <!-- Dynamically populated list of subjects -->
+                </ul>
+            </div>
+        </section>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                fetch('/subjects')
+                    .then(response => response.json())
+                    .then(data => {
+                        const subjectList = document.getElementById('subjectList');
+                        data.forEach(subject => {
+                            const li = document.createElement('li');
+                            li.textContent = subject.name;
+                            subjectList.appendChild(li);
+                        });
+                    })
+                    .catch(error => console.error('Error fetching subjects:', error));
+            });
+        </script>
+    </body>
+</html>

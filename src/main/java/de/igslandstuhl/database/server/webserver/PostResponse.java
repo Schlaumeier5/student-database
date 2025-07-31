@@ -35,6 +35,8 @@ public class PostResponse {
      */
     private final Cookie cookie;
 
+    private final String[] headers;
+
     /**
      * Constructs a PostResponse with the given status code, body, and content type.
      * This constructor is used when no cookie is needed in the response.
@@ -48,6 +50,7 @@ public class PostResponse {
         this.body = body;
         this.contentType = contentType;
         this.cookie = null;
+        this.headers = new String[0]; // Initialize headers as an empty array
     }
     /**
      * Constructs a PostResponse with the given status code, body, content type, and cookie.
@@ -63,6 +66,23 @@ public class PostResponse {
         this.body = body;
         this.contentType = contentType;
         this.cookie = cookie;
+        this.headers = new String[0]; // Initialize headers as an empty array
+    }
+    /**
+     * Constructs a PostResponse with the given status code, body, content type, and headers.
+     * This constructor is used when additional headers need to be included in the response.
+     *
+     * @param statusCode The HTTP status code of the response.
+     * @param body The body of the response.
+     * @param contentType The content type of the response.
+     * @param headers Additional headers to be included in the response.
+     */
+    private PostResponse(Status statusCode, String body, ContentType contentType, String[] headers) {
+        this.statusCode = statusCode;
+        this.body = body;
+        this.contentType = contentType;
+        this.cookie = null; // No cookie in this constructor
+        this.headers = headers != null ? headers : new String[0]; // Initialize headers, ensuring it's not null
     }
 
     /**
@@ -79,6 +99,9 @@ public class PostResponse {
         out.print("Content-Type: " + contentType + "; charset=UTF-8\r\n");
         if (cookie != null) {
             out.print("Set-Cookie: " + cookie + "; HttpOnly; Secure\r\n");
+        }
+        for (String header : headers) {
+            out.print(header + "\r\n");
         }
         out.print("\r\n");
         if (body != null) {
@@ -181,5 +204,10 @@ public class PostResponse {
      */
     public static PostResponse forbidden(String message) {
         return new PostResponse(Status.FORBIDDEN, message, ContentType.TEXT_PLAIN);
+    }
+    public static PostResponse redirect(String location) {
+        return new PostResponse(Status.FOUND, "", ContentType.TEXT_PLAIN, new String[] {
+            "Location: " + location
+        });
     }
 }

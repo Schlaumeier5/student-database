@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import de.igslandstuhl.database.server.Server;
 import de.igslandstuhl.database.server.sql.SQLHelper;
@@ -124,13 +126,11 @@ public class Subject {
      * @return a list of all Subject objects
      */
     public static List<Subject> getAll() {
-        List<Subject> allSubjects = new ArrayList<>();
+        List<Integer> subjectIds = new ArrayList<>();
         try {
             Server.getInstance().processRequest(
                 fields -> {
-                    Subject subject = Subject.fromSQLFields(fields);
-                    subjects.put(subject.getId(), subject);
-                    allSubjects.add(subject);
+                    subjectIds.add(Integer.parseInt(fields[0]));
                 },
                 "get_all_subjects",
                 SQL_FIELDS
@@ -138,7 +138,10 @@ public class Subject {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return allSubjects;
+        return subjectIds.stream()
+            .map(Subject::get)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
     }
     
     /**

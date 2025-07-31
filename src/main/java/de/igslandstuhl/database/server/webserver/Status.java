@@ -7,13 +7,14 @@ import java.io.PrintWriter;
  */
 public enum Status {
     OK (200, "OK"),
+    FOUND(302, "Found"),
     BAD_REQUEST(400, "Bad Request"),
     UNAUTHORIZED(401, "Unauthorized"),
     FORBIDDEN (403, "Forbidden"),
     NOT_FOUND(404, "Not Found"),
     METHOD_NOT_ALLOWED(405, "Method Not Allowed"),
     I_AM_A_TEAPOT(418, "I'm a teapot"),
-    INTERNAL_SERVER_ERROR(500, "Internal Server Error")
+    INTERNAL_SERVER_ERROR(500, "Internal Server Error"),
     ;
     /**
      * The HTTP status code.
