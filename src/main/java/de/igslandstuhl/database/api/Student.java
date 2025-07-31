@@ -273,7 +273,7 @@ public class Student extends User {
             String lastName = fields[2].trim();
             String email = fields[5].trim();
             String schoolClassName = fields[3].trim();
-            int graduationLevel = 0;
+            int graduationLevel = 1;
             ids.add(id);
             firstNames.add(firstName);
             lastNames.add(lastName);

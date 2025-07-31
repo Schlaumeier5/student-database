@@ -30,6 +30,12 @@
                         data.forEach(subject => {
                             const li = document.createElement('li');
                             li.textContent = subject.name;
+                            li.style.cursor = 'pointer';
+                            li.title = 'Bearbeiten';
+                            li.addEventListener('click', (e) => {
+                                sessionStorage.setItem('currentSubject', JSON.stringify(subject));
+                                window.location.href = '/subject';
+                            })
                             subjectList.appendChild(li);
                         });
                     })

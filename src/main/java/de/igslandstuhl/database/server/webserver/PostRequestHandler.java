@@ -95,6 +95,10 @@ public class PostRequestHandler {
                 return handleAddSubjectToTeacher(request);
             case "/add-subject":
                 return handleAddSubject(request);
+            case "/edit-subject":
+                return handleEditSubject(request);
+            case "/delete-subject":
+                return handleDeleteSubject(request);
             case "/class-subjects":
                 return handleClassSubjects(request);
             case "/delete-class":
@@ -103,12 +107,22 @@ public class PostRequestHandler {
                 return handleAddClass(request);
             case "/edit-class":
                 return handleEditClass(request);
+            case "/add-subject-to-class":
+                return handleAddSubjectToClass(request);
+            case "/grade-list":
+                return handleGradeList(request);
+            case "/topic-list":
+                return handleTopicList(request);
+            case "/add-grade-to-subject":
+                return handleAddGradeToSubject(request);
+            case "/delete-grade-from-subject":
+                return handleDeleteGradeFromSubject(request);
             default:
                 return PostResponse.notFound("Unknown POST request path: " + path);
         }
     }
 
-    private Student getActualStudent(PostRequest request) {
+    private Student getCurrentStudent(PostRequest request) {
         String user = Server.getInstance().getWebServer().getUserManager().getSessionUser(request);
         if (user == null) {
             return null; // User is not logged in
@@ -122,25 +136,33 @@ public class PostRequestHandler {
         return null;
     }
     private String prepare(String webInput) {
+        return prepare(webInput, true);
+    }
+    private String prepare(String webInput, boolean sanitize) {
         webInput = webInput.replaceAll("%20", " ")
+                .replaceAll("\\+", " ")
                 .replaceAll("%0A", "\n")
                 .replaceAll("%0D", "\r")
-                .replaceAll("%2C", ",")
-                .replaceAll("%40", "@")
-                .replaceAll("%3A", ":")
-                .replaceAll("%3B", ";")
-                .replaceAll("%3D", "=")
-                .replaceAll("%3F", "?")
+                .replaceAll("%21", "$")
                 .replaceAll("%23", "#")
                 .replaceAll("%26", "&")
+                .replaceAll("%28", "(")
+                .replaceAll("%29", ")")
+                .replaceAll("%2A", "*")
+                .replaceAll("%2B", "+")
+                .replaceAll("%2C", ",")
                 .replaceAll("%2F", "/")
+                .replaceAll("%3A", ":")
+                .replaceAll("%3B", ";")
+                .replaceAll("%3C", "<")
+                .replaceAll("%3D", "=")
+                .replaceAll("%3E", ">")
+                .replaceAll("%3F", "?")
+                .replaceAll("%40", "@")
                 .replaceAll("%5B", "[")
                 .replaceAll("%5D", "]")
                 .replaceAll("%7B", "{")
                 .replaceAll("%7D", "}")
-                .replaceAll("%3C", "<")
-                .replaceAll("%3E", ">")
-                .replaceAll("%C3%A4", "ä")
                 .replaceAll("ÃŸ", "ß")
                 .replaceAll("Ã¤", "ä")
                 .replaceAll("Ã¶", "ö")
@@ -148,31 +170,34 @@ public class PostRequestHandler {
                 .replaceAll("Ã„", "Ä")
                 .replaceAll("Ã–", "Ö")
                 .replaceAll("Ãœ", "Ü")
+                .replaceAll("%C3%A4", "ä")
                 .replaceAll("%C3%BC", "ü")
                 .replaceAll("%C3%B6", "ö")
                 .replaceAll("%C3%9F", "ß")
                 .replaceAll("%C2%A0", " ")
                 ;
-        // Sanitize the input to prevent XSS attacks
-        webInput = webInput.replaceAll("<", "&lt;")
-                .replaceAll(">", "&gt;")
-                .replaceAll("\"", "&quot;")
-                .replaceAll("'", "&#39;")
-                .replaceAll("&", "&amp;");
-        // Remove any script tags
-        webInput = webInput.replaceAll("(?i)<script.*?>.*?</script>", "")
-                .replaceAll("(?i)<script.*?/>", "")
-                .replaceAll("(?i)<script.*?>", "")
-                .replaceAll("(?i)</script>", "");
-        // Remove any SQL injection attempts
-        webInput = webInput.replaceAll("(?i)select", "")
-                .replaceAll("(?i)insert", "")
-                .replaceAll("(?i)update", "")
-                .replaceAll("(?i)delete", "")
-                .replaceAll("(?i)drop", "")
-                .replaceAll("(?i)union", "")
-                .replaceAll("(?i)exec", "")
-                .replaceAll("(?i)execute", "");
+        if (sanitize) {
+            // Sanitize the input to prevent XSS attacks
+            webInput = webInput.replaceAll("<", "&lt;")
+                    .replaceAll(">", "&gt;")
+                    .replaceAll("\"", "&quot;")
+                    .replaceAll("'", "&#39;")
+                    .replaceAll("&", "&amp;");
+            // Remove any script tags
+            webInput = webInput.replaceAll("(?i)<script.*?>.*?</script>", "")
+                    .replaceAll("(?i)<script.*?/>", "")
+                    .replaceAll("(?i)<script.*?>", "")
+                    .replaceAll("(?i)</script>", "");
+            // Remove any SQL injection attempts
+            webInput = webInput.replaceAll("(?i)select", "")
+                    .replaceAll("(?i)insert", "")
+                    .replaceAll("(?i)update", "")
+                    .replaceAll("(?i)delete", "")
+                    .replaceAll("(?i)drop", "")
+                    .replaceAll("(?i)union", "")
+                    .replaceAll("(?i)exec", "")
+                    .replaceAll("(?i)execute", "");
+        }
         return webInput;
     }
 
@@ -196,7 +221,7 @@ public class PostRequestHandler {
         int subjectId = ((Number) json.get("subjectId")).intValue();
         String type = (String) json.get("type");
 
-        Student student = getActualStudent(request);
+        Student student = getCurrentStudent(request);
         boolean remove = json.containsKey("remove") && (boolean) json.get("remove");
         PostResponse response;
         if (student != null) {
@@ -230,8 +255,8 @@ public class PostRequestHandler {
 
         // Expected format: "username=user&password=pass"
         Map<String, String> params = request.getFormData();
-        String username = params.get("username");
-        String password = params.get("password");
+        String username = prepare(params.get("username"));
+        String password = prepare(params.get("password"), false);
 
         // Check login credentials in the database
         if (Server.getInstance().isValidUser(username, password)) {
@@ -261,7 +286,7 @@ public class PostRequestHandler {
         Map<String, Object> json = request.getJson();
         int subjectId = ((Number) json.get("subjectId")).intValue();
 
-        Student student = getActualStudent(request);
+        Student student = getCurrentStudent(request);
         PostResponse response;
         if (student != null) {
             Subject subject = Subject.get(subjectId);
@@ -303,7 +328,7 @@ public class PostRequestHandler {
             }
         }
 
-        Student student = getActualStudent(request);
+        Student student = getCurrentStudent(request);
         PostResponse response;
         if (student != null && ids != null) {
             // Assuming Student has a method getTasksByIds(List<Integer> ids)
@@ -334,7 +359,7 @@ public class PostRequestHandler {
         Map<String, Object> json = request.getJson();
         String roomLabel = (String) json.get("room");
 
-        Student student = getActualStudent(request);
+        Student student = getCurrentStudent(request);
         PostResponse response;
         if (student != null && roomLabel != null) {
             try {
@@ -438,7 +463,7 @@ public class PostRequestHandler {
         Map<String, Object> json = request.getJson();
         int taskId = ((Number) json.get("taskId")).intValue();
 
-        Student student = getActualStudent(request);
+        Student student = getCurrentStudent(request);
         PostResponse response;
         if (student != null) {
             Task task = Task.get(taskId);
@@ -614,7 +639,7 @@ public class PostRequestHandler {
             return PostResponse.badRequest("Missing or invalid Content-Length!");
         }
         Map<String, String> data = request.getFormData();
-        String name = data.get("name");
+        String name = prepare(data.get("name"));
 
         try {
             Subject.addSubject(name);
@@ -744,6 +769,278 @@ public class PostRequestHandler {
         try {
             schoolClass.edit(name, grade);
             return PostResponse.redirect("/manage_classes");
+        } catch (java.sql.SQLException e) {
+            return PostResponse.internalServerError("Database error: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return PostResponse.badRequest("Invalid input: " + e.getMessage());
+        }
+    }
+    /**
+     * Handles a POST request to add a subject to a class.
+     * Only admins are allowed to perform this action.
+     *
+     * @param request The parsed POST request containing the class and subject data.
+     * @throws IOException If an I/O error occurs while reading or writing.
+     */
+    private PostResponse handleAddSubjectToClass(PostRequest request) throws IOException {
+        // Test if current user is admin
+        User user = User.getUser(Server.getInstance().getWebServer().getUserManager().getSessionUser(request));
+        if (user == null || !user.isAdmin()) {
+            return PostResponse.unauthorized("Not logged in or invalid session");
+        }
+        int contentLength = request.getContentLength();
+        if (contentLength <= 0) {
+            return PostResponse.badRequest("Missing or invalid Content-Length!");
+        }
+        Map<String, String> data = request.getFormData();
+        int classId;
+        int subjectId;
+        try {
+            classId = Integer.parseInt(data.get("classId"));
+            subjectId = Integer.parseInt(data.get("subject"));
+        } catch (NumberFormatException | NullPointerException e) {
+            return PostResponse.badRequest("Invalid or missing classId or subjectId.");
+        }
+
+        SchoolClass schoolClass = SchoolClass.get(classId);
+        Subject subject = Subject.get(subjectId);
+        if (schoolClass == null || subject == null) {
+            return PostResponse.notFound("Class or subject not found");
+        }
+
+        try {
+            schoolClass.addSubject(subject);
+            return PostResponse.redirect("/class");
+        } catch (java.sql.SQLException e) {
+            return PostResponse.internalServerError("Database error: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Handles a POST request to edit an existing subject.
+     * Only admins are allowed to perform this action.
+     *
+     * @param request The parsed POST request containing the subject edit data.
+     * @throws IOException If an I/O error occurs while reading or writing.
+     */
+    private PostResponse handleEditSubject(PostRequest request) throws IOException {
+        // Test if current user is admin
+        User user = User.getUser(Server.getInstance().getWebServer().getUserManager().getSessionUser(request));
+        if (user == null || !user.isAdmin()) {
+            return PostResponse.unauthorized("Not logged in or invalid session");
+        }
+        int contentLength = request.getContentLength();
+        if (contentLength <= 0) {
+            return PostResponse.badRequest("Missing or invalid Content-Length!");
+        }
+        Map<String, String> data = request.getFormData();
+        int subjectId;
+        try {
+            subjectId = Integer.parseInt(data.get("id"));
+        } catch (NumberFormatException | NullPointerException e) {
+            return PostResponse.badRequest("Invalid or missing subjectId.");
+        }
+        String name = prepare(data.get("name"));
+
+        Subject subject = Subject.get(subjectId);
+        if (subject == null) {
+            return PostResponse.notFound("Subject not found");
+        }
+
+        try {
+            subject.edit(name);
+            return PostResponse.redirect("/manage_subjects");
+        } catch (java.sql.SQLException e) {
+            return PostResponse.internalServerError("Database error: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return PostResponse.badRequest("Invalid input: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Handles a POST request to delete an existing subject.
+     * Only admins are allowed to perform this action.
+     *
+     * @param request The parsed POST request containing the subject delete data.
+     * @throws IOException If an I/O error occurs while reading or writing.
+     */
+    private PostResponse handleDeleteSubject(PostRequest request) throws IOException {
+        // Test if current user is admin
+        User user = User.getUser(Server.getInstance().getWebServer().getUserManager().getSessionUser(request));
+        if (user == null || !user.isAdmin()) {
+            return PostResponse.unauthorized("Not logged in or invalid session");
+        }
+        int contentLength = request.getContentLength();
+        if (contentLength <= 0) {
+            return PostResponse.badRequest("Missing or invalid Content-Length!");
+        }
+        Map<String, Object> data = request.getJson();
+        int subjectId;
+        try {
+            subjectId = ((Number)data.get("id")).intValue();
+        } catch (NumberFormatException | NullPointerException e) {
+            return PostResponse.badRequest("Invalid or missing subjectId.");
+        }
+
+        Subject subject = Subject.get(subjectId);
+        if (subject == null) {
+            return PostResponse.notFound("Subject not found");
+        }
+
+        try {
+            subject.delete();
+            return PostResponse.redirect("/manage_subjects");
+        } catch (java.sql.SQLException e) {
+            return PostResponse.internalServerError("Database error: " + e.getMessage());
+        }
+    }
+    /**
+     * Handles a POST request to retrieve the list of topics for a given subject.
+     * Only admins are allowed to perform this action.
+     *
+     * @param request The parsed POST request.
+     * @return PostResponse containing the topic list or an error.
+     * @throws IOException If an I/O error occurs while reading or writing.
+     */
+    private PostResponse handleTopicList(PostRequest request) throws IOException {
+        // Test if current user is admin
+        User user = User.getUser(Server.getInstance().getWebServer().getUserManager().getSessionUser(request));
+        if (user == null || !user.isAdmin()) {
+            return PostResponse.unauthorized("Not logged in or invalid session");
+        }
+
+        Map<String, Object> json = request.getJson();
+        if (!json.containsKey("subjectId")) {
+            return PostResponse.badRequest("Missing subjectId in request.");
+        }
+
+        int subjectId = ((Number) json.get("subjectId")).intValue();
+        Subject subject = Subject.get(subjectId);
+        if (subject == null) {
+            return PostResponse.notFound("Subject not found.");
+        }
+
+        int grade = ((Number) json.get("grade")).intValue();
+        
+        java.util.List<Topic> topics = subject.getTopics(grade);
+        StringBuilder responseBuilder = new StringBuilder("[");
+        for (int i = 0; i < topics.size(); i++) {
+            Topic topic = topics.get(i);
+            responseBuilder.append("{\"id\":").append(topic.getId())
+                .append(",\"name\":\"").append(topic.getName()).append("\"}");
+            if (i < topics.size() - 1) {
+                responseBuilder.append(",");
+            }
+        }
+        responseBuilder.append("]");
+        return PostResponse.ok(responseBuilder.toString(), ContentType.JSON);
+    }
+    /**
+     * Handles a POST request to retrieve the list of grades.
+     * Only admins are allowed to perform this action.
+     *
+     * @param request The parsed POST request.
+     * @return PostResponse containing the grade list or an error.
+     * @throws IOException If an I/O error occurs while reading or writing.
+     */
+    private PostResponse handleGradeList(PostRequest request) throws IOException {
+        // Test if current user is admin
+        User user = User.getUser(Server.getInstance().getWebServer().getUserManager().getSessionUser(request));
+        if (user == null || !user.isAdmin()) {
+            return PostResponse.unauthorized("Not logged in or invalid session");
+        }
+        
+        Subject subject = Subject.get(((Number)request.getJson().get("subjectId")).intValue());
+
+        int[] grades = subject.getGrades();
+
+        StringBuilder responseBuilder = new StringBuilder("[");
+        for (int i = 0; i < grades.length; i++) {
+            responseBuilder.append("\"").append(grades[i]).append("\"");
+            if (i < grades.length - 1) {
+                responseBuilder.append(",");
+            }
+        }
+        responseBuilder.append("]");
+        return PostResponse.ok(responseBuilder.toString(), ContentType.JSON);
+    }
+    /**
+     * Handles a POST request to add a grade to a subject.
+     * Only admins are allowed to perform this action.
+     *
+     * @param request The parsed POST request containing the subject and grade data.
+     * @throws IOException If an I/O error occurs while reading or writing.
+     */
+    private PostResponse handleAddGradeToSubject(PostRequest request) throws IOException {
+        // Test if current user is admin
+        User user = User.getUser(Server.getInstance().getWebServer().getUserManager().getSessionUser(request));
+        if (user == null || !user.isAdmin()) {
+            return PostResponse.unauthorized("Not logged in or invalid session");
+        }
+        int contentLength = request.getContentLength();
+        if (contentLength <= 0) {
+            return PostResponse.badRequest("Missing or invalid Content-Length!");
+        }
+        Map<String, String> data = request.getFormData();
+        int subjectId;
+        int grade;
+        try {
+            subjectId = Integer.parseInt(data.get("subjectId"));
+            grade = Integer.parseInt(data.get("grade"));
+        } catch (NumberFormatException | NullPointerException e) {
+            return PostResponse.badRequest("Invalid or missing subjectId or grade.");
+        }
+
+        Subject subject = Subject.get(subjectId);
+        if (subject == null) {
+            return PostResponse.notFound("Subject not found");
+        }
+
+        try {
+            subject.addToGrade(grade);
+            return PostResponse.redirect("/subject");
+        } catch (java.sql.SQLException e) {
+            return PostResponse.internalServerError("Database error: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return PostResponse.badRequest("Invalid input: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Handles a POST request to delete a grade from a subject.
+     * Only admins are allowed to perform this action.
+     *
+     * @param request The parsed POST request containing the subject and grade data.
+     * @throws IOException If an I/O error occurs while reading or writing.
+     */
+    private PostResponse handleDeleteGradeFromSubject(PostRequest request) throws IOException {
+        // Test if current user is admin
+        User user = User.getUser(Server.getInstance().getWebServer().getUserManager().getSessionUser(request));
+        if (user == null || !user.isAdmin()) {
+            return PostResponse.unauthorized("Not logged in or invalid session");
+        }
+        int contentLength = request.getContentLength();
+        if (contentLength <= 0) {
+            return PostResponse.badRequest("Missing or invalid Content-Length!");
+        }
+        Map<String, String> data = request.getFormData();
+        int subjectId;
+        int grade;
+        try {
+            subjectId = Integer.parseInt(data.get("subject"));
+            grade = Integer.parseInt(data.get("grade"));
+        } catch (NumberFormatException | NullPointerException e) {
+            return PostResponse.badRequest("Invalid or missing subjectId or grade.");
+        }
+
+        Subject subject = Subject.get(subjectId);
+        if (subject == null) {
+            return PostResponse.notFound("Subject not found");
+        }
+
+        try {
+            subject.removeFromGrade(grade);
+            return PostResponse.redirect("/subject");
         } catch (java.sql.SQLException e) {
             return PostResponse.internalServerError("Database error: " + e.getMessage());
         } catch (IllegalArgumentException e) {

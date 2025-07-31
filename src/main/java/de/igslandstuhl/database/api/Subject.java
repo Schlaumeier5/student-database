@@ -156,6 +156,12 @@ public class Subject {
             SQLHelper.getAddObjectProcess("subject_to_grade", String.valueOf(grade), String.valueOf(id))
         );
     }
+    public void removeFromGrade(int grade) throws SQLException {
+        Server.getInstance().getConnection().executeVoidProcessSecure(
+            SQLHelper.getDeleteObjectProcess("subject_from_grade", String.valueOf(grade), String.valueOf(id))
+        );
+    }
+
     @Override
     public String toString() {
         return "{\"id\": " + id + ", \"name\": \"" + name + "\"}";
@@ -180,12 +186,11 @@ public class Subject {
      * @return a list of topics associated with the subject for the specified grade
      */
     public List<Topic> getTopics(int grade) {
-        List<Topic> topics = new ArrayList<>();
+        List<Integer> topicIds = new ArrayList<>();
         try {
             Server.getInstance().processRequest(
                 fields -> {
-                    Topic topic = Topic.get(Integer.parseInt(fields[0]));
-                    if (topic != null) topics.add(topic);
+                    topicIds.add(Integer.valueOf(fields[0]));
                 },
                 "get_topics_by_grade",
                 new String[] {"id"},
@@ -195,7 +200,42 @@ public class Subject {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return topics;
+        return topicIds.stream()
+        .map(Topic::get)
+        .filter(Objects::nonNull)
+        .toList();
+    }
+
+    public int[] getGrades() {
+        List<Integer> grades = new ArrayList<>();
+        try {
+            Server.getInstance().processRequest(
+            fields -> {
+                grades.add(Integer.parseInt(fields[0]));
+            },
+            "get_grades_by_subject",
+            new String[] {"grade"}, 
+            String.valueOf(id));
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return grades.stream().mapToInt(Integer::intValue).toArray();
+    }
+
+    public void edit(String name) throws SQLException {
+        Server.getInstance().getConnection().executeVoidProcessSecure(
+            SQLHelper.getAddObjectProcess("subject_with_id", String.valueOf(id), name)
+        );
+        // Update the cached subject's name if present
+        Subject updated = new Subject(id, name);
+        subjects.put(id, updated);
+    }
+
+    public void delete() throws SQLException {
+        Server.getInstance().getConnection().executeVoidProcessSecure(
+            SQLHelper.getDeleteObjectProcess("Subject", String.valueOf(id))
+        );
+        subjects.remove(id);
     }
 
     @Override
