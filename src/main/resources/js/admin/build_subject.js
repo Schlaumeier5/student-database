@@ -117,9 +117,11 @@ document.addEventListener('DOMContentLoaded', async (e) => {
     populateGradeList(gradeList, grades);
     populateGradeSelect(gradeSelect, grades);
 
-    function updateTopicTable(e) {
+    async function updateTopicTable(e) {
         const grade = Number(e.target.value);
-        const topics = fetchJson('/topic-list', {
+        console.log(document.getElementById("topicTable"))
+        const topicTable = document.querySelector("#topicTable tbody");
+        const topics = await fetchJson('/topic-list', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -128,8 +130,16 @@ document.addEventListener('DOMContentLoaded', async (e) => {
                 subjectId: subject.id, grade
             })
         })
+        populateTopicTable(topicTable, topics);
     }
 
     gradeSelect.addEventListener('change', updateTopicTable);
-    updateTopicTable({target: {value: gradeSelect.value}})
+    updateTopicTable({target: {value: gradeSelect.value}});
+
+    document.getElementById("deleteAllTopics").addEventListener('click', e => 
+        openUrlWithPostParams("/delete-topics", {
+            subjectId: subject.id,
+            grade: Number(gradeSelect.value)
+        })
+    );
 })

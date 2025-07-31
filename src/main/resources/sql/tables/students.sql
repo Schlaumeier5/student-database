@@ -5,5 +5,7 @@ CREATE TABLE IF NOT EXISTS students (
     email TEXT NOT NULL,
     password TEXT NOT NULL,
     class INTEGER NOT NULL,
-    graduation_level INTEGER NOT NULL
+    graduation_level INTEGER NOT NULL,
+
+    FOREIGN KEY (class) REFERENCES classes(id) ON DELETE CASCADE
 )

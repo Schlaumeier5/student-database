@@ -4,6 +4,6 @@ CREATE TABLE IF NOT EXISTS special_tasks (
     ratio REAL NOT NULL,
     subject_id INTEGER,
 
-    FOREIGN KEY (subject_id) REFERENCES subjects(id),
+    FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE,
     UNIQUE (subject_id, name)
 );

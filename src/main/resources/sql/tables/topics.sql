@@ -7,5 +7,6 @@ CREATE TABLE IF NOT EXISTS topics (
     resource TEXT,
     number INTEGER NOT NULL,
     UNIQUE(name, subject, grade),
-    UNIQUE(grade, subject, number)
+    UNIQUE(grade, subject, number),
+    FOREIGN KEY (subject) REFERENCES subjects(id) ON DELETE CASCADE
 )

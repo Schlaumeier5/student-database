@@ -1,12 +1,15 @@
 package de.igslandstuhl.database.server.webserver;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import de.igslandstuhl.database.Application;
 import de.igslandstuhl.database.api.Room;
 import de.igslandstuhl.database.api.SchoolClass;
+import de.igslandstuhl.database.api.SerializationException;
 import de.igslandstuhl.database.api.Student;
 import de.igslandstuhl.database.api.Subject;
 import de.igslandstuhl.database.api.SubjectRequest;
@@ -119,6 +122,10 @@ public class PostRequestHandler {
                 return handleDeleteGradeFromSubject(request);
             case "/add-class-to-teacher":
                 return addClassToTeacher(request);
+            case "/lpt-file":
+                return handleLPTFile(request);
+            case "/delete-topics":
+                return handleDeleteTopics(request);
             default:
                 return PostResponse.notFound("Unknown POST request path: " + path);
         }
@@ -928,8 +935,7 @@ public class PostRequestHandler {
         StringBuilder responseBuilder = new StringBuilder("[");
         for (int i = 0; i < topics.size(); i++) {
             Topic topic = topics.get(i);
-            responseBuilder.append("{\"id\":").append(topic.getId())
-                .append(",\"name\":\"").append(topic.getName()).append("\"}");
+            responseBuilder.append(topic.toString());
             if (i < topics.size() - 1) {
                 responseBuilder.append(",");
             }
@@ -1087,6 +1093,71 @@ public class PostRequestHandler {
             return PostResponse.redirect("/teacher");
         } catch (java.sql.SQLException e) {
             return PostResponse.internalServerError("Database error: " + e.getMessage());
+        }
+    }
+    private PostResponse handleLPTFile(PostRequest request) {
+        // Test if current user is admin
+        User user = User.getUser(Server.getInstance().getWebServer().getUserManager().getSessionUser(request));
+        if (user == null || !user.isAdmin()) {
+            return PostResponse.unauthorized("Not logged in or invalid session");
+        }
+        int contentLength = request.getContentLength();
+        if (contentLength <= 0) {
+            return PostResponse.badRequest("Missing or invalid Content-Length!");
+        }
+
+        String file = prepare(request.getBodyAsString().replaceFirst("file=", "").replace("Â", ""));
+        try {
+            Application.getInstance().readFile(file);
+        } catch (SerializationException e) {
+            if (e.getCause() == null)
+                return PostResponse.badRequest("File is malformed (" + e + ")");
+            else
+                return PostResponse.badRequest("File is malformed(" + e + ", caused by " + e.getCause() + ")");
+        } catch (SQLException e) {
+            return PostResponse.internalServerError("Server sql database access failed.");
+        }
+
+        return PostResponse.ok("File data stored", ContentType.TEXT_PLAIN);
+    }
+    /**
+     * Handles a POST request to delete topics from a subject.
+     * Only admins are allowed to perform this action.
+     *
+     * @param request The parsed POST request containing the subject and topic IDs.
+     * @throws IOException If an I/O error occurs while reading or writing.
+     */
+    private PostResponse handleDeleteTopics(PostRequest request) throws IOException {
+        // Test if current user is admin
+        User user = User.getUser(Server.getInstance().getWebServer().getUserManager().getSessionUser(request));
+        if (user == null || !user.isAdmin()) {
+            return PostResponse.unauthorized("Not logged in or invalid session");
+        }
+        int contentLength = request.getContentLength();
+        if (contentLength <= 0) {
+            return PostResponse.badRequest("Missing or invalid Content-Length!");
+        }
+        Map<String, Object> json = request.getJson();
+        if (!json.containsKey("subjectId")) {
+            return PostResponse.badRequest("Missing subjectId or topicIds in request.");
+        }
+        int subjectId = ((Number) json.get("subjectId")).intValue();
+        Subject subject = Subject.get(subjectId);
+        if (subject == null) {
+            return PostResponse.notFound("Subject not found");
+        }
+        int grade = ((Number)json.get("grade")).intValue();
+        try {
+            subject.getTopics(grade).forEach((topic) -> {
+                try {
+                    topic.delete();
+                } catch (SQLException e) {
+                    throw new IllegalStateException(e);
+                }
+            });
+            return PostResponse.redirect("/subject");
+        } catch (IllegalStateException e) {
+            return PostResponse.internalServerError("Database error: " + e.getCause().getMessage());
         }
     }
 }

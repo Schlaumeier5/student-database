@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Comparator;
 
+import de.igslandstuhl.database.Application;
 import de.igslandstuhl.database.server.Server;
 import de.igslandstuhl.database.server.sql.SQLHelper;
 
@@ -269,6 +270,12 @@ public class Task {
         if (niveau != other.niveau)
             return false;
         return true;
+    }
+    public static Task fromSerialized(Topic topic, String serialized) throws SQLException {
+        String[] parts = serialized.split(Application.TASK_TITLE_DELIMITER);
+        String name = parts[0];
+        Level level = Level.get(Integer.parseInt(parts[1]));
+        return addTask(topic, name, level);
     }
     
 }

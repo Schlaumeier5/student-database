@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import de.igslandstuhl.database.Application;
 import de.igslandstuhl.database.server.Server;
 import de.igslandstuhl.database.server.sql.SQLHelper;
 
@@ -316,6 +317,10 @@ public class Topic {
                 .orElse(null);
     }
 
+    public void delete() throws SQLException {
+        Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getDeleteObjectProcess("topic", String.valueOf(id)));
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -378,5 +383,52 @@ public class Topic {
             return false;
         return true;
     }
-    
+    public static Topic fromSerialized(String serialized, Subject subject, int grade, int number) throws SerializationException, SQLException {
+        // Gathering general info (topic name and ratio)
+        String[] parts = serialized.split(Application.TITLE_DELIMITER);
+        String[] generalInfo = parts[0].split(Application.TASK_DELIMITER);
+        if (generalInfo.length != 2) {
+            throw new SerializationException("Topic is not serialized correctly: '" + serialized + "'. Expected format: 'name" + Application.TASK_DELIMITER + "ratio'");
+        }
+        String name = generalInfo[0];
+        if (name.isEmpty()) {
+            throw new SerializationException("Topic name is empty in serialized string: '" + serialized + "'");
+        }
+        double ratio = Double.parseDouble(generalInfo[1]);
+        if (ratio <= 0 || ratio > 1) {
+            throw new SerializationException("Topic ratio must be greater than 0 and lower or equal to 1, but was: " + ratio + " in serialized string: '" + serialized + "'");
+        }
+
+        // Adding topic to the database, creating a new topic object
+        Topic topic = addTopic(name, subject, (int)(ratio * 100), grade, number);
+
+        // Deserializing the tasks, and adding them to the object
+        if (parts.length > 1) {
+            String[] tasks = parts[1].split(Application.TASK_DELIMITER);
+
+            List<Task> taskList = new ArrayList<>();
+            for (String s : tasks) {
+                if (s != "") {
+                    taskList.add(Task.fromSerialized(topic, s));
+                }
+            }
+
+            for (Task task : taskList) {
+                switch (task.getNiveau()) {
+                    case LEVEL1:
+                        topic.tasksLevel1.add(task);
+                        break;
+                    case LEVEL2:
+                        topic.tasksLevel2.add(task);
+                        break;
+                    case LEVEL3:
+                        topic.tasksLevel3.add(task);
+                        break;
+                    default:
+                        throw new IllegalStateException("Unknown task level: " + task.getNiveau());
+                }
+            }
+        }
+        return topic;
+    }
 }
