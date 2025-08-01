@@ -128,6 +128,8 @@ public class PostRequestHandler {
                 return handleLPTFile(request);
             case "/delete-topics":
                 return handleDeleteTopics(request);
+            case "/change-graduation-level":
+                return handleChangeGraduationLevel(request);
             default:
                 return PostResponse.notFound("Unknown POST request path: " + path);
         }
@@ -1206,6 +1208,34 @@ public class PostRequestHandler {
             return PostResponse.redirect("/subject");
         } catch (IllegalStateException e) {
             return PostResponse.internalServerError("Database error: " + e.getCause().getMessage());
+        }
+    }
+    private PostResponse handleChangeGraduationLevel(PostRequest request) throws IOException {
+        // Test if current user is admin
+        User user = User.getUser(Server.getInstance().getWebServer().getUserManager().getSessionUser(request));
+        if (user == null || !user.isAdmin()) {
+            return PostResponse.unauthorized("Not logged in or invalid session");
+        }
+        int contentLength = request.getContentLength();
+        if (contentLength <= 0) {
+            return PostResponse.badRequest("Missing or invalid Content-Length!");
+        }
+        Map<String, Object> data = request.getJson();
+        Student student = getCurrentStudent(request);
+        int graduationLevel;
+        try {
+            graduationLevel = ((Number)data.get("graduationLevel")).intValue();
+        } catch (NumberFormatException | NullPointerException e) {
+            return PostResponse.badRequest("Invalid or missing subjectId or grade.");
+        }
+
+        try {
+            student.changeGraduationLevel(graduationLevel);
+            return PostResponse.ok("Changed graduation level", ContentType.TEXT_PLAIN);
+        } catch (java.sql.SQLException e) {
+            return PostResponse.internalServerError("Database error: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return PostResponse.badRequest("Invalid input: " + e.getMessage());
         }
     }
 }

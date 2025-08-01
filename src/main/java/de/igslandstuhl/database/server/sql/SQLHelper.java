@@ -134,4 +134,36 @@ public class SQLHelper {
     public static SQLVoidProcess getDeleteObjectProcess(String object, String... args) {
         return (stmt) -> stmt.executeUpdate(getSQLDeleteStatement(object, args));
     }
+
+        /**
+     * Gets an SQL delete statement for a specific object and replaces placeholders with provided arguments.
+     *
+     * @param object the name of the object to add (e.g., "student", "course")
+     * @param args   the arguments to replace in the SQL statement
+     * @return the SQL add statement as a String with placeholders replaced
+     */
+    public static String getSQLUpdateStatement(String object, String... args) {
+        ResourceLocation location = new ResourceLocation(CONTEXT,PUSHES, "update_" + object + ".sql");
+        String statement;
+        try {
+            statement = ResourceHelper.readResourceCompletely(location);
+        } catch (FileNotFoundException e) {
+            throw new SQLCommandNotFoundException("update_" + object, e);
+        }
+        for (int i = 0; i < args.length; i++) {
+            statement = Pattern.compile("\\{" + i + "\\}").matcher(statement).replaceAll(args[i]);
+        }
+        return statement;
+    }
+
+    /**
+     * Gets an SQL process for deleting an object from the database.
+     *
+     * @param object the name of the object to add (e.g., "student", "course")
+     * @param args   the arguments to replace in the SQL statement
+     * @return a SQLVoidProcess that executes the add statement
+     */
+    public static SQLVoidProcess getUpdateObjectProcess(String object, String... args) {
+        return (stmt) -> stmt.executeUpdate(getSQLUpdateStatement(object, args));
+    }
 }
