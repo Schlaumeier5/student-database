@@ -64,6 +64,8 @@ public class PostRequestHandler {
                 return handleSubjectRequest(request);
             case "/current-topic":
                 return handleCurrentTopic(request);
+            case "/change-current-topic":
+                return handleChangeCurrentTopic(request);
             case "/tasks":
                 return handleTasks(request);
             case "/update-room":
@@ -310,6 +312,52 @@ public class PostRequestHandler {
         }
         return response;
     }
+    /**
+     * Handles a POST request to change the current topic for a student in a specific subject.
+     * It reads the request body, extracts the subject ID and topic ID, and updates the student's current topic.
+     * If successful, it responds with a 200 OK status; otherwise, it responds with an error status.
+     *
+     * @param request The parsed POST request containing the subject and topic IDs.
+     * @throws IOException If an I/O error occurs while reading or writing.
+     */
+    private PostResponse handleChangeCurrentTopic(PostRequest request) throws IOException {
+        // Test if current user is admin or teacher
+        User user = User.getUser(Server.getInstance().getWebServer().getUserManager().getSessionUser(request));
+        if (user == null || (!user.isAdmin() && !user.isTeacher())) {
+            return PostResponse.unauthorized("Not logged in or invalid session");
+        }
+        int contentLength = request.getContentLength();
+        if (contentLength <= 0) {
+            return PostResponse.badRequest("Missing or invalid Content-Length!");
+        }
+        Map<String, Object> json = request.getJson();
+        if (!json.containsKey("subjectId") || !json.containsKey("topicId")) {
+            return PostResponse.badRequest("Missing subjectId or topicId in request.");
+        }
+        int subjectId = ((Number) json.get("subjectId")).intValue();
+        int topicId = ((Number) json.get("topicId")).intValue();
+
+        Student student = getCurrentStudent(request);
+        PostResponse response;
+        if (student != null) {
+            Subject subject = Subject.get(subjectId);
+            Topic topic = Topic.get(topicId);
+            if (subject != null && topic != null) {
+                try {
+                    student.setCurrentTopic(subject, topic);
+                    response = PostResponse.ok("Current topic changed successfully", ContentType.TEXT_PLAIN);
+                } catch (Exception e) {
+                    response = PostResponse.internalServerError("Error changing topic: " + e.getMessage());
+                }
+            } else {
+                response = PostResponse.badRequest("Subject or topic not found.");
+            }
+        } else {
+            response = PostResponse.unauthorized("Not logged in or invalid session");
+        }
+        return response;
+    }
+
     /**
      * Handles a POST request for tasks, parsing the request body to retrieve a list of task IDs.
      * It retrieves the tasks associated with those IDs and responds with their details in JSON format.
@@ -1137,16 +1185,16 @@ public class PostRequestHandler {
         if (contentLength <= 0) {
             return PostResponse.badRequest("Missing or invalid Content-Length!");
         }
-        Map<String, Object> json = request.getJson();
+        Map<String, String> json = request.getFormData();
         if (!json.containsKey("subjectId")) {
             return PostResponse.badRequest("Missing subjectId or topicIds in request.");
         }
-        int subjectId = ((Number) json.get("subjectId")).intValue();
+        int subjectId = Integer.parseInt(json.get("subjectId"));
         Subject subject = Subject.get(subjectId);
         if (subject == null) {
             return PostResponse.notFound("Subject not found");
         }
-        int grade = ((Number)json.get("grade")).intValue();
+        int grade = Integer.parseInt(json.get("grade"));
         try {
             subject.getTopics(grade).forEach((topic) -> {
                 try {

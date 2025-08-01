@@ -77,7 +77,9 @@ function createRequestButton(subject, type, label) {
 
 async function fetchJson(url, options) {
   const res = await fetch(url, options);
-  return await res.json();
+  if (res.ok){
+    return await res.json();
+  }
 }
 
 function setStudentInfo(studentData) {
@@ -143,8 +145,43 @@ function createPanel(subject, studentData) {
       body: JSON.stringify({ subjectId: subject.id, studentId: studentId })
     });
 
+    // Load all topics for this subject
+    const topics = await fetchJson('/topic-list', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                subjectId: subject.id, grade: studentData.schoolClass.grade
+            })
+      })
+
     const topicTitle = document.createElement('p');
-    topicTitle.innerHTML = `<strong>Aktuelles Thema:</strong> ${topic.name} (${topic.number})`;
+    topicTitle.innerHTML = `<label for="topicSelect">Aktuelles Thema:</label>`;
+    const topicSelect = document.createElement('select');
+    topics.forEach(t => {
+      const option = document.createElement('option');
+      option.value = t.id;
+      option.textContent = `${t.name} (${t.number})`;
+      option.selected = (topic && topic.id == t.id);
+      topicSelect.appendChild(option);
+    });
+    topicSelect.addEventListener('change', async e => {
+      result = await fetch('/change-current-topic', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ subjectId: subject.id, studentId, topicId: Number(e.target.value) })
+      });
+      if (result.ok) {
+        refreshPanel();
+      } else {
+        alert('Fehler beim Ändern des Themas')
+      }
+    });
+    topicSelect.id = 'topicSelect';
+    topicTitle.appendChild(topicSelect);
     body.appendChild(topicTitle);
 
     // Filter tasks for the current topic
