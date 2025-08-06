@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 
 import de.igslandstuhl.database.Application;
@@ -141,6 +142,10 @@ public class Task {
         return topic.getSubject();
     }
 
+    public void removeFromCache() {
+        tasks.remove(id);
+    }
+
     /**
      * Creates a Task object from SQL query result fields.
      *
@@ -173,10 +178,6 @@ public class Task {
             return null;
         }
     }
-    private static void addToCache(String[] fields) {
-        Task task = fromSQLFields(fields);
-        tasks.put(task.getId(), task);
-    }
     /**
      * Retrieves a list of tasks by their names.
      * * @param name the name of the tasks
@@ -184,7 +185,8 @@ public class Task {
      */
     public static List<Task> getByName(String name) {
         try {
-            Server.getInstance().processRequest(Task::addToCache, "get_tasks_by_name", SQL_FIELDS, name);
+            String[][] table = Server.getInstance().processRequest("get_tasks_by_name", new String[] {"id"}, name);
+            Arrays.stream(table).map(s -> s[0]).map(Integer::parseInt).map(Task::get);
         } catch (SQLException e) {
             e.printStackTrace();
             return new ArrayList<>();
@@ -229,7 +231,7 @@ public class Task {
     public static Task addTask(Topic topic, String name, Level niveau) throws SQLException {
         Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getAddObjectProcess("task", topic == null ? "-1" : String.valueOf(topic.getId()), name, String.valueOf(niveau)));
         return getByName(name).stream()
-                .filter(t -> t.getTopic() == topic && t.getNiveau() == niveau)
+                .filter(t -> t.getTopic().equals(topic) && t.getNiveau() == niveau)
                 .sorted(Comparator.comparing(Task::getId, Comparator.reverseOrder()))
                 .findFirst()
                 .orElse(null);

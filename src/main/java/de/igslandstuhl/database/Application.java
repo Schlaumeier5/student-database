@@ -46,6 +46,7 @@ public final class Application {
                 }
             }
         } catch (Throwable t) {
+            t.printStackTrace();
             throw new SerializationException("Failed to read file", t);
         }
 

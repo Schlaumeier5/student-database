@@ -8,8 +8,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.regex.Pattern;
 
 import de.igslandstuhl.database.server.resources.ResourceHelper;
@@ -37,7 +35,7 @@ public class SQLiteConnection implements AutoCloseable {
     /**
      * A list of pending statements that need to be closed when the connection is closed.
      */
-    private final List<Statement> pendingStatements = new ArrayList<>();
+    private Statement pendingStatement = null;
     /**
      * Creates the necessary tables in the database by executing SQL scripts.
      * This method reads SQL files matching the pattern "./tables/*.sql" (regex: .*tables.+\\.sql) and executes their content.
@@ -101,8 +99,9 @@ public class SQLiteConnection implements AutoCloseable {
      * @throws SQLException if an SQL error occurs during execution
      */
     public ResultSet executeProcess(SQLProcess p) throws SQLException {
+        if (pendingStatement != null && !pendingStatement.isClosed()) throw new SQLMultipleAccessesException("Previous statement was not closed");
         Statement stmt = conn.createStatement();
-        pendingStatements.add(stmt);
+        pendingStatement = stmt;
         return p.execute(stmt);
     }
     /**
@@ -110,10 +109,8 @@ public class SQLiteConnection implements AutoCloseable {
      * This method should be called before closing the connection to ensure that all resources are released.
      * @throws SQLException if an error occurs while closing the statements
      */
-    public void closeAllPendingStatements() throws SQLException {
-        for (Statement statement : pendingStatements) {
-            statement.close();
-        }
+    public void closePendingStatement() throws SQLException {
+        pendingStatement.close();
     }
     /**
      * Creates the necessary tables in the database by executing SQL scripts.
@@ -136,7 +133,7 @@ public class SQLiteConnection implements AutoCloseable {
     }
     @Override
     public void close() throws SQLException {
-        closeAllPendingStatements();
+        closePendingStatement();
         conn.close();
     }
     public static void main(String[] args) throws SQLException {

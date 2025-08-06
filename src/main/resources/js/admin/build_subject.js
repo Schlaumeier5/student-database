@@ -63,7 +63,7 @@ function populateTopicTable(table, topics) {
             <td class="topic-name">${topic.name}</td>
             <td class="topic-ratio">${topic.ratio}</td>
             <td class="topic-number">${topic.number}</td>
-            <td class="topic-tasks">${topic.tasks}</td>
+            <td class="topic-tasks">${topic.tasks.length}</td>
         `
         table.appendChild(row)
     })

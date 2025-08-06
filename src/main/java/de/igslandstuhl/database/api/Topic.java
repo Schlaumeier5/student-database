@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import de.igslandstuhl.database.Application;
 import de.igslandstuhl.database.server.Server;
@@ -258,13 +259,14 @@ public class Topic {
     private void loadTasks() {
         tasks.clear();
         try {
+            List<Integer> taskIds = new ArrayList<>();
             Server.getInstance().processRequest(
                 fields -> {
-                    Task task = Task.get(Integer.parseInt(fields[0]));
-                    if (task != null) tasks.add(task);
+                    taskIds.add(Integer.parseInt(fields[0]));
                 },
                 "get_tasks_by_topic", new String[] {"id"}, String.valueOf(id)
             );
+            taskIds.stream().map(Task::get).filter(Objects::nonNull).forEach(t -> tasks.add(t));
             tasksLevel1 = getTasksByLevel(tasks, Level.LEVEL1);
             tasksLevel2 = getTasksByLevel(tasks, Level.LEVEL2);
             tasksLevel3 = getTasksByLevel(tasks, Level.LEVEL3);
@@ -319,6 +321,8 @@ public class Topic {
 
     public void delete() throws SQLException {
         Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getDeleteObjectProcess("topic", String.valueOf(id)));
+        topics.remove(id);
+        tasks.forEach(Task::removeFromCache);
     }
 
     @Override
@@ -405,29 +409,14 @@ public class Topic {
         // Deserializing the tasks, and adding them to the object
         if (parts.length > 1) {
             String[] tasks = parts[1].split(Application.TASK_DELIMITER);
-
-            List<Task> taskList = new ArrayList<>();
             for (String s : tasks) {
                 if (s != "") {
-                    taskList.add(Task.fromSerialized(topic, s));
+                    Task.fromSerialized(topic, s);
                 }
             }
 
-            for (Task task : taskList) {
-                switch (task.getNiveau()) {
-                    case LEVEL1:
-                        topic.tasksLevel1.add(task);
-                        break;
-                    case LEVEL2:
-                        topic.tasksLevel2.add(task);
-                        break;
-                    case LEVEL3:
-                        topic.tasksLevel3.add(task);
-                        break;
-                    default:
-                        throw new IllegalStateException("Unknown task level: " + task.getNiveau());
-                }
-            }
+            topic.loadTasks();
+            System.out.println(topic.getTasks());
         }
         return topic;
     }

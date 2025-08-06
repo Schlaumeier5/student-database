@@ -4,6 +4,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -116,10 +117,10 @@ public final class Server implements AutoCloseable {
                     results.add(result.getString(columnLabel));
                 }
                 String[] resultArr = new String[results.size()];
-                connection.closeAllPendingStatements();
+                connection.closePendingStatement();
                 return output.apply(results.toArray(resultArr));
             } else {
-                connection.closeAllPendingStatements();
+                connection.closePendingStatement();
                 return null;
             }
         }
@@ -139,15 +140,21 @@ public final class Server implements AutoCloseable {
         synchronized (connection) {
             ResultSet result = connection.executeProcess(SQLHelper.getQueryProcess(request, args));
             while (result.next()) {
-                List<String> results = new ArrayList<>();
+                List<String> results = new LinkedList<>();
                 for (String columnLabel : sqlFields) {
                     results.add(result.getString(columnLabel));
                 }
                 String[] resultArr = new String[results.size()];
                 callback.accept(results.toArray(resultArr));
             }
-            connection.closeAllPendingStatements();
+            connection.closePendingStatement();
         }
+    }
+    public String[][] processRequest(String request, String[] sqlFields, String... args) throws SQLException {
+        List<String[]> rows = new LinkedList<>();
+        processRequest(row -> rows.add(row), request, sqlFields, args);
+        String[][] rowsArr = new String[rows.size()][];
+        return rows.toArray(rowsArr);
     }
 
     public static void main(String[] args) throws Exception {

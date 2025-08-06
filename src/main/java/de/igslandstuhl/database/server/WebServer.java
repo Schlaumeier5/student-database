@@ -145,9 +145,12 @@ public class WebServer implements Runnable {
                 }
             } catch (IOException e) {
                 e.printStackTrace();
+                GetResponse.internalServerError().respond(out);
+                e.printStackTrace(out);
             } catch (Exception e) {
                 e.printStackTrace();
                 GetResponse.internalServerError().respond(out);
+                e.printStackTrace(out);
             } finally {
                 try {
                     out.flush();
