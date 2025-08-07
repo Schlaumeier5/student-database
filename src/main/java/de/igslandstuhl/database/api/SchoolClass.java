@@ -136,19 +136,18 @@ public class SchoolClass {
      * @return a list of students in this class
      */
     public List<Student> getStudents() {
-        List<Student> students = new ArrayList<>();
+        List<Integer> studentIds = new ArrayList<>();
         try {
             Server.getInstance().processRequest(
                 fields -> {
-                    Student student = Student.get(Integer.parseInt(fields[0]));
-                    if (student != null) students.add(student);
+                    studentIds.add(Integer.parseInt(fields[0]));
                 },
                 "get_students_by_class", new String[] {"id"}, String.valueOf(id)
             );
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return students;
+        return studentIds.stream().map(Student::get).toList();
     }
 
     public void delete() throws SQLException {
