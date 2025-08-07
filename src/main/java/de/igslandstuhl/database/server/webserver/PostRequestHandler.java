@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
-import java.util.regex.Matcher;
 
 import de.igslandstuhl.database.Application;
 import de.igslandstuhl.database.api.Room;
@@ -80,6 +79,8 @@ public class PostRequestHandler {
                 return handleTaskChange(request, Task.STATUS_NOT_STARTED);
             case "/reopen-task":
                 return handleTaskChange(request, Task.STATUS_NOT_STARTED);
+            case "/lock-task":
+                return handleTaskChange(request, Task.STATUS_LOCKED);
             case "/student-data":
             case "/rooms":
             case "/student-subjects":

@@ -20,6 +20,7 @@ public class Task {
     public static final int STATUS_NOT_STARTED = 0;
     public static final int STATUS_IN_PROGRESS = 1;
     public static final int STATUS_COMPLETED = 2;
+    public static final int STATUS_LOCKED = 3;
 
     /**
      * SQL fields for the Task table.
