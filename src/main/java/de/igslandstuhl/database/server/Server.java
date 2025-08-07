@@ -20,6 +20,7 @@ import de.igslandstuhl.database.api.Teacher;
 import de.igslandstuhl.database.api.User;
 import de.igslandstuhl.database.server.sql.SQLHelper;
 import de.igslandstuhl.database.server.sql.SQLiteConnection;
+import de.igslandstuhl.database.utils.CommandLineUtils;
 
 /**
  * Represents the main server class that handles all incoming requests and manages the database connection.
@@ -88,7 +89,7 @@ public final class Server implements AutoCloseable {
         try {
             connection = new SQLiteConnection(SQL_URL);
             String keystorePath = "keys/web/keystore.jks";
-            String keystorePassword = "changeit";
+            String keystorePassword = CommandLineUtils.input("Keystore Password:");
             int port = 443;
             webServer = new WebServer(port, keystorePath, keystorePassword);
         } catch (Exception e) {
