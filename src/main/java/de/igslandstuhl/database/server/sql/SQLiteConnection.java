@@ -21,21 +21,19 @@ public class SQLiteConnection implements AutoCloseable {
      * It is constructed as "jdbc:sqlite:" + url + ".db".
      */
     private final String url;
-    /**
-     * The SQL connection object.
-     */
-    private final Connection conn;
+
+    private final ThreadLocal<Connection> connectionSupplier;
     /**
      * Returns the <code>java.sql.Connection</code> associated with this <code>SQLiteConnection</code>.
      * @return the <code>Connection</code> object
      */
     public Connection getSQLConnection() {
-        return conn;
+        return connectionSupplier.get();
     }
     /**
-     * A list of pending statements that need to be closed when the connection is closed.
+     * Current statement in this thread that need to be closed when the connection is closed.
      */
-    private Statement pendingStatement = null;
+    private ThreadLocal<Statement> pendingStatement = null;
     /**
      * Creates the necessary tables in the database by executing SQL scripts.
      * This method reads SQL files matching the pattern "./tables/*.sql" (regex: .*tables.+\\.sql) and executes their content.
@@ -59,7 +57,7 @@ public class SQLiteConnection implements AutoCloseable {
      * @throws SQLException if an SQL error occurs during preparation
      */
     public PreparedStatement prepareStatement(String sql) throws SQLException {
-        return conn.prepareStatement(sql);
+        return getSQLConnection().prepareStatement(sql);
     }
     /**
      * Executes a SQL statement securely, ensuring that the statement is closed after execution.
@@ -78,7 +76,7 @@ public class SQLiteConnection implements AutoCloseable {
      * @throws SQLException if an SQL error occurs during execution
      */
     public void executeVoidProcessSecure(String sql) throws SQLException {
-        try (Statement stmt = conn.createStatement()) {
+        try (Statement stmt = getSQLConnection().createStatement()) {
             stmt.execute(sql);
         }
     }
@@ -88,7 +86,7 @@ public class SQLiteConnection implements AutoCloseable {
      * @throws SQLException if an SQL error occurs during execution
      */
     public void executeVoidProcessSecure(SQLVoidProcess p) throws SQLException {
-        try (Statement stmt = conn.createStatement()) {
+        try (Statement stmt = getSQLConnection().createStatement()) {
             p.execute(stmt);
         }
     }
@@ -99,9 +97,9 @@ public class SQLiteConnection implements AutoCloseable {
      * @throws SQLException if an SQL error occurs during execution
      */
     public ResultSet executeProcess(SQLProcess p) throws SQLException {
-        if (pendingStatement != null && !pendingStatement.isClosed()) throw new SQLMultipleAccessesException("Previous statement was not closed");
-        Statement stmt = conn.createStatement();
-        pendingStatement = stmt;
+        if (pendingStatement.get() != null && !pendingStatement.get().isClosed()) throw new SQLMultipleAccessesException("Previous statement was not closed");
+        Statement stmt = getSQLConnection().createStatement();
+        pendingStatement.set(stmt);
         return p.execute(stmt);
     }
     /**
@@ -109,8 +107,15 @@ public class SQLiteConnection implements AutoCloseable {
      * This method should be called before closing the connection to ensure that all resources are released.
      * @throws SQLException if an error occurs while closing the statements
      */
+    public void closeAllPendingStatements() throws SQLException {
+        pendingStatement.remove();
+    }
+    /**
+     * Closes the pending statement in the current thread
+     * @throws SQLException
+     */
     public void closePendingStatement() throws SQLException {
-        pendingStatement.close();
+        pendingStatement.get().close();
     }
     /**
      * Creates the necessary tables in the database by executing SQL scripts.
@@ -129,12 +134,18 @@ public class SQLiteConnection implements AutoCloseable {
      */
     public SQLiteConnection(String url) throws SQLException {
         this.url = "jdbc:sqlite:" + url + ".db";
-        this.conn = DriverManager.getConnection(this.url);
+        this.connectionSupplier = ThreadLocal.withInitial(() -> {
+            try {
+                return DriverManager.getConnection(this.url);
+            } catch (SQLException e) {
+                throw new IllegalStateException(e);
+            }
+        });
     }
     @Override
     public void close() throws SQLException {
-        closePendingStatement();
-        conn.close();
+        closeAllPendingStatements();
+        connectionSupplier.remove();
     }
     public static void main(String[] args) throws SQLException {
         String url = "lernjobs"; // Datenbank-Datei im Projektverzeichnis
