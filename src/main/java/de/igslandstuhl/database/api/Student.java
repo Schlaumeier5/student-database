@@ -7,7 +7,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -425,13 +424,20 @@ public class Student extends User {
         // Update in memory
         if (newStatus == Task.STATUS_COMPLETED) {
             selectedTasks.remove(task);
+            lockedTasks.remove(task);
             completedTasks.add(task);
         } else if (newStatus == Task.STATUS_IN_PROGRESS) {
             completedTasks.remove(task);
+            lockedTasks.remove(task);
             selectedTasks.add(task);
         } else if (newStatus == Task.STATUS_NOT_STARTED) {
             selectedTasks.remove(task);
+            lockedTasks.add(task);
             completedTasks.remove(task);
+        } else if (newStatus == Task.STATUS_LOCKED) {
+            selectedTasks.remove(task);
+            completedTasks.remove(task);
+            lockedTasks.add(task);
         } else {
             throw new IllegalArgumentException("Invalid task status: " + newStatus);
         }
