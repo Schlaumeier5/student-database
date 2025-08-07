@@ -3,6 +3,7 @@ package de.igslandstuhl.database.server.webserver;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 
@@ -612,15 +613,15 @@ public class PostRequestHandler {
         if (contentLength <= 0) {
             return PostResponse.badRequest("Missing or invalid Content-Length!");
         }
-        Map<String, Object> json = request.getJson();
-        String firstName = (String) json.get("firstName");
-        String lastName = (String) json.get("lastName");
-        String email = (String) json.get("email");
-        String password = (String) json.get("password");
+        Map<String,String> data = request.getFormData();
+        String firstName = data.get("firstName");
+        String lastName = data.get("lastName");
+        String email = data.get("email");
+        String password = Teacher.generateRandomPassword(12, (contentLength << 4 + firstName.length() + lastName.length()) << 7 + System.currentTimeMillis() * new Random().nextInt());
 
         try {
             Teacher teacher = Teacher.registerTeacher(firstName, lastName, email, password);
-            return PostResponse.ok(teacher.toString(), ContentType.JSON);
+            return PostResponse.ok(teacher.toString().replace("}", "") + ", \"password\": " + password + "}", ContentType.JSON);
         } catch (java.sql.SQLException e) {
             return PostResponse.internalServerError("Database error: " + e.getMessage());
         } catch (IllegalArgumentException e) {

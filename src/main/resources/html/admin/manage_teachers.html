@@ -14,9 +14,11 @@
         <main>
             <section id="add-teacher">
                 <h2>Lehrer hinzufügen</h2>
-                <form id="add-teacher-form">
-                    <label for="teacher-name">Name:</label>
-                    <input type="text" id="teacher-name" name="name" required>
+                <form id="add-teacher-form" method="POST" action="/add-teacher">
+                    <label for="teacher-first-name">Vorname:</label>
+                    <input type="text" id="teacher-first-name" name="firstName" required>
+                    <label for="teacher-last-name">Nachname:</label>
+                    <input type="text" id="teacher-last-name" name="lastName" required>
                     <label for="teacher-email">Email:</label>
                     <input type="email" id="teacher-email" name="email" required>
                     <button type="submit">Lehrer hinzufügen</button>
