@@ -69,7 +69,7 @@ public class SQLHelper {
      */
     public static SQLProcess getQueryProcess(String queryName, String... args) {
         String query = getSQLQuery(queryName, args);
-        return (stmt) -> stmt.executeQuery(query);
+        return new SQLQueryProcess(query);
     }
 
     /**
