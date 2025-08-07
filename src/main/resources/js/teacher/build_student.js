@@ -191,6 +191,9 @@ function createPanel(subject, studentData) {
     const completedTasks = studentData.completedTasks.filter(
       task => task.topic && task.topic.id === topic.id
     );
+    const lockedTasks = studentData.lockedTasks.filter(
+      task => task.topic && task.topic.id === topic.id
+    );
     let allTasks = [];
     if (Array.isArray(topic.tasks) && topic.tasks.length > 0) {
       allTasks = await fetchJson('/tasks', {
@@ -203,13 +206,14 @@ function createPanel(subject, studentData) {
     const otherTasks = allTasks.filter(
       task =>
         !selectedTasks.some(t => t.id === task.id) &&
-        !completedTasks.some(t => t.id === task.id)
+        !completedTasks.some(t => t.id === task.id) &&
+        !lockedTasks.some(t => t.id === task.id)
     );
 
     // Current stage (selectedTasks)
     const { label: selectedLabel, list: selectedList } = createTaskList(selectedTasks, 'Aktuelle Etappe:', async (task) => {
       const action = window.prompt(
-        'Was möchten Sie tun?\n1: Als abgeschlossen markieren\n2: Aufgabe abbrechen',
+        'Was möchten Sie tun?\n1: Als abgeschlossen markieren\n2: Aufgabe abbrechen\n3: Aufgabe sperren',
         '1'
       );
       if (action === '1') {
@@ -231,6 +235,14 @@ function createPanel(subject, studentData) {
         });
         studentData.selectedTasks = studentData.selectedTasks.filter(t => t.id !== task.id);
         // No need to push to completedTasks or otherTasks, UI will refresh
+      } else if (action === '3') {
+        await fetch('/lock-task', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ taskId: task.id, studentId })
+        });
+        studentData.selectedTasks = studentData.selectedTasks.filter(t => t.id !== task.id);
+        studentData.lockedTasks.push(task)
       }
       refreshPanel(); // Refresh the panel to show updated tasks
     });
@@ -252,6 +264,22 @@ function createPanel(subject, studentData) {
     });
     body.appendChild(completedLabel);
     body.appendChild(completedList);
+
+    // locked stages
+    const { label: lockedLabel, list: lockedList } = createTaskList(lockedTasks, 'Gesperrte Etappen:', async (task) => {
+      if (window.confirm('Soll diese Aufgabe wirklich wieder in die offenen Aufgaben verschoben werden?')) {
+        await fetch('/reopen-task', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ taskId: task.id, studentId })
+        });
+        studentData.lockedTasks = studentData.lockedTasks.filter(t => t.id !== task.id);
+        // No need to push to otherTasks, UI will refresh
+        refreshPanel(); // Refresh the panel to show updated tasks
+      }
+    });
+    body.appendChild(lockedLabel);
+    body.appendChild(lockedList);
 
     // Other stages
     const { label: otherLabel, list: otherList } = createTaskList(otherTasks, 'Weitere Etappen:', async (task) => {

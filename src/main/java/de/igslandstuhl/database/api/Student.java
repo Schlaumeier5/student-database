@@ -7,7 +7,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -73,6 +72,11 @@ public class Student extends User {
     private final Set<Task> completedTasks = new HashSet<>();
 
     /**
+     * The set of tasks locked for the student
+     */
+    private final Set<Task> lockedTasks = new HashSet<>();
+
+    /**
      * The current requests of the student, mapped by subject ID.
      */
     private final Map<Integer, Set<SubjectRequest>> currentRequests = new ConcurrentHashMap<>();
@@ -131,6 +135,7 @@ public class Student extends User {
     private void fetchTasks() throws SQLException {
         Server.getInstance().processRequest((t) -> selectedTasks.add(Task.get(Integer.parseInt(t[0]))), "get_selected_tasks_by_student", INTERESTING_TASKSTAT_FIELDS, String.valueOf(id));
         Server.getInstance().processRequest((t) -> completedTasks.add(Task.get(Integer.parseInt(t[0]))), "get_completed_tasks_by_student", INTERESTING_TASKSTAT_FIELDS, String.valueOf(id));
+        Server.getInstance().processRequest((t) -> lockedTasks.add(Task.get(Integer.parseInt(t[0]))), "get_locked_tasks_by_student", INTERESTING_TASKSTAT_FIELDS, String.valueOf(id));
 
         Server.getInstance().processRequest((t) -> completedTasks.add(SpecialTask.get(Integer.parseInt(t[0]))), "get_completed_special_tasks_by_student", INTERESTING_SPECIAL_TASK_STAT_FIELDS, String.valueOf(id));
     }
@@ -350,6 +355,12 @@ public class Student extends User {
     public Set<Task> getCompletedTasks() { return new HashSet<>(completedTasks); }
 
     /**
+     * Returns the set of locked tasks.
+     * @return completed tasks
+     */
+    public Set<Task> getLockedTasks() { return new HashSet<>(completedTasks); }
+
+    /**
      * Returns the current requests.
      * @return current requests
      */
@@ -413,13 +424,20 @@ public class Student extends User {
         // Update in memory
         if (newStatus == Task.STATUS_COMPLETED) {
             selectedTasks.remove(task);
+            lockedTasks.remove(task);
             completedTasks.add(task);
         } else if (newStatus == Task.STATUS_IN_PROGRESS) {
             completedTasks.remove(task);
+            lockedTasks.remove(task);
             selectedTasks.add(task);
         } else if (newStatus == Task.STATUS_NOT_STARTED) {
             selectedTasks.remove(task);
+            lockedTasks.add(task);
             completedTasks.remove(task);
+        } else if (newStatus == Task.STATUS_LOCKED) {
+            selectedTasks.remove(task);
+            completedTasks.remove(task);
+            lockedTasks.add(task);
         } else {
             throw new IllegalArgumentException("Invalid task status: " + newStatus);
         }
@@ -475,6 +493,7 @@ public class Student extends User {
         .append("\"graduationLevel\": ").append(graduationLevel).append(",\n")
         .append("\"selectedTasks\": ").append(selectedTasks).append(",\n")
         .append("\"completedTasks\": ").append(completedTasks).append(",\n")
+        .append("\"lockedTasks\": ").append(lockedTasks).append(",\n")
         .append("\"currentRoom\": ").append(String.valueOf(currentRoom)).append(",\n")
         .append("\"currentRequests\": {").append(currentRequests.entrySet().stream()
             .map(entry -> "\"" + entry.getKey() + "\": " + entry.getValue().stream().map((r) -> '"' + r.getGermanTranslation() + '"').toList())
