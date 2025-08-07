@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Matcher;
 
 import de.igslandstuhl.database.Application;
 import de.igslandstuhl.database.api.Room;
@@ -157,7 +158,7 @@ public class PostRequestHandler {
                 .replaceAll("\\+", " ")
                 .replaceAll("%0A", "\n")
                 .replaceAll("%0D", "\r")
-                .replaceAll("%21", "$")
+                .replaceAll("%21", "!")
                 .replaceAll("%23", "#")
                 .replaceAll("%26", "&")
                 .replaceAll("%28", "(")
@@ -614,9 +615,9 @@ public class PostRequestHandler {
             return PostResponse.badRequest("Missing or invalid Content-Length!");
         }
         Map<String,String> data = request.getFormData();
-        String firstName = data.get("firstName");
-        String lastName = data.get("lastName");
-        String email = data.get("email");
+        String firstName = prepare(data.get("firstName"));
+        String lastName = prepare(data.get("lastName"));
+        String email = prepare(data.get("email"));
         String password = Teacher.generateRandomPassword(12, (contentLength << 4 + firstName.length() + lastName.length()) << 7 + System.currentTimeMillis() * new Random().nextInt());
 
         try {

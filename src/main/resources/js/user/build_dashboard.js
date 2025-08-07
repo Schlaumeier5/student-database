@@ -111,10 +111,10 @@ function createPanel(subject, studentData) {
   function createRequestButtons() {
     ['hilfe', 'partner', 'betreuung', 'gelingensnachweis'].forEach(type => {
       const label = {
-        hilfe: 'Schüler braucht Hilfe',
-        partner: 'Schüler sucht einen Partner',
-        betreuung: 'Schüler braucht Betreuung für ein Experiment',
-        gelingensnachweis: 'Schüler ist bereit für den Gelingensnachweis'
+        hilfe: 'Ich brauche Hilfe',
+        partner: 'Ich suche einen Partner',
+        betreuung: 'Ich brauche Betreuung für ein Experiment',
+        gelingensnachweis: 'Ich bin bereit für den Gelingensnachweis'
       }[type];
 
       const btn = createRequestButton(subject, type, label);
@@ -152,6 +152,9 @@ function createPanel(subject, studentData) {
     const completedTasks = studentData.completedTasks.filter(
       task => task.topic && task.topic.id === topic.id
     );
+    const lockedTasks = studentData.completedTasks.filter(
+      task => task.topic && task.topic.id === topic.id
+    )
     let allTasks = [];
     if (Array.isArray(topic.tasks) && topic.tasks.length > 0) {
       allTasks = await fetchJson('/tasks', {
@@ -164,7 +167,8 @@ function createPanel(subject, studentData) {
     const otherTasks = allTasks.filter(
       task =>
         !selectedTasks.some(t => t.id === task.id) &&
-        !completedTasks.some(t => t.id === task.id)
+        !completedTasks.some(t => t.id === task.id) &&
+        !lockedTasks.some(t => t.id === task.id)
     );
 
     // Current stage (selectedTasks)
@@ -189,6 +193,11 @@ function createPanel(subject, studentData) {
     const { label: completedLabel, list: completedList } = createTaskList(completedTasks, 'Abgeschlossene Etappen:');
     body.appendChild(completedLabel);
     body.appendChild(completedList);
+
+    // Stages locked by the teacher
+    const { label: lockedLabel, list: lockedList} = createTaskList(lockedTasks, 'Gesperrte Etappen:');
+    body.appendChild(lockedLabel);
+    body.appendChild(lockedList);
 
     // Other stages
     const { label: otherLabel, list: otherList } = createTaskList(otherTasks, 'Weitere Etappen:', async (task) => {
