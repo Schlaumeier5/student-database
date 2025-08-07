@@ -126,7 +126,7 @@ public final class Server implements AutoCloseable {
     /**
      * Processes a SQL request and applies a callback to each row of the result set.
      * This method executes a SQL query and iterates through the result set, applying the callback to each row.
-     * It is synchronized to ensure thread safety when accessing the database connection.
+     * It creates a new Thread to ensure the callbacks do not interrupt the database query.
      *
      * @param callback The callback function to apply to each row of the result set.
      * @param request The SQL query to execute.
@@ -136,13 +136,27 @@ public final class Server implements AutoCloseable {
      */
     public void processRequest(Consumer<String[]> callback, String request, String[] sqlFields, String... args) throws SQLException {
         ResultSet result = connection.executeProcess(SQLHelper.getQueryProcess(request, args));
-        while (result.next()) {
-            List<String> results = new LinkedList<>();
-            for (String columnLabel : sqlFields) {
-                results.add(result.getString(columnLabel));
+        Thread subroutine = new Thread(() -> {
+            try {
+                while (result.next()) {
+                    List<String> results = new LinkedList<>();
+                    for (String columnLabel : sqlFields) {
+                        results.add(result.getString(columnLabel));
+                    }
+                    String[] resultArr = new String[results.size()];
+                    callback.accept(results.toArray(resultArr));
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+                throw new IllegalStateException(e);
             }
-            String[] resultArr = new String[results.size()];
-            callback.accept(results.toArray(resultArr));
+        });
+        subroutine.start();
+        try {
+            subroutine.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            throw new IllegalStateException(e);
         }
         connection.closePendingStatement();
     }
