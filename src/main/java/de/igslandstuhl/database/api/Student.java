@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -518,20 +519,24 @@ public class Student extends User {
     private void loadCurrentTopics() {
         currentTopics.clear();
         try {
+            List<Integer> subjectIds = new ArrayList<>();
+            List<Integer> topicIds = new ArrayList<>();
             Server.getInstance().processRequest(
                 fields -> {
-                    int subjectId = Integer.parseInt(fields[1]);
-                    int topicId = Integer.parseInt(fields[2]);
-                    Subject subject = Subject.get(subjectId);
-                    Topic topic = Topic.get(topicId);
-                    if (subject != null && topic != null) {
-                        currentTopics.put(subject, topic);
-                    }
+                    subjectIds.add(Integer.parseInt(fields[1]));
+                    topicIds.add(Integer.parseInt(fields[2]));
                 },
                 "get_current_topics_by_student",
                 new String[] {"student_id", "subject_id", "topic_id"},
                 String.valueOf(id)
             );
+            for (int i = 0; i < subjectIds.size(); i++) {
+                Subject subject = Subject.get(subjectIds.get(i));
+                Topic topic = Topic.get(topicIds.get(i));
+                if (subject != null && topic != null) {
+                    currentTopics.put(subject, topic);
+                }
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
