@@ -123,7 +123,6 @@ public class WebServer implements Runnable {
             try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
 
                 String request = ResourceHelper.readResourceTillEmptyLine(in);
-                System.out.println("Anfrage erhalten: " + request);
 
                 if (request.startsWith("GET")) {
                     String user = Server.getInstance().getWebServer().getUserManager().getSessionUser(request);
@@ -193,7 +192,6 @@ public class WebServer implements Runnable {
         while (running) {
             try {
                 SSLSocket clientSocket = (SSLSocket) serverSocket.accept();
-                System.out.println("Neue HTTPS-Anfrage erhalten");
                 new Thread(new ClientHandler(clientSocket)).start();
             } catch (IOException e) {
                 System.err.println("Error while accepting client");
