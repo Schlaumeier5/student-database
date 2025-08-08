@@ -8,6 +8,8 @@ import de.igslandstuhl.database.api.SerializationException;
 import de.igslandstuhl.database.api.Subject;
 import de.igslandstuhl.database.api.Topic;
 import de.igslandstuhl.database.server.Server;
+import de.igslandstuhl.database.server.commands.Command;
+import de.igslandstuhl.database.utils.CommandLineUtils;
 
 /**
  * Represents the main application class that serves as a singleton instance.
@@ -59,6 +61,10 @@ public final class Application {
         Server.getInstance().getConnection().createTables();
         Server.getInstance().getWebServer().start();
 
-        while (true);
+        Command.registerCommands();
+
+        while (true) {
+            CommandLineUtils.waitForCommandAndExec();
+        }
     }
 }
