@@ -7,6 +7,7 @@ import java.util.List;
 import de.igslandstuhl.database.api.SerializationException;
 import de.igslandstuhl.database.api.Subject;
 import de.igslandstuhl.database.api.Topic;
+import de.igslandstuhl.database.server.Server;
 
 /**
  * Represents the main application class that serves as a singleton instance.
@@ -52,5 +53,12 @@ public final class Application {
 
         Topic[] topicsArr = new Topic[topics.size()];
         return topics.toArray(topicsArr);
+    }
+
+    public static void main(String[] args) throws Exception {
+        Server.getInstance().getConnection().createTables();
+        Server.getInstance().getWebServer().start();
+
+        while (true);
     }
 }
