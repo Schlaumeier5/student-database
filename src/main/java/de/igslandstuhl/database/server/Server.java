@@ -12,6 +12,7 @@ import java.util.function.Function;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
+import de.igslandstuhl.database.Application;
 import de.igslandstuhl.database.api.Room;
 import de.igslandstuhl.database.api.SchoolClass;
 import de.igslandstuhl.database.api.Student;
@@ -89,7 +90,7 @@ public final class Server implements AutoCloseable {
         try {
             connection = new SQLiteConnection(SQL_URL);
             String keystorePath = "keys/web/keystore.jks";
-            String keystorePassword = CommandLineUtils.input("Keystore Password:");
+            String keystorePassword = Application.getInstance().beingTested() ? "changeit" : CommandLineUtils.input("Keystore Password:");
             int port = 443;
             webServer = new WebServer(port, keystorePath, keystorePassword);
         } catch (Exception e) {

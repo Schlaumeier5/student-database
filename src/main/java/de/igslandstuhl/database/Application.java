@@ -23,6 +23,10 @@ public final class Application {
         return instance;
     }
 
+    public boolean beingTested() {
+        return "true".equals(System.getProperty("test.environment"));
+    }
+
     private final boolean onServer = true;
     public boolean isOnServer() {
         return onServer;
