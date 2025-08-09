@@ -1,17 +1,16 @@
 package de.igslandstuhl.database.api;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
+
 import java.sql.SQLException;
-import org.junit.Before;
-import org.junit.Test;
-import de.igslandstuhl.database.server.Server;
+
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 public class StudentTest {
-    Server server;
-    @Before
-    public void setupServer() throws SQLException {
+    @BeforeAll
+    public static void setupServer() throws SQLException {
         PreConditions.setupDatabase();
-        server = Server.getInstance();
         PreConditions.addSampleClass();
     }
     @Test
