@@ -23,6 +23,7 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+    systemProperty("test.environment", "true")
 }
 
 java {
