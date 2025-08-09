@@ -31,5 +31,16 @@ public interface Command {
             }
             return "Successfully added admin";
         });
+        registerCommand("remove-admin", (args) -> {
+            if (args.length < 1) return "Usage: remove-admin [username]";
+            try {
+                Admin.get(args[0]).delete();
+            } catch (NullPointerException e) {
+                return "Admin not found";
+            } catch (Exception e) {
+                return "Error while trying to remove admin:\n" + CommonUtils.getStacktrace(e);
+            }
+            return "Successfully removed admin";
+        });
     }
 }
