@@ -1,17 +1,16 @@
 package de.igslandstuhl.database.api;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
+
 import java.sql.SQLException;
-import org.junit.Before;
-import org.junit.Test;
-import de.igslandstuhl.database.server.Server;
+
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 public class SubjectTest {
-    Server server;
-    @Before
-    public void setupServer() throws SQLException {
+    @BeforeAll
+    public static void setupServer() throws SQLException {
         PreConditions.setupDatabase();
-        server = Server.getInstance();
         PreConditions.addSampleClass(); // Ensure a class exists for testing
     }
     @Test
@@ -27,8 +26,8 @@ public class SubjectTest {
         Subject.get(1).addToGrade(5);
         SchoolClass schoolClass = SchoolClass.get(1);
         assertTrue(
-            "Subject not found in SchoolClass",
-            schoolClass.getSubjects().stream().anyMatch(subject -> subject.getId() == 1)
+            schoolClass.getSubjects().stream().anyMatch(subject -> subject.getId() == 1),
+            "Subject not found in SchoolClass"
         );
     }
 }

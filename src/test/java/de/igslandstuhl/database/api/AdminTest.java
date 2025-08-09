@@ -1,11 +1,11 @@
 package de.igslandstuhl.database.api;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 public class AdminTest {
-    @Before
-    public void createDatabase() throws Exception {
+    @BeforeAll
+    public static void createDatabase() throws Exception {
         PreConditions.setupDatabase();
     }
     @Test

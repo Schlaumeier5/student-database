@@ -1,12 +1,12 @@
 package de.igslandstuhl.database.server;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import de.igslandstuhl.database.api.SchoolClass;
 import de.igslandstuhl.database.api.Student;
@@ -14,7 +14,7 @@ import de.igslandstuhl.database.api.Student;
 public class ServerTest {
     Server server;
 
-    @Before
+    @BeforeEach
     public void setupServer() throws SQLException {
         server = Server.getInstance();
     }
