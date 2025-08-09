@@ -62,6 +62,7 @@ public final class Application {
         Server.getInstance().getWebServer().start();
 
         Command.registerCommands();
+        CommandLineUtils.setup();
 
         while (true) {
             CommandLineUtils.waitForCommandAndExec();
