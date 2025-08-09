@@ -1,6 +1,7 @@
 plugins {
     java
     application
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 group = "igs-landstuhl"
@@ -24,6 +25,19 @@ dependencies {
 tasks.test {
     useJUnitPlatform()
     systemProperty("test.environment", "true")
+}
+tasks.jar {
+    manifest {
+        attributes["Main-Class"] = application.mainClass.get()
+    }
+}
+tasks.shadowJar {
+    archiveBaseName.set("student-database")
+    archiveClassifier.set("") // no "-all" suffix, makes it the default jar
+    archiveVersion.set(project.version.toString())    // omit version in filename if you want
+    manifest {
+        attributes["Main-Class"] = application.mainClass.get()
+    }
 }
 
 java {
