@@ -22,6 +22,10 @@ public class Admin extends User {
         return new Admin(username, passwordHash);
     }
 
+    public void delete() throws SQLException {
+        Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getDeleteObjectProcess("admin", username));
+    }
+
     @Override
     public boolean isTeacher() {
         return false; // Admins are not teachers

@@ -89,7 +89,7 @@ public final class Server implements AutoCloseable {
     private Server() {
         try {
             connection = new SQLiteConnection(SQL_URL);
-            String keystorePath = "keys/web/keystore.jks";
+            String keystorePath = Application.getInstance().beingTested() ? "keys/web/keystore.jks" : CommandLineUtils.input("Keystore:");
             String keystorePassword = Application.getInstance().beingTested() ? "changeit" : CommandLineUtils.input("Keystore Password:");
             int port = 443;
             webServer = new WebServer(port, keystorePath, keystorePassword);
@@ -167,14 +167,6 @@ public final class Server implements AutoCloseable {
         processRequest(row -> rows.add(row), request, sqlFields, args);
         String[][] rowsArr = new String[rows.size()][];
         return rows.toArray(rowsArr);
-    }
-
-    public static void main(String[] args) throws Exception {
-        try (instance) {
-            getInstance().getConnection().createTables();
-            getInstance().getWebServer().start();
-            while (true);
-        }
     }
 
     /**

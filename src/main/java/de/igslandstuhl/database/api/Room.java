@@ -57,6 +57,7 @@ public class Room {
      * @throws SQLException if there is an error accessing the database
      */
     public static void fetchAll() throws SQLException {
+        rooms.clear();
         Server.getInstance().processRequest((fields) -> {
             Room room = fromSQLFields(fields);
             rooms.put(room.getLabel(), room);
@@ -123,6 +124,10 @@ public class Room {
         rooms.put(label, room);
         return room;
     }
+    public void delete() throws SQLException {
+        Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getDeleteObjectProcess("room", getLabel()));
+        rooms.remove(getLabel());
+    }
     /**
      * Returns the label of the room.
      * This is used to identify the room in various operations.
@@ -139,6 +144,14 @@ public class Room {
     public int getMinimumLevel() {
         return minimumLevel;
     }
+
+    public Room setMinimumLevel(int level) throws SQLException {
+        if (level < 0 || level > 3) throw new IllegalArgumentException("Level " + level + " out of range");
+        Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getUpdateObjectProcess("level_of_room", getLabel(), String.valueOf(level)));
+        rooms.remove(getLabel());
+        return getRoom(getLabel());
+    }
+
     @Override
     public String toString() {
         return "{\"label\": \""+label+ "\", \"minimumLevel\": \"" + minimumLevel + "\"}";
