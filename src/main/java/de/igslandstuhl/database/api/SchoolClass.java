@@ -78,6 +78,16 @@ public class SchoolClass {
         return grade;
     }
 
+    public SchoolClass setLabel(String label) throws SQLException {
+        Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getUpdateObjectProcess("label_of_class", String.valueOf(id), label));
+        return get(id);
+    }
+    public SchoolClass setGrade(int grade) throws SQLException {
+        if (grade < 1 || grade > 13) throw new IllegalArgumentException("Grade out of range");
+        Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getUpdateObjectProcess("grade_of_class", String.valueOf(id), String.valueOf(grade)));
+        return get(id);
+    }
+
     /**
      * Fetches all subjects associated with this class from the database.
      * This method retrieves subjects based on the class's grade level.
