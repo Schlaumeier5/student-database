@@ -44,13 +44,6 @@ public final class Server implements AutoCloseable {
         return instance;
     }
     /**
-     * The URL for the SQL database connection.
-     * This URL is used to connect to the SQLite database that stores user and room information.
-     * * Note: In a production environment, this URL should be configured to point to the actual database location.
-     * @see SQLiteConnection#SQLiteConnection(String)
-     */
-    private static final String SQL_URL = "test-server";
-    /**
      * The SQLiteConnection instance used to interact with the database.
      * This connection is used to execute SQL queries and manage database transactions.
      * It is synchronized to ensure thread safety when processing requests.
@@ -88,7 +81,7 @@ public final class Server implements AutoCloseable {
      */
     private Server() {
         try {
-            connection = new SQLiteConnection(SQL_URL);
+            connection = new SQLiteConnection(Application.getInstance().beingTested() ? "test-server-" + System.currentTimeMillis() : CommandLineUtils.input("Datenbank-ID:"));
             String keystorePath = Application.getInstance().beingTested() ? "keys/web/keystore.jks" : CommandLineUtils.input("Keystore:");
             String keystorePassword = Application.getInstance().beingTested() ? "changeit" : CommandLineUtils.input("Keystore Password:");
             int port = 443;
