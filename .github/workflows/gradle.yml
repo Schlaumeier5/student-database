@@ -30,10 +30,17 @@ jobs:
       run: chmod +x gradlew
 
     - name: Build project & run tests
-      run: ./gradlew build
+      run: ./gradlew build --stacktrace --info
+
+    - name: Upload test report
+      if: failure() # always run if tests fail
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-report
+        path: build/reports/tests/test
 
     - name: Build fat JAR
-      run: ./gradlew shadowJar
+      run: ./gradlew shadowJar --stacktrace --info
 
     - name: Upload fat JAR as artifact
       uses: actions/upload-artifact@v4
@@ -41,7 +48,6 @@ jobs:
         name: student-database-fat-jar
         path: build/libs/student-database-*-fat.jar
 
-    # Attach fat JAR to release if triggered by release event
     - name: Upload fat JAR to GitHub Release
       if: github.event_name == 'release'
       uses: softprops/action-gh-release@v2
