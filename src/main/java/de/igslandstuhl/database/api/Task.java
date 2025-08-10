@@ -187,7 +187,7 @@ public class Task {
     public static List<Task> getByName(String name) {
         try {
             String[][] table = Server.getInstance().processRequest("get_tasks_by_name", new String[] {"id"}, name);
-            Arrays.stream(table).map(s -> s[0]).map(Integer::parseInt).map(Task::get);
+            Arrays.stream(table).map(s -> s[0]).map(Integer::parseInt).map(Task::get).forEach((t) -> t.getId()); // Do something because streams are lazy
         } catch (SQLException e) {
             e.printStackTrace();
             return new ArrayList<>();
@@ -232,7 +232,7 @@ public class Task {
     public static Task addTask(Topic topic, String name, Level niveau) throws SQLException {
         Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getAddObjectProcess("task", topic == null ? "-1" : String.valueOf(topic.getId()), name, String.valueOf(niveau)));
         return getByName(name).stream()
-                .filter(t -> t.getTopic().equals(topic) && t.getNiveau() == niveau)
+                //.filter(t -> t.getTopic().equals(topic) && t.getNiveau() == niveau)
                 .sorted(Comparator.comparing(Task::getId, Comparator.reverseOrder()))
                 .findFirst()
                 .orElse(null);
