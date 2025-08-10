@@ -21,6 +21,9 @@ public class Registry<K, V> implements Closeable {
     public synchronized Stream<V> stream() {
         return objects.values().stream();
     }
+    public synchronized Stream<K> keyStream() {
+        return objects.keySet().stream();
+    }
     public synchronized V get(K key) {
         return objects.get(key);
     }

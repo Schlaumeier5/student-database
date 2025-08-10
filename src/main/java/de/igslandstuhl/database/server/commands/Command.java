@@ -5,6 +5,7 @@ import java.util.Arrays;
 
 import de.igslandstuhl.database.Registry;
 import de.igslandstuhl.database.api.*;
+import de.igslandstuhl.database.server.Server;
 import de.igslandstuhl.database.utils.CommonUtils;
 
 @FunctionalInterface
@@ -25,6 +26,14 @@ public interface Command {
         Registry.commandRegistry().register(name, command);
     }
     public static void registerCommands() {
+        registerCommand("exit", (args) -> {
+            System.out.println("Exiting...");
+            System.exit(0);
+            return "";
+        });
+        registerCommand("help", (args) -> {
+            return Registry.commandRegistry().keyStream().reduce("Available Commands:", (s1,s2) -> s1+"\n"+s2);
+        });
         // Add admin
         registerCommand("add-admin", (args) -> {
             if (args.length < 2) return "Usage: add-admin [username] [password]";
@@ -198,6 +207,80 @@ public interface Command {
                 throw new IllegalStateException(e);
             }
             return "Successfully deleted class";
+        });
+        // school year
+        registerCommand("list-school-years", (args) -> {
+            return SchoolYear.getAll().stream().map(SchoolYear::getLabel).reduce("School years:", (s1,s2) -> s1 + "\n" + s2);
+        });
+        registerCommand("get-current-school-year", (args) -> {
+            SchoolYear current = SchoolYear.getCurrentYear();
+            if (current == null) return "No school year found.";
+            return "Current school year: " + current.getLabel() + ", current week: " + current.getCurrentWeek() + ", total week count: " + current.getWeekCount();
+        });
+        registerCommand("get-current-week", (args) -> {
+            SchoolYear current = SchoolYear.getCurrentYear();
+            if (current == null) return "No school year found.";
+            return "Current week: " + current.getCurrentWeek();
+        });
+        registerCommand("set-current-week", (args) -> {
+            if (args.length != 1) return "Usage: set-current-week [week]";
+            int week;
+            try {
+                week = Integer.parseInt(args[0]);
+            } catch (NumberFormatException e) {
+                return "You have to specify a valid number";
+            }
+            SchoolYear current = SchoolYear.getCurrentYear();
+            if (current == null) return "No school year found";
+            if (week < 0 || week > current.getWeekCount()) return "Week not inside school year";
+            try {
+                current.setCurrentWeek(week);
+            } catch (SQLException e) {
+                throw new IllegalStateException(e);
+            }
+            return "Week successfully changed";
+        });
+        registerCommand("inc-week", (args) -> {
+            SchoolYear current = SchoolYear.getCurrentYear();
+            if (current == null) return "No school year found";
+            try {
+                current.setCurrentWeek(current.getCurrentWeek() + 1);
+            } catch (SQLException e) {
+                throw new IllegalStateException(e);
+            }
+            return "Week successfully changed";
+        });
+        registerCommand("add-school-year", (args) -> {
+            if (args.length != 2) return "Usage: add-school-year [label] [week count]";
+            try {
+                SchoolYear.addSchoolYear(args[0], Integer.parseInt(args[1]), 1);
+            } catch (NumberFormatException e) {
+                return "No valid week count";
+            } catch (SQLException e) {
+                throw new IllegalStateException(e);
+            }
+            return "Successfully added school year";
+        });
+        registerCommand("remove-school-year", (args) -> {
+            if (args.length != 1) return "Usage: remove-school-year [label]";
+            SchoolYear schoolYear = SchoolYear.get(args[0]);
+            if (schoolYear == null) return "School year not found";
+            try {
+                schoolYear.delete();
+            } catch (SQLException e) {
+                throw new IllegalStateException(e);
+            }
+            return "School Year successfully removed";
+        });
+        // manual sql commands
+        registerCommand("sql-update", (args) -> {
+            String command = argsPart(args, 0, args.length);
+            try {
+                Server.getInstance().getConnection().executeVoidProcessSecure((stmt) -> stmt.executeUpdate(command));
+            } catch (SQLException e) {
+                throw new IllegalArgumentException(e);
+            }
+            return "Successfully executed";
         });
     }
     private static String argsPart(String[] args, int start, int end) {
