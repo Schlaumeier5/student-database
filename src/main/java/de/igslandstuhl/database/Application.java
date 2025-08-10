@@ -27,7 +27,7 @@ public final class Application {
     }
 
     public boolean beingTested() {
-        return arguments.hasKey("test-environment") && arguments.get("test-environment").equals("true");
+        return arguments.hasKey("test-environment") && arguments.get("test-environment").equals("true") || "true".equals(System.getProperty("test.environment"));
     }
 
     private final boolean onServer = true;
@@ -41,7 +41,7 @@ public final class Application {
     }
 
     public boolean runsWebServer() {
-        return !getArguments().hasKey("web-server") || getArguments().get("web-server") == "true";
+        return !beingTested() && (!getArguments().hasKey("web-server") || getArguments().get("web-server") == "true");
     }
     public boolean suppressCmd() {
         return !beingTested() && getArguments().hasKey("suppress-cmd") && getArguments().get("suppress-cmd") == "true";
