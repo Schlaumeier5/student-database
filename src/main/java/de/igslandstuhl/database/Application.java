@@ -2,6 +2,7 @@ package de.igslandstuhl.database;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import de.igslandstuhl.database.api.SerializationException;
@@ -27,7 +28,7 @@ public final class Application {
     }
 
     public boolean beingTested() {
-        return arguments.hasKey("test-environment") && arguments.get("test-environment").equals("true");
+        return arguments.hasKey("test-environment") && arguments.get("test-environment").equals("true") || "true".equals(System.getProperty("test.environment")) || Arrays.stream(Thread.currentThread().getStackTrace()).anyMatch((it) -> it.getClassName().startsWith("org.junit"));
     }
 
     private final boolean onServer = true;
