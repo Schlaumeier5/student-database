@@ -2,7 +2,6 @@ package de.igslandstuhl.database;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import de.igslandstuhl.database.api.SerializationException;
@@ -28,7 +27,7 @@ public final class Application {
     }
 
     public boolean beingTested() {
-        return arguments.hasKey("test-environment") && arguments.get("test-environment").equals("true") || "true".equals(System.getProperty("test.environment")) || Arrays.stream(Thread.currentThread().getStackTrace()).anyMatch((it) -> it.getClassName().startsWith("org.junit"));
+        return arguments.hasKey("test-environment") && arguments.get("test-environment").equals("true") || "true".equals(System.getProperty("test.environment"));
     }
 
     private final boolean onServer = true;
@@ -42,7 +41,7 @@ public final class Application {
     }
 
     public boolean runsWebServer() {
-        return !getArguments().hasKey("web-server") || getArguments().get("web-server") == "true";
+        return !beingTested() && (!getArguments().hasKey("web-server") || getArguments().get("web-server") == "true");
     }
     public boolean suppressCmd() {
         return !beingTested() && getArguments().hasKey("suppress-cmd") && getArguments().get("suppress-cmd") == "true";
