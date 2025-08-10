@@ -233,7 +233,7 @@ public class Subject {
 
     public void delete() throws SQLException {
         Server.getInstance().getConnection().executeVoidProcessSecure(
-            SQLHelper.getDeleteObjectProcess("Subject", String.valueOf(id))
+            SQLHelper.getDeleteObjectProcess("subject", String.valueOf(id))
         );
         subjects.remove(id);
     }
