@@ -141,7 +141,11 @@ public class ResourceHelper{
                     throw new IllegalStateException(e);
                 }
             } else {
-                readers.add(new BufferedReader(new InputStreamReader(ResourceHelper.class.getResourceAsStream(resource), StandardCharsets.UTF_8)));
+                try {
+                    readers.add(new BufferedReader(new InputStreamReader(ClassLoader.getSystemResourceAsStream(resource), StandardCharsets.UTF_8)));
+                } catch (NullPointerException e) {
+                    throw new IllegalStateException(new FileNotFoundException("Resource " + resource + " not found"));
+                }
             }
         }
         BufferedReader[] arr = new BufferedReader[readers.size()];
