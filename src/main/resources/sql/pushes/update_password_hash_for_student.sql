@@ -1,0 +1,3 @@
+UPDATE students
+SET password = "{0}"
+WHERE id = {1}

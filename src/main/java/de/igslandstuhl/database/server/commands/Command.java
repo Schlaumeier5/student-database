@@ -2,6 +2,7 @@ package de.igslandstuhl.database.server.commands;
 
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Random;
 
 import de.igslandstuhl.database.Registry;
 import de.igslandstuhl.database.api.*;
@@ -272,6 +273,74 @@ public interface Command {
             }
             return "School Year successfully removed";
         });
+        // User commands
+        registerCommand("regenerate-user-password", (args) -> {
+            if (args.length != 1) return "Usage: regenerate-user-password [user]";
+            User user = User.getUser(args[0]);
+            if (user == null) return "User not found";
+            try {
+                return "Password: " + user.regeneratePassword();
+            } catch (SQLException e) {
+                throw new IllegalStateException(e);
+            }
+        });
+        registerCommand("generate-password", (args) -> {
+            return "Passwort: " + User.generateRandomPassword(12, CommonUtils.stringToSeed(argsPart(args, 0, args.length)) + System.currentTimeMillis() + new Random().nextInt(1000));
+        });
+        registerCommand("change-user-password", (args) -> {
+            if (args.length != 2) return "Usage: change-user-password [user] [password]";
+            User user = User.getUser(args[0]);
+            if (user == null) return "User not found";
+            try {
+                user.setPassword(args[1]);
+                return "Changed password of " + user.getUsername() + " to " + args[1];
+            } catch (SQLException e) {
+                throw new IllegalStateException(e);
+            }
+        });
+        // Subject commands
+        registerCommand("list-subjects", (args) -> {
+            return Subject.getAll().stream().map(Subject::getName).reduce("Subjects:", (s1,s2) -> s1+"\n"+s2);
+        });
+        registerCommand("add-subject", (args) -> {
+            if (args.length < 1) return "Usage: add-subject [subject]";
+            String name = argsPart(args, 0, args.length);
+            try {
+                Subject subject = Subject.addSubject(name);
+                return "Subject '" + name + "' successfully created with id " + subject.getId();
+            } catch (SQLException e) {
+                throw new IllegalStateException(e);
+            }
+        });
+        registerCommand("rename-subject", (args) -> {
+            if (args.length < 3) return "Usage: rename-subject [old name] : [new name]";
+            
+            String[] parts = argsPart(args, 0, args.length).split("[\\s]*:[\\s]*");
+            if (parts.length != 2) return "Usage: add-subject [old name] : [new name]";
+            String oldLabel = parts[0];
+            String newLabel = parts[1];
+            
+            Subject subject = Subject.get(oldLabel);
+            if (subject == null) return "Subject " + oldLabel + " does not exist";
+            try {
+                subject.edit(newLabel);
+                return "Successfully changed subject to " + newLabel;
+            } catch (SQLException e) {
+                throw new IllegalStateException(e);
+            }
+        });
+        registerCommand("remove-subject", (args) -> {
+            if (args.length == 0) return "remove-subject [name]";
+            String name = argsPart(args, 0, args.length);
+            Subject subject = Subject.get(name);
+            if (subject == null) return "Subject " + name + " does not exist";
+            try {
+                subject.delete();
+                return "Successfully deleted " + name;
+            } catch (SQLException e) {
+                throw new IllegalStateException(e);
+            }
+        });
         // manual sql commands
         registerCommand("sql-update", (args) -> {
             String command = argsPart(args, 0, args.length);
@@ -284,6 +353,6 @@ public interface Command {
         });
     }
     private static String argsPart(String[] args, int start, int end) {
-        return Arrays.stream(Arrays.copyOfRange(args, start, end)).reduce("", (s1,s2) -> s1+s2);
+        return Arrays.stream(Arrays.copyOfRange(args, start, end)).reduce("", (s1,s2) -> s1+" "+s2).replaceFirst(" ", "");
     }
 }
