@@ -8,8 +8,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
@@ -75,6 +77,8 @@ public class ResourceHelper{
             zf = new ZipFile(file);
         } catch(final ZipException e){
             throw new Error(e);
+        } catch (final NoSuchFileException e) {
+            return Collections.emptySet();
         } catch(final IOException e){
             throw new Error(e);
         }

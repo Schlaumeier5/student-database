@@ -27,7 +27,7 @@ public final class Application {
     }
 
     public boolean beingTested() {
-        return "true".equals(System.getProperty("test.environment"));
+        return arguments.hasKey("test-environment") && arguments.get("test-environment").equals("true");
     }
 
     private final boolean onServer = true;

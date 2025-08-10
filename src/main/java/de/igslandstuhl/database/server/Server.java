@@ -80,7 +80,7 @@ public final class Server implements AutoCloseable {
      */
     private Server() {
         try {
-            connection = new SQLiteConnection(Application.getInstance().getOptionSafe("database", "test-server"));
+            connection = new SQLiteConnection(Application.getInstance().getOptionSafe("database", Application.getInstance().beingTested() ? "test-server-" + System.currentTimeMillis() : "database"));
             String keystorePath = Application.getInstance().getOptionSafe("keystore", "keys/web/keystore.jks");
             String keystorePassword = Application.getInstance().getOptionSafe("keystore-password", "changeit");
             int port = 443;
