@@ -21,7 +21,6 @@ import de.igslandstuhl.database.api.Teacher;
 import de.igslandstuhl.database.api.User;
 import de.igslandstuhl.database.server.sql.SQLHelper;
 import de.igslandstuhl.database.server.sql.SQLiteConnection;
-import de.igslandstuhl.database.utils.CommandLineUtils;
 
 /**
  * Represents the main server class that handles all incoming requests and manages the database connection.
@@ -81,11 +80,11 @@ public final class Server implements AutoCloseable {
      */
     private Server() {
         try {
-            connection = new SQLiteConnection(Application.getInstance().beingTested() ? "test-server-" + System.currentTimeMillis() : CommandLineUtils.input("Datenbank-ID:"));
-            String keystorePath = Application.getInstance().beingTested() ? "keys/web/keystore.jks" : CommandLineUtils.input("Keystore:");
-            String keystorePassword = Application.getInstance().beingTested() ? "changeit" : CommandLineUtils.input("Keystore Password:");
+            connection = new SQLiteConnection(Application.getInstance().getOptionSafe("database", "test-server"));
+            String keystorePath = Application.getInstance().getOptionSafe("keystore", "keys/web/keystore.jks");
+            String keystorePassword = Application.getInstance().getOptionSafe("keystore-password", "changeit");
             int port = 443;
-            webServer = new WebServer(port, keystorePath, keystorePassword);
+            webServer = Application.getInstance().runsWebServer() ? new WebServer(port, keystorePath, keystorePassword) : null;
         } catch (Exception e) {
             throw new IllegalStateException("Server failed on start", e);
         }
