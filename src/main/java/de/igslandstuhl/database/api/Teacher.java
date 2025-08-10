@@ -101,6 +101,10 @@ public class Teacher extends User {
      * @return the email address of the teacher
      */
     public String getEmail() { return email; }
+    @Override
+    public String getUsername() {
+        return getEmail();
+    }
     /**
      * Returns the password hash of the teacher.
      * This is used for authentication purposes.
@@ -392,5 +396,12 @@ public class Teacher extends User {
         } else if (!email.equals(other.email))
             return false;
         return true;
+    }
+
+    @Override
+    public Teacher setPassword(String password) throws SQLException {
+        Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getUpdateObjectProcess("password_hash_for_teachers", passHash(password), String.valueOf(id)));
+        teachers.remove(id);
+        return get(id);
     }
 }

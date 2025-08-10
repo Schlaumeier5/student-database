@@ -1,3 +1,3 @@
 SELECT * FROM school_years
-ORDER BY current_week ASC
+ORDER BY label DESC
 LIMIT 1

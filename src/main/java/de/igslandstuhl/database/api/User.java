@@ -1,8 +1,11 @@
 package de.igslandstuhl.database.api;
 
+import java.sql.SQLException;
 import java.util.Random;
 
 import org.apache.commons.codec.digest.DigestUtils;
+
+import de.igslandstuhl.database.utils.CommonUtils;
 
 /**
  * Abstract class representing a user in the system.
@@ -24,11 +27,19 @@ public abstract class User {
         }
         @Override
         public String getPasswordHash() {
-            throw new UnsupportedOperationException("Unimplemented method 'getPasswordHash'");
+            throw new UnsupportedOperationException("Anonymous user does not have password");
         }
         @Override
         public String toJSON() {
-            throw new UnsupportedOperationException("Unimplemented method 'toJSON'");
+            return "{}";
+        }
+        @Override
+        public User setPassword(String password) {
+            throw new UnsupportedOperationException("Anonymous user does not have password");
+        }
+        @Override
+        public String getUsername() {
+            return "ANONYMOUS";
         }
     };
     /**
@@ -65,6 +76,10 @@ public abstract class User {
      */
     public abstract String toJSON();
 
+    public abstract User setPassword(String password) throws SQLException;
+
+    public abstract String getUsername();
+
     /**
      * Retrieves a user by their username.
      * This method searches for a user in the database using the provided username.
@@ -85,7 +100,7 @@ public abstract class User {
         return null;
     }
 
-    public static String generateRandomPassword(int length, int seed) {
+    public static String generateRandomPassword(int length, long seed) {
         StringBuilder password = new StringBuilder();
         Random random = new Random(seed);
         String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-+";
@@ -135,5 +150,11 @@ public abstract class User {
             return (Admin) this;
         }
         return null;
+    }
+
+    public String regeneratePassword() throws SQLException {
+        String password = generateRandomPassword(12, CommonUtils.stringToSeed(getPasswordHash()) + System.currentTimeMillis() + new Random().nextInt(1000));
+        setPassword(password);
+        return password;
     }
 }

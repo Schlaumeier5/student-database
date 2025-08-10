@@ -7,6 +7,9 @@ import java.util.List;
 import de.igslandstuhl.database.api.SerializationException;
 import de.igslandstuhl.database.api.Subject;
 import de.igslandstuhl.database.api.Topic;
+import de.igslandstuhl.database.server.Server;
+import de.igslandstuhl.database.server.commands.Command;
+import de.igslandstuhl.database.utils.CommandLineUtils;
 
 /**
  * Represents the main application class that serves as a singleton instance.
@@ -18,7 +21,7 @@ public final class Application {
     public static final String TITLE_DELIMITER = "¶";
     public static final String TASK_TITLE_DELIMITER = "\\|";
     public static final String TASK_DELIMITER = "¤";
-    private static final Application instance = new Application();
+    private static Application instance = new Application(new String[] {"--test-environment", "true"});
     public static Application getInstance() {
         return instance;
     }
@@ -30,6 +33,33 @@ public final class Application {
     private final boolean onServer = true;
     public boolean isOnServer() {
         return onServer;
+    }
+
+    private final Arguments arguments;
+    public Arguments getArguments() {
+        return arguments;
+    }
+
+    public boolean runsWebServer() {
+        return !getArguments().hasKey("web-server") || getArguments().get("web-server") == "true";
+    }
+    public boolean suppressCmd() {
+        return !beingTested() && getArguments().hasKey("suppress-cmd") && getArguments().get("suppress-cmd") == "true";
+    }
+
+    public String getOptionSafe(String key, String defaultValue) {
+        if (suppressCmd() && getArguments().hasKey(key)) {
+            return getArguments().get(key);
+        } else if (!beingTested() && !suppressCmd()) {
+            String result = CommandLineUtils.input(key, "( default:", defaultValue, ")");
+            return result == "" ? defaultValue : result;
+        } else {
+            return defaultValue;
+        }
+    }
+
+    public Application(String[] args) {
+        this.arguments = new Arguments(args);
     }
 
     public Topic[] readFile(String file) throws SerializationException, SQLException {
@@ -56,5 +86,23 @@ public final class Application {
 
         Topic[] topicsArr = new Topic[topics.size()];
         return topics.toArray(topicsArr);
+    }
+
+    public static void main(String[] args) throws Exception {
+        instance = new Application(args);
+        Server.getInstance().getConnection().createTables();
+        if (getInstance().runsWebServer()) {
+            Server.getInstance().getWebServer().start();
+        }
+        if (!getInstance().suppressCmd()) {
+            Command.registerCommands();
+            CommandLineUtils.setup();
+        }
+
+        while (true) {
+            if (!getInstance().suppressCmd()) {
+                CommandLineUtils.waitForCommandAndExec();
+            }
+        }
     }
 }

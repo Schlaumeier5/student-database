@@ -128,6 +128,16 @@ public class SchoolYear {
             return null;
         }
     }
+    public static SchoolYear get(String label) {
+        try {
+            return Server.getInstance().processSingleRequest((fields) -> {
+                return get(Integer.parseInt(fields[0]));
+            }, "get_school_year_by_label", new String[] {"id"}, label);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
     /**
      * Retrieves all school years from the database.
      * This method queries the database and populates the cache with all school years.
@@ -192,6 +202,10 @@ public class SchoolYear {
         );
         // Fetch the newly created year
         return Server.getInstance().processSingleRequest(SchoolYear::fromSQL, "get_school_year_by_label", SQL_FIELDS, label);
+    }
+
+    public void delete() throws SQLException {
+        Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getDeleteObjectProcess("school_year", String.valueOf(id)));
     }
 
     @Override

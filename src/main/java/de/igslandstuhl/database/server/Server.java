@@ -21,7 +21,6 @@ import de.igslandstuhl.database.api.Teacher;
 import de.igslandstuhl.database.api.User;
 import de.igslandstuhl.database.server.sql.SQLHelper;
 import de.igslandstuhl.database.server.sql.SQLiteConnection;
-import de.igslandstuhl.database.utils.CommandLineUtils;
 
 /**
  * Represents the main server class that handles all incoming requests and manages the database connection.
@@ -43,13 +42,6 @@ public final class Server implements AutoCloseable {
     public static Server getInstance() {
         return instance;
     }
-    /**
-     * The URL for the SQL database connection.
-     * This URL is used to connect to the SQLite database that stores user and room information.
-     * * Note: In a production environment, this URL should be configured to point to the actual database location.
-     * @see SQLiteConnection#SQLiteConnection(String)
-     */
-    private static final String SQL_URL = "test-server";
     /**
      * The SQLiteConnection instance used to interact with the database.
      * This connection is used to execute SQL queries and manage database transactions.
@@ -88,11 +80,11 @@ public final class Server implements AutoCloseable {
      */
     private Server() {
         try {
-            connection = new SQLiteConnection(SQL_URL);
-            String keystorePath = "keys/web/keystore.jks";
-            String keystorePassword = Application.getInstance().beingTested() ? "changeit" : CommandLineUtils.input("Keystore Password:");
+            connection = new SQLiteConnection(Application.getInstance().getOptionSafe("database", "test-server"));
+            String keystorePath = Application.getInstance().getOptionSafe("keystore", "keys/web/keystore.jks");
+            String keystorePassword = Application.getInstance().getOptionSafe("keystore-password", "changeit");
             int port = 443;
-            webServer = new WebServer(port, keystorePath, keystorePassword);
+            webServer = Application.getInstance().runsWebServer() ? new WebServer(port, keystorePath, keystorePassword) : null;
         } catch (Exception e) {
             throw new IllegalStateException("Server failed on start", e);
         }
@@ -167,14 +159,6 @@ public final class Server implements AutoCloseable {
         processRequest(row -> rows.add(row), request, sqlFields, args);
         String[][] rowsArr = new String[rows.size()][];
         return rows.toArray(rowsArr);
-    }
-
-    public static void main(String[] args) throws Exception {
-        try (instance) {
-            getInstance().getConnection().createTables();
-            getInstance().getWebServer().start();
-            while (true);
-        }
     }
 
     /**

@@ -22,6 +22,10 @@ public class Admin extends User {
         return new Admin(username, passwordHash);
     }
 
+    public void delete() throws SQLException {
+        Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getDeleteObjectProcess("admin", username));
+    }
+
     @Override
     public boolean isTeacher() {
         return false; // Admins are not teachers
@@ -42,6 +46,7 @@ public class Admin extends User {
     public String toJSON() {
         throw new UnsupportedOperationException("Admins are not serializable to JSON");
     }
+    @Override
     public String getUsername() {
         return username;
     }
@@ -91,5 +96,10 @@ public class Admin extends User {
             return false;
         return true;
     }
-    
+
+    @Override
+    public Admin setPassword(String password) throws SQLException {
+        Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getUpdateObjectProcess("password_hash_for_admin", passHash(password), getUsername()));
+        return get(username);
+    }
 }

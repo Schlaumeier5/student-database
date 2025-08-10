@@ -223,20 +223,11 @@ public class Student extends User {
         return student;
     }
 
-    private static String generatePassword(int length, int seed) {
-        StringBuilder password = new StringBuilder();
-        Random random = new Random(seed);
-        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-+";
-        for (int i = 0; i < length; i++) {
-            password.append(chars.charAt(random.nextInt(chars.length())));
-        }
-        return password.toString();
-    }
     public static String[] generatePasswords(int count, int length) {
         String[] passwords = new String[count];
         for (int i = 0; i < count; i++) {
             int time = (int) System.currentTimeMillis();
-            passwords[i] = generatePassword(length, i + time + new Random().nextInt(1000));
+            passwords[i] = generateRandomPassword(length, i + time + new Random().nextInt(1000));
             try {
                 Thread.sleep(new Random().nextInt(1,10)); // Sleep to ensure different seeds
             } catch (InterruptedException e) {
@@ -246,7 +237,7 @@ public class Student extends User {
         return passwords;
     }
     public static StudentGenerationResult generateStudentWithPassword(int id, String firstName, String lastName, String email, SchoolClass schoolClass, int graduationLevel) throws SQLException {
-        String password = generatePassword(12, id + (int) System.currentTimeMillis());
+        String password = generateRandomPassword(12, id + (int) System.currentTimeMillis());
         Student student = registerStudentWithPassword(id, firstName, lastName, email, password, schoolClass, graduationLevel);
         return new StudentGenerationResult(student, password);
     }
@@ -323,6 +314,11 @@ public class Student extends User {
      * @return the email
      */
     public String getEmail() { return email; }
+
+    @Override
+    public String getUsername() {
+        return getEmail();
+    }
 
     /**
      * Returns the student's graduation level.
@@ -742,5 +738,12 @@ public class Student extends User {
         if (graduationLevel != other.graduationLevel)
             return false;
         return true;
+    }
+
+    @Override
+    public Student setPassword(String password) throws SQLException {
+        Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getUpdateObjectProcess("password_hash_for_student", passHash(password), String.valueOf(getId())));
+        students.remove(id);
+        return get(id);
     }
 }
