@@ -2,13 +2,15 @@
 
 ## 📘 Overview
 
-The **Student Database** (name still under discussion) is a Java-based application designed to manage and store student information efficiently. It allows users to perform CRUD (Create, Read, Update, Delete) operations on student records, classes, subjects, and other school-related data, making it a valuable tool for educational institutions.
+The **Student Database** (name still under discussion) is a Java-based application designed to manage and store student information efficiently.
+It allows admins to perform CRUD (Create, Read, Update, Delete) operations on student records, classes, subjects, and other school-related data, making it a valuable tool for educational institutions.
+Students can view their progress, and teachers can assign them topics, based on subjects.
 
 ## 🛠️ Features
 
-- Student Management: Add, update, and delete student records.
-- Data Persistence: Store student information in a structured format.
-- User Interface: Simple command-line interface for interaction.
+- Data Management: Add, update, and delete student records and other educational data.
+- Data Persistence: Store student information in a structured format (as SQLite database).
+- User Interface: Simple command-line interface for interaction for a few commands, web interface for students and teachers.
 - Data Validation: Ensure correct data entry through validation checks.
 
 ## ⚙️ Technologies Used
@@ -78,7 +80,7 @@ There are a few command line arguments you can give the program:
 
 ### 🌐 Web interface
 
-The most important part of the program is the web interface, accessible
+The most important part of the program is the web interface, accessible over a browser using https.
 
 # 🧪 Running Tests
 
@@ -88,13 +90,13 @@ To run the unit tests included in the project (after you cloned this project):
 ```
 This will execute all tests and display the results in the terminal. Additionally, it will give you a pretty html output if the test fails.
 
-📸 Screenshots
+# 📸 Screenshots
 
 TODO: Create screenshots
 
-🔄 Contributing
+# 🔄 Contributing
 
 Contributions are welcome! If you have suggestions, improvements, or bug fixes, please fork the repository and submit a pull request. For major changes, open an issue first to discuss what you would like to change.
 
-📄 License
+# 📄 License
 TODO: Add license
