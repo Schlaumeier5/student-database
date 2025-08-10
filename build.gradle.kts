@@ -33,7 +33,7 @@ tasks.jar {
 }
 tasks.shadowJar {
     archiveBaseName.set("student-database")
-    archiveClassifier.set("") // no "-all" suffix, makes it the default jar
+    archiveClassifier.set("fat") // no "-all" suffix, makes it the default jar
     archiveVersion.set(project.version.toString())    // omit version in filename if you want
     manifest {
         attributes["Main-Class"] = application.mainClass.get()
