@@ -48,7 +48,7 @@ public final class Application {
     }
 
     public String getOptionSafe(String key, String defaultValue) {
-        if (suppressCmd() && getArguments().hasKey(key)) {
+        if (getArguments().hasKey(key)) {
             return getArguments().get(key);
         } else if (!beingTested() && !suppressCmd()) {
             String result = CommandLineUtils.input(key, "( default:", defaultValue, ")");
