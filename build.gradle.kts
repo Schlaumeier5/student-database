@@ -7,7 +7,7 @@ plugins {
 group = "igs-landstuhl"
 version = "1.0-SNAPSHOT"
 application {
-    mainClass.set("de.igslandstuhl.database.server.Server") // update to your actual main class if different
+    mainClass.set("de.igslandstuhl.database.Application") // update to your actual main class if different
 }
 
 repositories {
