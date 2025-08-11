@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import de.igslandstuhl.database.api.User;
 import de.igslandstuhl.database.server.resources.ResourceLocation;
 
 /**
@@ -38,7 +39,7 @@ public class GetRequest {
      * @param request the request string to parse
      */
     public GetRequest(String request) {
-        if (!request.startsWith("GET")){
+        if (!request.startsWith("GET") || !request.endsWith("HTTP/1.1")){
             throw new IllegalArgumentException();
         }
         String [] lines = request.split("\n");
@@ -77,6 +78,6 @@ public class GetRequest {
      * @see de.igslandstuhl.database.server.resources.ResourceLocation
      */
     public ResourceLocation toResourceLocation(String user) {
-        return WebResourceHandler.locationFromPath(path, user);
+        return WebResourceHandler.locationFromPath(path, User.getUser(user));
     }
 }

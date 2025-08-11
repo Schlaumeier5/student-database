@@ -47,7 +47,7 @@ public final class WebResourceHandler {
         return false;
     }
 
-    public static ResourceLocation locationFromPath(String path, String username) {
+    public static ResourceLocation locationFromPath(String path, User user) {
         if (isSQLWebResource(path)) {
             return new ResourceLocation("virtual", "sql", path.replaceFirst("/", ""));
         }
@@ -68,7 +68,7 @@ public final class WebResourceHandler {
             path += ".html";
         }
 
-        User user = username == null ? null : User.getUser(username);
+        if (user == null) user = User.ANONYMOUS;
 
         parts = path.split("/", 3);
         String namespace;
@@ -77,12 +77,16 @@ public final class WebResourceHandler {
             namespace = parts[1];
             resource = parts[2];
         } else {
-            if (inAdminOnlySpace(parts[1]) && (user == null || user.isAdmin())) {
+            if (inAdminOnlySpace(parts[1]) && (user == User.ANONYMOUS || user.isAdmin())) {
                 namespace = "admin";
-            } else if (inTeacherOnlySpace(parts[1]) && (user == null || user.isTeacher() || user.isAdmin())) {
+            } else if (inTeacherOnlySpace(parts[1]) && (user == User.ANONYMOUS || user.isTeacher() || user.isAdmin())) {
                 namespace = "teacher";
             } else if (inUserOnlySpace(parts[1])) {
                 namespace = "user";
+            } else if (inAdminOnlySpace(parts[1])) {
+                namespace = "admin";
+            } else if (inTeacherOnlySpace(parts[1])) {
+                namespace = "teacher";
             } else {
                 namespace = "site";
             }

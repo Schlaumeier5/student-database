@@ -1,6 +1,8 @@
 package de.igslandstuhl.database.server;
 
 import java.io.*;
+import java.net.URLDecoder;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 import javax.net.ssl.*;
@@ -10,7 +12,13 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
-import de.igslandstuhl.database.server.resources.ResourceHelper;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import de.igslandstuhl.database.server.webserver.GetRequest;
 import de.igslandstuhl.database.server.webserver.GetResponse;
 import de.igslandstuhl.database.server.webserver.PostHeader;
@@ -24,148 +32,163 @@ import de.igslandstuhl.database.server.webserver.UserManager;
  * It supports GET and POST requests for login, subject requests, current topics, tasks, and room updates.
  */
 public class WebServer implements Runnable {
-    /**
-     * Indicates whether the server is currently running.
-     */
-    private boolean running;
-    /**
-     * The SSL server socket that listens for incoming HTTPS connections.
-     */
-    private SSLServerSocket serverSocket;
-    /**
-     * The UserManager instance that handles user-related operations such as login and session management.
-     */
+    private volatile boolean running;
+    private final SSLServerSocket serverSocket;
     private final UserManager userManager = new UserManager();
-    /**
-     * Returns the session store used by the server.
-     * This method provides access to the session store, allowing for session management operations.
-     *
-     * @return The session store map containing session IDs and associated usernames.
-     */
+    private final ExecutorService clientPool = Executors.newCachedThreadPool();
+
     public UserManager getUserManager() {
         return userManager;
     }
-    
-    /**
-     * Constructs a new WebServer instance with the specified port and keystore.
-     *
-     * @param port The port on which the server will listen for HTTPS requests.
-     * @param keystorePath The path to the keystore file containing the server's SSL certificate.
-     * @param keystorePassword The password for the keystore.
-     * @throws KeyStoreException If the keystore cannot be initialized.
-     * @throws FileNotFoundException If the keystore file is not found.
-     * @throws IOException If an I/O error occurs while reading the keystore.
-     * @throws NoSuchAlgorithmException If the specified algorithm is not available.
-     * @throws CertificateException If there is an error with the certificate in the keystore.
-     * @throws UnrecoverableKeyException If the key cannot be recovered from the keystore.
-     * @throws KeyManagementException If there is an error initializing the SSL context.
-     */
-    public WebServer(int port, String keystorePath, String keystorePassword) throws KeyStoreException, FileNotFoundException, IOException, NoSuchAlgorithmException, CertificateException, UnrecoverableKeyException, KeyManagementException {
+
+    public WebServer(int port, String keystorePath, String keystorePassword)
+            throws KeyStoreException, FileNotFoundException, IOException,
+            NoSuchAlgorithmException, CertificateException, UnrecoverableKeyException, KeyManagementException {
         KeyStore ks = KeyStore.getInstance("JKS");
         try (FileInputStream fis = new FileInputStream(keystorePath)) {
             ks.load(fis, keystorePassword.toCharArray());
         }
-        
         KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
         kmf.init(ks, keystorePassword.toCharArray());
-        
         SSLContext sslContext = SSLContext.getInstance("TLS");
         sslContext.init(kmf.getKeyManagers(), null, null);
-        
         SSLServerSocketFactory factory = sslContext.getServerSocketFactory();
         serverSocket = (SSLServerSocket) factory.createServerSocket(port);
     }
-
     /**
-     * Handles incoming client connections in a separate thread.
-     * This class implements Runnable to allow concurrent handling of multiple clients.
+     * Constructs a test webserver without server socket
      */
-    class ClientHandler implements Runnable {
-        /**
-         * The SSLSocket representing the client connection.
-         */
-        private SSLSocket clientSocket;
+    protected WebServer() {
+        this.serverSocket = null;
+    }
 
-        /**
-         * Constructs a new ClientHandler for the given SSLSocket.
-         *
-         * @param socket The SSLSocket representing the client connection.
-         */
-        public ClientHandler(SSLSocket socket) {
+    class ClientHandler implements Runnable {
+        private final SSLSocket clientSocket;
+
+        ClientHandler(SSLSocket socket) {
             this.clientSocket = socket;
         }
 
-        /**
-         * Responds to a GET request by retrieving the requested resource.
-         *
-         * @param request The GetRequest object containing the request details.
-         * @param user The username associated with the session, or null if not logged in.
-         * @return A GetResponse containing the requested resource or an error response.
-         */
-        private GetResponse respond(GetRequest request, String user) {
-            return GetResponse.getResource(request.toResourceLocation(user), user);
-        }
-
-        /**
-         * Handles the client request by reading the input, processing it, and sending a response.
-         * This method supports GET and POST requests for various functionalities such as login,
-         * subject requests, current topics, tasks, and room updates.
-         */
         @Override
         public void run() {
-            PrintWriter out;
-            try {
-                out = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8), true);
-            } catch (IOException e) {
-                e.printStackTrace();
-                return;
-            }
-            try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
-
-                String request = ResourceHelper.readResourceTillEmptyLine(in);
-
-                if (request.startsWith("GET")) {
-                    String user = Server.getInstance().getWebServer().getUserManager().getSessionUser(request);
-                    GetRequest get = new GetRequest(request);
-                    GetResponse response = respond(get, user);
-                    response.respond(out);
-                } else if (request.startsWith("POST")) {
-                    PostHeader header = new PostHeader(request);
-                    int contentLength = header.getContentLength();
-                    String body = null;
-                    if (contentLength > 0) {
-                        char[] bodyChars = new char[contentLength];
-                        in.read(bodyChars, 0, contentLength);
-                        body = new String(bodyChars);
+            try (BufferedOutputStream rawOut = new BufferedOutputStream(clientSocket.getOutputStream())) {
+                PrintWriter out = new PrintWriter(new OutputStreamWriter(rawOut, StandardCharsets.UTF_8), true);
+                try (BufferedInputStream bis = new BufferedInputStream(clientSocket.getInputStream())) {
+                    String headerString = readHeadersAsString(bis);
+                    if (headerString == null) {
+                        GetResponse.internalServerError().respond(out);
+                        return;
                     }
-                    PostRequest parsedRequest = new PostRequest(header, body);
-                    PostResponse response = PostRequestHandler.getInstance().handlePostRequest(parsedRequest);
-                    response.respond(out);
+                    if (headerString.startsWith("GET")) {
+                        handleGet(headerString, out);
+                    } else if (headerString.startsWith("POST")) {
+                        handlePost(headerString, bis, out);
+                    } else {
+                        GetResponse.internalServerError().respond(out);
+                    }
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
-                GetResponse.internalServerError().respond(out);
-                e.printStackTrace(out);
             } catch (Exception e) {
                 e.printStackTrace();
-                GetResponse.internalServerError().respond(out);
-                e.printStackTrace(out);
-            } finally {
                 try {
-                    out.flush();
-                    out.close();
-                    clientSocket.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
+                    PrintWriter out = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8), true);
+                    GetResponse.internalServerError().respond(out);
+                } catch (IOException ignored) {}
+            } finally {
+                try { clientSocket.close(); } catch (IOException ignored) {}
+            }
+        }
+
+        String readHeadersAsString(InputStream in) throws IOException {
+            byte[] headerBytes = readUntilDoubleCRLF(in);
+            if (headerBytes == null || headerBytes.length == 0) return null;
+            return new String(headerBytes, StandardCharsets.ISO_8859_1);
+        }
+
+        void handleGet(String headerString, PrintWriter out) {
+            String user = Server.getInstance().getWebServer().getUserManager().getSessionUser(headerString);
+            GetRequest get = new GetRequest(headerString);
+            GetResponse response = GetResponse.getResource(get.toResourceLocation(user), user);
+            response.respond(out);
+        }
+
+        void handlePost(String headerString, InputStream in, PrintWriter out) throws IOException {
+            Map<String, String> headerMap = parseHeaders(headerString);
+            PostHeader postHeader = new PostHeader(headerString);
+            int contentLength = headerMap.containsKey("content-length") ? Integer.parseInt(headerMap.get("content-length")) : 0;
+            Charset bodyCharset = determineCharset(headerMap.get("content-type"));
+            String body = null;
+            if (contentLength > 0) {
+                byte[] bodyBytes = readNBytes(in, contentLength);
+                String raw = new String(bodyBytes, bodyCharset);
+                body = URLDecoder.decode(raw, bodyCharset.name());
+            }
+            PostRequest parsedRequest = new PostRequest(postHeader, body);
+            PostResponse response = PostRequestHandler.getInstance().handlePostRequest(parsedRequest);
+            response.respond(out);
+        }
+
+        byte[] readUntilDoubleCRLF(InputStream in) throws IOException {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            LinkedList<Integer> window = new LinkedList<>();
+            int current;
+            while ((current = in.read()) != -1) {
+                baos.write(current);
+                window.addLast(current);
+                if (window.size() > 4) window.removeFirst();
+                if (window.size() == 4) {
+                    Integer[] w = window.toArray(new Integer[0]);
+                    if (w[0] == 13 && w[1] == 10 && w[2] == 13 && w[3] == 10) {
+                        break;
+                    }
+                }
+                if (baos.size() > 64 * 1024) break;
+            }
+            return baos.toByteArray();
+        }
+
+        byte[] readNBytes(InputStream in, int n) throws IOException {
+            byte[] buffer = new byte[n];
+            int read = 0;
+            while (read < n) {
+                int r = in.read(buffer, read, n - read);
+                if (r == -1) return null;
+                read += r;
+            }
+            return buffer;
+        }
+
+        Map<String, String> parseHeaders(String headerString) {
+            Map<String, String> map = new HashMap<>();
+            String[] lines = headerString.split("\\r?\\n");
+            for (int i = 1; i < lines.length; i++) {
+                String line = lines[i];
+                int idx = line.indexOf(':');
+                if (idx > 0) {
+                    String name = line.substring(0, idx).trim().toLowerCase(Locale.ROOT);
+                    String value = line.substring(idx + 1).trim();
+                    map.put(name, value);
                 }
             }
+            return map;
+        }
+
+        Charset determineCharset(String contentType) {
+            if (contentType != null) {
+                for (String p : contentType.split(";")) {
+                    p = p.trim();
+                    if (p.toLowerCase(Locale.ROOT).startsWith("charset=")) {
+                        try {
+                            return Charset.forName(p.substring(8).replace("\"", ""));
+                        } catch (Exception ignored) {
+                            return StandardCharsets.UTF_8;
+                        }
+                    }
+                }
+            }
+            return StandardCharsets.UTF_8;
         }
     }
 
-    /**
-     * Starts the web server, allowing it to accept incoming HTTPS requests.
-     * If the server is already running, it throws an IllegalStateException.
-     */
     public void start() {
         if (!running) {
             running = true;
@@ -174,28 +197,24 @@ public class WebServer implements Runnable {
             throw new IllegalStateException("Server already started");
         }
     }
-    /**
-     * Stops the web server, preventing it from accepting new requests.
-     * It closes the server socket and releases any resources held by the server.
-     */
+
     public void stop() {
         running = false;
-        try {
-            serverSocket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        try { serverSocket.close(); } catch (IOException e) { e.printStackTrace(); }
+        clientPool.shutdownNow();
     }
 
     @Override
     public void run() {
         while (running) {
             try {
-                SSLSocket clientSocket = (SSLSocket) serverSocket.accept();
-                new Thread(new ClientHandler(clientSocket)).start();
+                final SSLSocket clientSocket = (SSLSocket) serverSocket.accept();
+                clientPool.submit(new ClientHandler(clientSocket));
             } catch (IOException e) {
-                System.err.println("Error while accepting client");
-                e.printStackTrace();
+                if (running) {
+                    System.err.println("Error while accepting client");
+                    e.printStackTrace();
+                }
             }
         }
     }
