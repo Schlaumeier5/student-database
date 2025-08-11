@@ -72,7 +72,7 @@ public class WebServer implements Runnable {
         @Override
         public void run() {
             try (BufferedOutputStream rawOut = new BufferedOutputStream(clientSocket.getOutputStream())) {
-                PrintWriter out = new PrintWriter(new OutputStreamWriter(rawOut, StandardCharsets.UTF_8), true);
+                PrintStream out = new PrintStream(rawOut, true, StandardCharsets.UTF_8);
                 try (BufferedInputStream bis = new BufferedInputStream(clientSocket.getInputStream())) {
                     String headerString = readHeadersAsString(bis);
                     if (headerString == null) {
@@ -90,7 +90,7 @@ public class WebServer implements Runnable {
             } catch (Exception e) {
                 e.printStackTrace();
                 try {
-                    PrintWriter out = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8), true);
+                    PrintStream out = new PrintStream(clientSocket.getOutputStream(), true);
                     GetResponse.internalServerError().respond(out);
                 } catch (IOException ignored) {}
             } finally {
@@ -104,14 +104,14 @@ public class WebServer implements Runnable {
             return new String(headerBytes, StandardCharsets.ISO_8859_1);
         }
 
-        void handleGet(String headerString, PrintWriter out) {
+        void handleGet(String headerString, PrintStream out) {
             String user = Server.getInstance().getWebServer().getUserManager().getSessionUser(headerString);
             GetRequest get = new GetRequest(headerString);
             GetResponse response = GetResponse.getResource(get.toResourceLocation(user), user);
             response.respond(out);
         }
 
-        void handlePost(String headerString, InputStream in, PrintWriter out) throws IOException {
+        void handlePost(String headerString, InputStream in, PrintStream out) throws IOException {
             Map<String, String> headerMap = parseHeaders(headerString);
             PostHeader postHeader = new PostHeader(headerString);
             int contentLength = headerMap.containsKey("content-length") ? Integer.parseInt(headerMap.get("content-length")) : 0;

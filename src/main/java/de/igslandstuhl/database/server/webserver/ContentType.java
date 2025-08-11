@@ -31,6 +31,18 @@ public enum ContentType {
     public String getName() {
         return name;
     }
+    public boolean isText() {
+        switch (this) {
+            case TEXT_PLAIN:
+            case HTML:
+            case JAVASCRIPT:
+            case CSS:
+            case JSON:
+                return true;
+            default:
+                return false;
+        }
+    }
     /**
      * Returns the ContentType corresponding to the given ResourceLocation.
      * @param l the ResourceLocation to determine the content type for

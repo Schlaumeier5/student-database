@@ -1,15 +1,15 @@
 package de.igslandstuhl.database.server.webserver;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 
 import org.junit.jupiter.api.Test;
 
 public class PostResponseTest {
     private String read(PostResponse r) {
-        StringWriter w = new StringWriter();
-        r.respond(new PrintWriter(w));
-        return w.toString();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        r.respond(new PrintStream(out));
+        return out.toString();
     }
     @Test
     void testBadRequest() {
