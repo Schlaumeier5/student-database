@@ -40,10 +40,11 @@ async function onClassChange(event) {
     studentTable.innerHTML = ""; // clear previous rows
     students.forEach(student => {
         const row = document.createElement('tr');
+        const graduationLevels = ["Neustarter", "Starter", "Durchstarter", "Lernprofi"];
         row.innerHTML = `
             <td class="student-name">${student.name}</td>
             <td class="student-room">${student.room}</td>
-            <td class="student-graduation-level">${student.graduationLevel}</td>
+            <td class="student-graduation-level">${graduationLevels[student.graduationLevel]}</td>
             <td class="student-action"><button onclick="viewStudent(${student.id})">Bearbeiten</button></td>
         `;
         studentTable.appendChild(row);
