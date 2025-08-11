@@ -1,7 +1,6 @@
 package de.igslandstuhl.database.server;
 
 import java.io.*;
-import java.net.SocketTimeoutException;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -49,26 +48,16 @@ public class WebServer implements Runnable {
         try (FileInputStream fis = new FileInputStream(keystorePath)) {
             ks.load(fis, keystorePassword.toCharArray());
         }
-
         KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
         kmf.init(ks, keystorePassword.toCharArray());
-
         SSLContext sslContext = SSLContext.getInstance("TLS");
         sslContext.init(kmf.getKeyManagers(), null, null);
-
         SSLServerSocketFactory factory = sslContext.getServerSocketFactory();
         serverSocket = (SSLServerSocket) factory.createServerSocket(port);
     }
 
-    /**
-     * Handles incoming client connections in a separate thread.
-     * This class implements Runnable to allow concurrent handling of multiple clients.
-     */
     class ClientHandler implements Runnable {
-        /**
-         * The SSLSocket representing the client connection.
-         */
-        private SSLSocket clientSocket;
+        private final SSLSocket clientSocket;
 
         ClientHandler(SSLSocket socket) {
             this.clientSocket = socket;
@@ -77,112 +66,65 @@ public class WebServer implements Runnable {
         @Override
         public void run() {
             try (BufferedOutputStream rawOut = new BufferedOutputStream(clientSocket.getOutputStream())) {
-                // Writer for responses (use UTF-8 for response text)
                 PrintWriter out = new PrintWriter(new OutputStreamWriter(rawOut, StandardCharsets.UTF_8), true);
-
-                // Use a buffered input stream so we can read headers as bytes and then the body as bytes
                 try (BufferedInputStream bis = new BufferedInputStream(clientSocket.getInputStream())) {
-                    bis.mark(64 * 1024); // allow reset if needed
-
-                    // 1) Read header bytes until CRLF CRLF
-                    byte[] headerBytes = readUntilDoubleCRLF(bis);
-                    if (headerBytes == null || headerBytes.length == 0) {
+                    String headerString = readHeadersAsString(bis);
+                    if (headerString == null) {
                         GetResponse.internalServerError().respond(out);
                         return;
                     }
-
-                    // Per HTTP spec, headers are ISO-8859-1 (a superset of bytes 0-255)
-                    String headerString = new String(headerBytes, StandardCharsets.ISO_8859_1);
-
-                    // Use existing helper to read the first-line-based resource location if you want, otherwise parse
                     if (headerString.startsWith("GET")) {
-                        String user = Server.getInstance().getWebServer().getUserManager().getSessionUser(headerString);
-                        GetRequest get = new GetRequest(headerString);
-                        GetResponse response = GetResponse.getResource(get.toResourceLocation(user), user);
-                        response.respond(out);
-                        return;
+                        handleGet(headerString, out);
+                    } else if (headerString.startsWith("POST")) {
+                        handlePost(headerString, bis, out);
+                    } else {
+                        GetResponse.internalServerError().respond(out);
                     }
-
-                    if (headerString.startsWith("POST")) {
-                        // Parse headers into a map
-                        Map<String, String> headerMap = parseHeaders(headerString);
-                        PostHeader postHeader = new PostHeader(headerString);
-
-                        int contentLength = 0;
-                        if (headerMap.containsKey("content-length")) {
-                            try {
-                                contentLength = Integer.parseInt(headerMap.get("content-length"));
-                            } catch (NumberFormatException ignore) {
-                                contentLength = 0;
-                            }
-                        }
-
-                        // Determine charset from Content-Type header if provided
-                        Charset bodyCharset = StandardCharsets.UTF_8; // default
-                        if (headerMap.containsKey("content-type")) {
-                            String ct = headerMap.get("content-type");
-                            String cs = extractCharset(ct);
-                            if (cs != null) {
-                                try {
-                                    bodyCharset = Charset.forName(cs);
-                                } catch (Exception ignored) {
-                                    bodyCharset = StandardCharsets.UTF_8;
-                                }
-                            }
-                        }
-
-                        String body = null;
-                        if (contentLength > 0) {
-                            // Read exactly contentLength bytes from the stream
-                            byte[] bodyBytes = readNBytes(bis, contentLength);
-                            if (bodyBytes == null) {
-                                GetResponse.internalServerError().respond(out);
-                                return;
-                            }
-                            // If body is percent-encoded (typical for form submissions), decode using the chosen charset
-                            // URLDecoder.decode expects an application/x-www-form-urlencoded string
-                            String raw = new String(bodyBytes, bodyCharset);
-                            // decode percent-encoding into Unicode using bodyCharset -> URLDecoder requires the charset name
-                            body = URLDecoder.decode(raw, bodyCharset.name());
-                        }
-
-                        PostRequest parsedRequest = new PostRequest(postHeader, body);
-                        PostResponse response = PostRequestHandler.getInstance().handlePostRequest(parsedRequest);
-                        response.respond(out);
-                        return;
-                    }
-
-                    // not a GET or POST we expect
-                    GetResponse.internalServerError().respond(out);
-                } catch (SocketTimeoutException ste) {
-                    ste.printStackTrace();
-                    GetResponse.internalServerError().respond(new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8), true));
                 }
             } catch (Exception e) {
                 e.printStackTrace();
                 try {
                     PrintWriter out = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8), true);
                     GetResponse.internalServerError().respond(out);
-                } catch (IOException ignored) {
-                }
+                } catch (IOException ignored) {}
             } finally {
-                try {
-                    clientSocket.close();
-                } catch (IOException ignored) {
-                }
+                try { clientSocket.close(); } catch (IOException ignored) {}
             }
         }
 
-        /**
-         * Read bytes from InputStream until we find CRLF CRLF. Returns the header bytes (without consuming
-         * beyond the CRLFCRLF). If stream ends before that, returns what was read.
-         */
-        private byte[] readUntilDoubleCRLF(InputStream in) throws IOException {
+        String readHeadersAsString(InputStream in) throws IOException {
+            byte[] headerBytes = readUntilDoubleCRLF(in);
+            if (headerBytes == null || headerBytes.length == 0) return null;
+            return new String(headerBytes, StandardCharsets.ISO_8859_1);
+        }
+
+        void handleGet(String headerString, PrintWriter out) {
+            String user = Server.getInstance().getWebServer().getUserManager().getSessionUser(headerString);
+            GetRequest get = new GetRequest(headerString);
+            GetResponse response = GetResponse.getResource(get.toResourceLocation(user), user);
+            response.respond(out);
+        }
+
+        void handlePost(String headerString, InputStream in, PrintWriter out) throws IOException {
+            Map<String, String> headerMap = parseHeaders(headerString);
+            PostHeader postHeader = new PostHeader(headerString);
+            int contentLength = headerMap.containsKey("content-length") ? Integer.parseInt(headerMap.get("content-length")) : 0;
+            Charset bodyCharset = determineCharset(headerMap.get("content-type"));
+            String body = null;
+            if (contentLength > 0) {
+                byte[] bodyBytes = readNBytes(in, contentLength);
+                String raw = new String(bodyBytes, bodyCharset);
+                body = URLDecoder.decode(raw, bodyCharset.name());
+            }
+            PostRequest parsedRequest = new PostRequest(postHeader, body);
+            PostResponse response = PostRequestHandler.getInstance().handlePostRequest(parsedRequest);
+            response.respond(out);
+        }
+
+        byte[] readUntilDoubleCRLF(InputStream in) throws IOException {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            int current;
-            // We need to detect the sequence \r\n\r\n (13,10,13,10)
-            // We'll buffer last 4 bytes in a rolling window
             LinkedList<Integer> window = new LinkedList<>();
+            int current;
             while ((current = in.read()) != -1) {
                 baos.write(current);
                 window.addLast(current);
@@ -193,29 +135,26 @@ public class WebServer implements Runnable {
                         break;
                     }
                 }
-                // simple safety: stop if headers exceed some reasonable size
                 if (baos.size() > 64 * 1024) break;
             }
             return baos.toByteArray();
         }
 
-        private byte[] readNBytes(InputStream in, int n) throws IOException {
+        byte[] readNBytes(InputStream in, int n) throws IOException {
             byte[] buffer = new byte[n];
             int read = 0;
             while (read < n) {
                 int r = in.read(buffer, read, n - read);
-                if (r == -1) {
-                    return null; // stream ended unexpectedly
-                }
+                if (r == -1) return null;
                 read += r;
             }
             return buffer;
         }
 
-        private Map<String, String> parseHeaders(String headerString) {
+        Map<String, String> parseHeaders(String headerString) {
             Map<String, String> map = new HashMap<>();
-            String[] lines = headerString.split("\r?\n");
-            for (int i = 1; i < lines.length; i++) { // skip request line
+            String[] lines = headerString.split("\\r?\\n");
+            for (int i = 1; i < lines.length; i++) {
                 String line = lines[i];
                 int idx = line.indexOf(':');
                 if (idx > 0) {
@@ -227,16 +166,20 @@ public class WebServer implements Runnable {
             return map;
         }
 
-        private String extractCharset(String contentType) {
-            if (contentType == null) return null;
-            String[] parts = contentType.split(";");
-            for (String p : parts) {
-                p = p.trim();
-                if (p.toLowerCase(Locale.ROOT).startsWith("charset=")) {
-                    return p.substring(8).replaceAll("\"", "").trim();
+        Charset determineCharset(String contentType) {
+            if (contentType != null) {
+                for (String p : contentType.split(";")) {
+                    p = p.trim();
+                    if (p.toLowerCase(Locale.ROOT).startsWith("charset=")) {
+                        try {
+                            return Charset.forName(p.substring(8).replace("\"", ""));
+                        } catch (Exception ignored) {
+                            return StandardCharsets.UTF_8;
+                        }
+                    }
                 }
             }
-            return null;
+            return StandardCharsets.UTF_8;
         }
     }
 
@@ -251,11 +194,7 @@ public class WebServer implements Runnable {
 
     public void stop() {
         running = false;
-        try {
-            serverSocket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        try { serverSocket.close(); } catch (IOException e) { e.printStackTrace(); }
         clientPool.shutdownNow();
     }
 
