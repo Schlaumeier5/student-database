@@ -60,10 +60,10 @@ public class PostRequest {
             if (line.startsWith("Content-Length:")) {
                 contentLength = Integer.parseInt(line.split(":")[1].trim());
             } else if (line.startsWith("Cookie:")) {
-                String[] cookieData = line.substring(7).split("; ");
+                String[] cookieData = line.substring(7).split(";");
                 List<Cookie> cookieList = new ArrayList<>();
                 for (String cookie : cookieData) {
-                    String[] keyValue = cookie.split("=");
+                    String[] keyValue = cookie.trim().split("=");
                     if (keyValue.length == 2) {
                         cookieList.add(new Cookie(keyValue[0].trim(), keyValue[1].trim()));
                     }
@@ -126,15 +126,17 @@ public class PostRequest {
     }
 
     public Map<String, String> getFormData() {
+        if (body == null || body.isEmpty()) return Map.of();
+        else if (!Character.isLetter(body.charAt(0))) throw new IllegalArgumentException("No Form Data");
         Map<String, String> params = new HashMap<>();
         // Parse body as form data: key1=value1&key2=value2
-        if (body != null && !body.isEmpty()) {
-            String[] pairs = body.split("&");
-            for (String pair : pairs) {
-                String[] kv = pair.split("=");
-                if (kv.length == 2) {
-                    params.put(kv[0], kv[1]);
-                }
+        String[] pairs = body.split("&");
+        for (String pair : pairs) {
+            String[] kv = pair.split("=");
+            if (kv.length == 2) {
+                params.put(kv[0], kv[1]);
+            } else {
+                throw new IllegalArgumentException("No form data");
             }
         }
         return params;

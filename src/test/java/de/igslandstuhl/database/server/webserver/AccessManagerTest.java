@@ -46,7 +46,7 @@ public class AccessManagerTest {
             }
             @Override
             public String getUsername() {
-                return "example@teacher.de";
+                return "example@admin.de";
             }
         };
         teacher = new User() {
@@ -106,7 +106,7 @@ public class AccessManagerTest {
             }
             @Override
             public String getUsername() {
-                return "example@teacher.de";
+                return "example@student.de";
             }
         };
         anonymous = User.ANONYMOUS;
