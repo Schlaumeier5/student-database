@@ -72,7 +72,7 @@ public class WebServer implements Runnable {
         @Override
         public void run() {
             try (BufferedOutputStream rawOut = new BufferedOutputStream(clientSocket.getOutputStream())) {
-                PrintStream out = new PrintStream(rawOut, true);
+                PrintStream out = new PrintStream(rawOut, true, StandardCharsets.UTF_8);
                 try (BufferedInputStream bis = new BufferedInputStream(clientSocket.getInputStream())) {
                     String headerString = readHeadersAsString(bis);
                     if (headerString == null) {

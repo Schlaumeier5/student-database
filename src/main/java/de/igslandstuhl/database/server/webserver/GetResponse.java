@@ -3,7 +3,6 @@ package de.igslandstuhl.database.server.webserver;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.io.PrintWriter;
 
 import de.igslandstuhl.database.server.resources.ResourceHelper;
 import de.igslandstuhl.database.server.resources.ResourceLocation;
