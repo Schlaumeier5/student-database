@@ -60,9 +60,9 @@ public interface Command {
         });
         registerCommand("get-level-ratio", (args) -> {
             if (args.length < 1) return "Usage: get-level-ratio [level]";
-            Level level;
+            TaskLevel level;
             try {
-                level = Level.get(Integer.parseInt(args[0]));
+                level = TaskLevel.get(Integer.parseInt(args[0]));
             } catch (NumberFormatException e) {
                 return "This is no valid number.";
             } catch (IllegalArgumentException e) {

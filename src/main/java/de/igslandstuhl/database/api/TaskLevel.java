@@ -5,8 +5,26 @@ package de.igslandstuhl.database.api;
  * Each level has a specific ratio that indicates the proportion of the progress
  * that can be achieved at that level.
  */
-public enum Level {
-    LEVEL1, LEVEL2, LEVEL3, SPECIAL;
+public enum TaskLevel {
+    LEVEL1 (1, "Niveau 1"),
+    LEVEL2 (2, "Niveau 2"),
+    LEVEL3 (3, "Niveau 3"),
+    SPECIAL (-1, "Nanstein-Aufgabe");
+
+    private final int number;
+    private final String germanTranslation;
+
+    private TaskLevel(int number, String germanTranslation) {
+        this.number = number;
+        this.germanTranslation = germanTranslation;
+    }
+
+    public int getNumber() {
+        return number;
+    }
+    public String getGermanTranslation() {
+        return germanTranslation;
+    }
 
     /**
      * Returns the Level corresponding to the given number.
@@ -15,7 +33,7 @@ public enum Level {
      * @throws IllegalArgumentException if the number is out of range
      *                                  (not between 1 and 3 inclusive)
      */
-    public static Level get(int number) {
+    public static TaskLevel get(int number) {
         switch (number) {
             case 1:
                 return LEVEL1;
@@ -53,17 +71,6 @@ public enum Level {
      */
     @Override
     public String toString() {
-        switch (this) {
-            case LEVEL1:
-                return "1";
-            case LEVEL2:
-                return "2";
-            case LEVEL3:
-                return "3";
-            case SPECIAL:
-                return "Special";
-            default:
-                throw new IllegalStateException();
-        }
+        return this == SPECIAL ? "Special" : String.valueOf(number);
     }
 }

@@ -10,7 +10,7 @@ public class PreConditions {
         server.getConnection().createTables();
     }
     public static void addSampleStudent() throws SQLException {
-        Student.registerStudentWithPassword(0, "Max", "Mustermann", "max@muster.mann", "12345", SchoolClass.get(1), 1);
+        Student.registerStudentWithPassword(0, "Max", "Mustermann", "max@muster.mann", "12345", SchoolClass.get(1), GraduationLevel.LEVEL1);
     }
     public static void addSampleSubject() throws SQLException {
         Subject.addSubject("Mathematik");
@@ -19,7 +19,7 @@ public class PreConditions {
         Topic.addTopic("Bruchrechnung", Subject.get(1), 100, 5, 1);
     }
     public static void addSampleTask() throws SQLException {
-        Task.addTask(Topic.get(1), "Addition", Level.LEVEL1);
+        Task.addTask(Topic.get(1), "Addition", TaskLevel.LEVEL1);
     }
     public static void addSampleSpecialTask() throws SQLException {
         Subject subject = Subject.get(1);

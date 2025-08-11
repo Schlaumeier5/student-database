@@ -223,7 +223,7 @@ public class Topic {
      * @param level the difficulty level of the tasks to retrieve
      * @return a list of tasks at the specified level associated with the topic
      */
-    public List<Task> getTasksByLevel(Level level) {
+    public List<Task> getTasksByLevel(TaskLevel level) {
         if (tasks.isEmpty()) {
             loadTasks();
         }
@@ -246,7 +246,7 @@ public class Topic {
      * @param level the difficulty level to filter by
      * @return a list of tasks that match the specified level
      */
-    private List<Task> getTasksByLevel(List<Task> tasks, Level level) {
+    private List<Task> getTasksByLevel(List<Task> tasks, TaskLevel level) {
         return tasks.stream()
             .filter(task -> task.getNiveau() == level)
             .toList();
@@ -267,9 +267,9 @@ public class Topic {
                 "get_tasks_by_topic", new String[] {"id"}, String.valueOf(id)
             );
             taskIds.stream().map(Task::get).filter(Objects::nonNull).forEach(t -> tasks.add(t));
-            tasksLevel1 = getTasksByLevel(tasks, Level.LEVEL1);
-            tasksLevel2 = getTasksByLevel(tasks, Level.LEVEL2);
-            tasksLevel3 = getTasksByLevel(tasks, Level.LEVEL3);
+            tasksLevel1 = getTasksByLevel(tasks, TaskLevel.LEVEL1);
+            tasksLevel2 = getTasksByLevel(tasks, TaskLevel.LEVEL2);
+            tasksLevel3 = getTasksByLevel(tasks, TaskLevel.LEVEL3);
         } catch (SQLException e) {
             e.printStackTrace();
         }

@@ -51,7 +51,7 @@ public class Task {
      * This indicates how challenging the task is, such as LEVEL1, LEVEL2, or LEVEL3.
      * It is also used to calculate the task's ratio in relation to the topic.
      */
-    private final Level niveau;
+    private final TaskLevel niveau;
 
     /**
      * Constructs a new Task.
@@ -61,7 +61,7 @@ public class Task {
      * @param name  the name of the task
      * @param niveau the level of difficulty for the task
      */
-    protected Task(int id, Topic topic, String name, Level niveau) {
+    protected Task(int id, Topic topic, String name, TaskLevel niveau) {
         this.id = id;
         this.topic = topic;
         this.name = name;
@@ -101,7 +101,7 @@ public class Task {
      *
      * @return the level of difficulty for the task
      */
-    public Level getNiveau() {
+    public TaskLevel getNiveau() {
         return niveau;
     }
     /**
@@ -157,7 +157,7 @@ public class Task {
         int id = Integer.parseInt(fields[0]);
         Topic topic = Topic.get(Integer.parseInt(fields[1]));
         String name = fields[2];
-        Level niveau = Level.get(Integer.parseInt(fields[3]));
+        TaskLevel niveau = TaskLevel.get(Integer.parseInt(fields[3]));
         return new Task(id, topic, name, niveau);
     }
     /**
@@ -229,7 +229,7 @@ public class Task {
      * @throws SQLException if there is an error accessing the database
      * @return the newly created Task object, or null if the task could not be added
      */
-    public static Task addTask(Topic topic, String name, Level niveau) throws SQLException {
+    public static Task addTask(Topic topic, String name, TaskLevel niveau) throws SQLException {
         Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getAddObjectProcess("task", topic == null ? "-1" : String.valueOf(topic.getId()), name, String.valueOf(niveau)));
         return getByName(name).stream()
                 //.filter(t -> t.getTopic().equals(topic) && t.getNiveau() == niveau)
@@ -277,7 +277,7 @@ public class Task {
     public static Task fromSerialized(Topic topic, String serialized) throws SQLException {
         String[] parts = serialized.split(Application.TASK_TITLE_DELIMITER);
         String name = parts[0];
-        Level level = Level.get(Integer.parseInt(parts[1]));
+        TaskLevel level = TaskLevel.get(Integer.parseInt(parts[1]));
         return addTask(topic, name, level);
     }
     
