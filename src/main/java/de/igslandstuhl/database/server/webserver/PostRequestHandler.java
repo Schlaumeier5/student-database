@@ -1,6 +1,9 @@
 package de.igslandstuhl.database.server.webserver;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.Random;
@@ -155,42 +158,11 @@ public class PostRequestHandler {
         return prepare(webInput, true);
     }
     private String prepare(String webInput, boolean sanitize) {
-        webInput = webInput.replaceAll("%20", " ")
-                .replaceAll("\\+", " ")
-                .replaceAll("%0A", "\n")
-                .replaceAll("%0D", "\r")
-                .replaceAll("%21", "!")
-                .replaceAll("%23", "#")
-                .replaceAll("%26", "&")
-                .replaceAll("%28", "(")
-                .replaceAll("%29", ")")
-                .replaceAll("%2A", "*")
-                .replaceAll("%2B", "+")
-                .replaceAll("%2C", ",")
-                .replaceAll("%2F", "/")
-                .replaceAll("%3A", ":")
-                .replaceAll("%3B", ";")
-                .replaceAll("%3C", "<")
-                .replaceAll("%3D", "=")
-                .replaceAll("%3E", ">")
-                .replaceAll("%3F", "?")
-                .replaceAll("%40", "@")
-                .replaceAll("%5B", "[")
-                .replaceAll("%5D", "]")
-                .replaceAll("%7B", "{")
-                .replaceAll("%7D", "}")
-                .replaceAll("ÃŸ", "ß")
-                .replaceAll("Ã¤", "ä")
-                .replaceAll("Ã¶", "ö")
-                .replaceAll("Ã¼", "ü")
-                .replaceAll("Ã„", "Ä")
-                .replaceAll("Ã–", "Ö")
-                .replaceAll("Ãœ", "Ü")
-                .replaceAll("%C3%A4", "ä")
-                .replaceAll("%C3%BC", "ü")
-                .replaceAll("%C3%B6", "ö")
-                .replaceAll("%C3%9F", "ß")
-                .replaceAll("%C2%A0", " ")
+        try {
+            webInput = URLDecoder.decode(webInput, StandardCharsets.UTF_8.name());
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
                 ;
         if (sanitize) {
             // Sanitize the input to prevent XSS attacks
