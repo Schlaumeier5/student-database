@@ -59,7 +59,7 @@ public class Student extends User {
     /**
      * The graduation level of the student.
      */
-    private final int graduationLevel;
+    private final GraduationLevel graduationLevel;
 
     /**
      * The set of tasks currently selected by the student.
@@ -103,7 +103,7 @@ public class Student extends User {
      * @param graduationLevel The graduation level.
      */
     private Student(int id, String firstName, String lastName, String email, String passwordHash, SchoolClass schoolClass,
-            int graduationLevel) {
+            GraduationLevel graduationLevel) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -126,7 +126,7 @@ public class Student extends User {
         String email = fields[3];
         String password = fields[4];
         SchoolClass schoolClass = SchoolClass.get(Integer.parseInt(fields[5]));
-        int graduationLevel = Integer.parseInt(fields[6]);
+        GraduationLevel graduationLevel = GraduationLevel.of(Integer.parseInt(fields[6]));
         Student student = new Student(id, firstName, lastName, email, password, schoolClass, graduationLevel);
         student.loadCurrentTopics();
         return student;
@@ -216,9 +216,9 @@ public class Student extends User {
      * @return the created Student object
      * @throws SQLException if there is an error creating the student
      */
-    public static Student registerStudentWithPassword(int id, String firstName, String lastName, String email, String password, SchoolClass schoolClass, int graduationLevel) throws SQLException {
+    public static Student registerStudentWithPassword(int id, String firstName, String lastName, String email, String password, SchoolClass schoolClass, GraduationLevel graduationLevel) throws SQLException {
         Student student = new Student(id, firstName, lastName, email, User.passHash(password), schoolClass, graduationLevel);
-        Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getAddObjectProcess("student", String.valueOf(id), firstName, lastName, email, User.passHash(password), schoolClass != null ? String.valueOf(schoolClass.getId()) : "-1", String.valueOf(graduationLevel)));
+        Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getAddObjectProcess("student", String.valueOf(id), firstName, lastName, email, User.passHash(password), schoolClass != null ? String.valueOf(schoolClass.getId()) : "-1", String.valueOf(graduationLevel.getLevel())));
         students.put(id, student);
         return student;
     }
@@ -236,12 +236,12 @@ public class Student extends User {
         }
         return passwords;
     }
-    public static StudentGenerationResult generateStudentWithPassword(int id, String firstName, String lastName, String email, SchoolClass schoolClass, int graduationLevel) throws SQLException {
+    public static StudentGenerationResult generateStudentWithPassword(int id, String firstName, String lastName, String email, SchoolClass schoolClass, GraduationLevel graduationLevel) throws SQLException {
         String password = generateRandomPassword(12, id + (int) System.currentTimeMillis());
         Student student = registerStudentWithPassword(id, firstName, lastName, email, password, schoolClass, graduationLevel);
         return new StudentGenerationResult(student, password);
     }
-    public static StudentGenerationResult[] generateStudentsWithPasswords(int[] ids, String[] firstNames, String[] lastNames, String[] emails, String[] schoolClassNames, int[] graduationLevels) throws SQLException {
+    public static StudentGenerationResult[] generateStudentsWithPasswords(int[] ids, String[] firstNames, String[] lastNames, String[] emails, String[] schoolClassNames, GraduationLevel[] graduationLevels) throws SQLException {
         if (ids.length != firstNames.length || ids.length != lastNames.length || ids.length != emails.length || ids.length != schoolClassNames.length || ids.length != graduationLevels.length) {
             throw new IllegalArgumentException("All input arrays must have the same length");
         }
@@ -259,7 +259,7 @@ public class Student extends User {
         List<String> lastNames = new ArrayList<>();
         List<String> emails = new ArrayList<>();
         List<String> schoolClassNames = new ArrayList<>();
-        List<Integer> graduationLevels = new ArrayList<>();
+        List<GraduationLevel> graduationLevels = new ArrayList<>();
         for (int i = 0; i < lines.length; i++) {
             String[] fields = lines[i].split(",");
             if (fields.length != 6) {
@@ -270,7 +270,7 @@ public class Student extends User {
             String lastName = fields[2].trim();
             String email = fields[5].trim();
             String schoolClassName = fields[3].trim();
-            int graduationLevel = 1;
+            GraduationLevel graduationLevel = GraduationLevel.initialValue();
             ids.add(id);
             firstNames.add(firstName);
             lastNames.add(lastName);
@@ -283,11 +283,12 @@ public class Student extends User {
         String[] lastNameArray = new String[lastNames.size()];
         String[] emailArray = new String[emails.size()];
         String[] schoolClassNameArray = new String[schoolClassNames.size()];
-        int[] graduationLevelArray = graduationLevels.stream().mapToInt(Integer::intValue).toArray();
+        GraduationLevel[] graduationLevelArray = new GraduationLevel[graduationLevels.size()];
         firstNames.toArray(firstNameArray);
         lastNames.toArray(lastNameArray);
         emails.toArray(emailArray);
         schoolClassNames.toArray(schoolClassNameArray);
+        graduationLevels.toArray(graduationLevelArray);
         return generateStudentsWithPasswords(idArray, firstNameArray, lastNameArray, emailArray, schoolClassNameArray, graduationLevelArray);
     }
 
@@ -324,7 +325,7 @@ public class Student extends User {
      * Returns the student's graduation level.
      * @return the graduation level
      */
-    public int getGraduationLevel() { return graduationLevel; }
+    public GraduationLevel getGraduationLevel() { return graduationLevel; }
 
     /**
      * Returns the student's current room.
@@ -486,7 +487,7 @@ public class Student extends User {
         .append("\"lastName\": \"").append(lastName).append("\",\n")
         .append("\"email\": \"").append(email).append("\",\n")
         .append("\"schoolClass\": ").append(String.valueOf(schoolClass)).append(",\n")
-        .append("\"graduationLevel\": ").append(graduationLevel).append(",\n")
+        .append("\"graduationLevel\": ").append(graduationLevel.getLevel()).append(",\n")
         .append("\"selectedTasks\": ").append(selectedTasks).append(",\n")
         .append("\"completedTasks\": ").append(completedTasks).append(",\n")
         .append("\"lockedTasks\": ").append(lockedTasks).append(",\n")
@@ -700,7 +701,7 @@ public class Student extends User {
         result = prime * result + ((lastName == null) ? 0 : lastName.hashCode());
         result = prime * result + ((email == null) ? 0 : email.hashCode());
         result = prime * result + ((schoolClass == null) ? 0 : schoolClass.hashCode());
-        result = prime * result + graduationLevel;
+        result = prime * result + graduationLevel.getLevel();
         return result;
     }
 

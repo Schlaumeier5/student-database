@@ -10,7 +10,7 @@ public class PreConditions {
         server.getConnection().createTables();
     }
     public static void addSampleStudent() throws SQLException {
-        Student.registerStudentWithPassword(0, "Max", "Mustermann", "max@muster.mann", "12345", SchoolClass.get(1), 1);
+        Student.registerStudentWithPassword(0, "Max", "Mustermann", "max@muster.mann", "12345", SchoolClass.get(1), GraduationLevel.LEVEL1);
     }
     public static void addSampleSubject() throws SQLException {
         Subject.addSubject("Mathematik");
