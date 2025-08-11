@@ -1,7 +1,7 @@
 package de.igslandstuhl.database.server.webserver;
 
 import java.io.FileNotFoundException;
-import java.io.PrintWriter;
+import java.io.PrintStream;
 
 import de.igslandstuhl.database.server.resources.ResourceLocation;
 
@@ -92,7 +92,7 @@ public class PostResponse {
      *
      * @param out The PrintWriter to write the response to.
      */
-    public void respond(PrintWriter out) {
+    public void respond(PrintStream out) {
         out.print("HTTP/1.1 ");
         statusCode.write(out);
         out.print("\r\n");

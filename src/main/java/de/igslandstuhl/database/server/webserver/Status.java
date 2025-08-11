@@ -1,5 +1,6 @@
 package de.igslandstuhl.database.server.webserver;
 
+import java.io.PrintStream;
 import java.io.PrintWriter;
 
 /**
@@ -56,6 +57,14 @@ public enum Status {
      * @param out the PrintWriter to write to
      */
     public void write(PrintWriter out) {
+        out.print(code);out.print(" ");out.print(name);
+    }
+    /**
+     * Writes the HTTP status code and name to the given PrintStream.
+     * This is used to format the HTTP response header.
+     * @param out the PrintWriter to write to
+     */
+    public void write(PrintStream out) {
         out.print(code);out.print(" ");out.print(name);
     }
 }

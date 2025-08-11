@@ -2,9 +2,9 @@ package de.igslandstuhl.database.server.webserver;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.io.PrintStream;
 
 import org.junit.jupiter.api.Test;
 
@@ -43,11 +43,11 @@ public class GetResponseTest {
 
     @Test
     void testRespond() throws FileNotFoundException {
-        StringWriter testWriter = new StringWriter();
-        PrintWriter printWriter = new PrintWriter(testWriter);
+        ByteArrayOutputStream testStream = new ByteArrayOutputStream();
+        PrintStream printWriter = new PrintStream(testStream);
         GetResponse response = GetResponse.getResource(ResourceLocation.get("html", "site:login.html"), null);
         response.respond(printWriter);
-        String responseString = testWriter.toString();
+        String responseString = testStream.toString();
         String responseBody = response.getResponseBody();
         assertTrue(responseString.contains(responseBody));
         assertTrue(responseString.contains("HTTP/1.1 200 OK"));

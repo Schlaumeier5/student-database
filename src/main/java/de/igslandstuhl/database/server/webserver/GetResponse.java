@@ -1,6 +1,8 @@
 package de.igslandstuhl.database.server.webserver;
 
 import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 
 import de.igslandstuhl.database.server.resources.ResourceHelper;
@@ -116,24 +118,33 @@ public class GetResponse {
      * This method formats the HTTP response header and body, including the status, content type, and resource.
      * @param out the PrintWriter to write the response to
      */
-    public void respond(PrintWriter out) {
+    public void respond(PrintStream out) {
         try {
-            String resource = "";
-            if (resourceLocation != null) {
-                if (!resourceLocation.isVirtual()) {
-                    resource = ResourceHelper.readResourceCompletely(resourceLocation);
-                } else {
-                    resource = ResourceHelper.readVirtualResource(user, resourceLocation);
-                    if (resource == null) throw new NullPointerException();
-                }
-            }
             out.print("HTTP/1.1 "); status.write(out); out.println();
             if (contentType != null) {
                 out.print("Content-Type: "); out.print(contentType.getName());
-                out.print("; charset="); out.println(charset);
+                if (contentType.isText()) {
+                    out.print("; charset=");out.print(charset);
+                }
+                out.println();
             }
-            out.println(); // <--- Diese Zeile ist wichtig: trennt Header von Body!
-            out.println(resource);
+            out.println(); // <--- This line is important: seperates Header and Body!
+            if (contentType.isText()) {
+                String resource = "";
+                if (resourceLocation != null) {
+                    if (!resourceLocation.isVirtual()) {
+                        resource = ResourceHelper.readResourceCompletely(resourceLocation);
+                    } else {
+                        resource = ResourceHelper.readVirtualResource(user, resourceLocation);
+                        if (resource == null) throw new NullPointerException();
+                    }
+                }
+                out.println(resource);
+            } else {
+                try (InputStream in = ResourceHelper.openResourceAsStream(resourceLocation)) {
+                    in.transferTo(out); // Streams bytes directly
+                }
+            }
         } catch (FileNotFoundException e) {
             notFound().respond(out);
         } catch (Exception e) {
