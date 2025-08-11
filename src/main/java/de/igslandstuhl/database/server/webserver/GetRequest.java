@@ -39,7 +39,7 @@ public class GetRequest {
      * @param request the request string to parse
      */
     public GetRequest(String request) {
-        if (!request.startsWith("GET") || !request.endsWith("HTTP/1.1")){
+        if (!request.startsWith("GET") || !request.contains("HTTP/1.1")){
             throw new IllegalArgumentException();
         }
         String [] lines = request.split("\n");
