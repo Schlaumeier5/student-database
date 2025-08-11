@@ -116,9 +116,9 @@ public class Task {
             case LEVEL1:
                 return topic.getNumber() + ".1." + (topic.getTasksLevel1().indexOf(this) + 1);
             case LEVEL2:
-                return topic.getNumber() + ".2." + (topic.getTasksLevel2().indexOf(this) + 1 + topic.getTasksLevel1().size());
+                return topic.getNumber() + ".2." + (topic.getTasksLevel2().indexOf(this) + 1);
             case LEVEL3:
-                return topic.getNumber() + ".3." + (topic.getTasksLevel3().indexOf(this) + 1 + topic.getTasksLevel1().size() + topic.getTasksLevel2().size());
+                return topic.getNumber() + ".3." + (topic.getTasksLevel3().indexOf(this) + 1);
             default:
                 throw new IllegalStateException("Unknown level: " + niveau);
         }
