@@ -5,7 +5,7 @@ package de.igslandstuhl.database.api;
  * Each level has a specific ratio that indicates the proportion of the progress
  * that can be achieved at that level.
  */
-public enum Level {
+public enum TaskLevel {
     LEVEL1, LEVEL2, LEVEL3, SPECIAL;
 
     /**
@@ -15,7 +15,7 @@ public enum Level {
      * @throws IllegalArgumentException if the number is out of range
      *                                  (not between 1 and 3 inclusive)
      */
-    public static Level get(int number) {
+    public static TaskLevel get(int number) {
         switch (number) {
             case 1:
                 return LEVEL1;

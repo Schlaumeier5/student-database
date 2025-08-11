@@ -19,7 +19,7 @@ public class PreConditions {
         Topic.addTopic("Bruchrechnung", Subject.get(1), 100, 5, 1);
     }
     public static void addSampleTask() throws SQLException {
-        Task.addTask(Topic.get(1), "Addition", Level.LEVEL1);
+        Task.addTask(Topic.get(1), "Addition", TaskLevel.LEVEL1);
     }
     public static void addSampleSpecialTask() throws SQLException {
         Subject subject = Subject.get(1);

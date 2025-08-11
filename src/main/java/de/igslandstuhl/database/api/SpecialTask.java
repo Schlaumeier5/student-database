@@ -30,7 +30,7 @@ public class SpecialTask extends Task {
      * @param name  the name of the special task
      */
     public SpecialTask(int id, String name, double ratio, Subject subject) {
-        super(id, null, name, Level.SPECIAL);
+        super(id, null, name, TaskLevel.SPECIAL);
         this.ratio = ratio;
         this.subject = subject;
     }
