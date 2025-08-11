@@ -472,7 +472,7 @@ public class PostRequestHandler {
             responseBuilder.append("{\"id\":").append(student.getId())
                 .append(",\"name\":\"").append(student.getFirstName()).append(" ").append(student.getLastName()).append('"')
                 .append(", \"actionRequired\":").append(student.isActionRequired())
-                .append(", \"graduationLevel\":").append(student.getGraduationLevel())
+                .append(", \"graduationLevel\":").append(student.getGraduationLevel().getLevel())
                 .append(", \"room\":\"").append(student.getCurrentRoom() != null ? student.getCurrentRoom().getLabel() : "None").append("\"");
             if (request.getJson().containsKey("subjectId") && request.getJson().get("subjectId") instanceof Number subjectId) {
                 Set<SubjectRequest> subjectRequests = student.getCurrentRequests().keySet().contains(subjectId.intValue()) ? student.getCurrentRequests().get(subjectId.intValue()) : Set.of();
