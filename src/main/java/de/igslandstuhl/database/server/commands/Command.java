@@ -70,6 +70,8 @@ public interface Command {
             }
             return String.valueOf(level.getRatio() * 100) + "%";
         });
+
+        // Room commands
         registerCommand("list-rooms", (args) -> {
             try {
                 Room.fetchAll();
@@ -78,9 +80,6 @@ public interface Command {
             }
             return Room.getRooms().keySet().stream().reduce("Rooms:", (s1, s2) -> s1 + "\n" + s2);
         });
-        
-
-        // Room commands
         registerCommand("get-room-level", (args) -> {
             if (args.length < 1) return "Usage: get-room-level [room]";
             Room room = Room.getRoom(argsPart(args, 0, args.length));

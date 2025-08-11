@@ -13,6 +13,9 @@ public class CommonUtils {
         if (s == null) {
             return 0;
         }
+        try {
+            return Long.parseLong(s);
+        } catch (NumberFormatException e) {}
         long hash = 0;
         for (char c : s.toCharArray()) {
             hash = 31L*hash + c;
