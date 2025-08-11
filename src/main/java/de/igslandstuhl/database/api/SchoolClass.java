@@ -162,6 +162,14 @@ public class SchoolClass {
 
     public void delete() throws SQLException {
         Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getDeleteObjectProcess("class", String.valueOf(id)));
+        getStudents().forEach((s) -> {
+            try {
+                s.delete();
+            } catch (SQLException e) {
+                e.printStackTrace();
+                throw new IllegalStateException(e);
+            }
+        });
     }
 
     /**

@@ -322,7 +322,13 @@ public class Topic {
     public void delete() throws SQLException {
         Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getDeleteObjectProcess("topic", String.valueOf(id)));
         topics.remove(id);
-        tasks.forEach(Task::removeFromCache);
+        tasks.forEach(t -> {
+            try {
+                t.delete();
+            } catch (SQLException e) {
+                throw new IllegalStateException(e);
+            }
+        });
     }
 
     @Override

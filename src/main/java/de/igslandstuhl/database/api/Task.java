@@ -147,6 +147,11 @@ public class Task {
         tasks.remove(id);
     }
 
+    public void delete() throws SQLException {
+        Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getDeleteObjectProcess("task", String.valueOf(id)));
+        removeFromCache();
+    }
+
     /**
      * Creates a Task object from SQL query result fields.
      *
