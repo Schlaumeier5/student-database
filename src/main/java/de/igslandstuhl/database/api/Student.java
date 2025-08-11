@@ -461,6 +461,11 @@ public class Student extends User {
         currentRequests.remove(subjectId);
     }
 
+    public void delete() throws SQLException {
+        Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getDeleteObjectProcess("student", String.valueOf(id)));
+        students.remove(id);
+    }
+
     @Override
     public String toString() {
         return toJSON();

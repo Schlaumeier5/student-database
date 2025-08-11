@@ -2,6 +2,7 @@ package de.igslandstuhl.database.api;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -236,6 +237,22 @@ public class Subject {
             SQLHelper.getDeleteObjectProcess("subject", String.valueOf(id))
         );
         subjects.remove(id);
+        try {
+            Arrays.stream(getGrades()).mapToObj(this::getTopics).forEach((l) -> l.forEach((t) -> {
+                try {
+                    t.delete();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                    throw new IllegalStateException(e);
+                }
+            }));
+        } catch (IllegalStateException e) {
+            if (e.getCause() != null && e.getCause() instanceof SQLException ex) {
+                throw ex;
+            } else {
+                throw e;
+            }
+        }
     }
 
     @Override
