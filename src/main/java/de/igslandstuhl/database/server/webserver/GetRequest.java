@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import de.igslandstuhl.database.api.User;
 import de.igslandstuhl.database.server.resources.ResourceLocation;
 
 /**
@@ -77,6 +78,6 @@ public class GetRequest {
      * @see de.igslandstuhl.database.server.resources.ResourceLocation
      */
     public ResourceLocation toResourceLocation(String user) {
-        return WebResourceHandler.locationFromPath(path, user);
+        return WebResourceHandler.locationFromPath(path, User.getUser(user));
     }
 }

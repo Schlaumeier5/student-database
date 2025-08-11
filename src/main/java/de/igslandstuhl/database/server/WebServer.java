@@ -55,6 +55,12 @@ public class WebServer implements Runnable {
         SSLServerSocketFactory factory = sslContext.getServerSocketFactory();
         serverSocket = (SSLServerSocket) factory.createServerSocket(port);
     }
+    /**
+     * Constructs a test webserver without server socket
+     */
+    protected WebServer() {
+        this.serverSocket = null;
+    }
 
     class ClientHandler implements Runnable {
         private final SSLSocket clientSocket;

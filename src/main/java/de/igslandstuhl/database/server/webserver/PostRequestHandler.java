@@ -430,7 +430,7 @@ public class PostRequestHandler {
         }
         String email = student.getEmail(); // Email is the username for the student
 
-        return PostResponse.getResource(WebResourceHandler.locationFromPath(path, email), email);
+        return PostResponse.getResource(WebResourceHandler.locationFromPath(path, User.getUser(email)), email);
     }
     private PostResponse handleTeacherGetData(PostRequest request) {
         String path = request.getPath();
@@ -447,7 +447,7 @@ public class PostRequestHandler {
         Teacher teacher = Teacher.get(id);
 
         String email = teacher.getEmail(); // Email is the username for the teacher
-        return PostResponse.getResource(WebResourceHandler.locationFromPath(path, email), email);
+        return PostResponse.getResource(WebResourceHandler.locationFromPath(path, User.getUser(email)), email);
     }
     private PostResponse handleStudentList(PostRequest request) {
         String path = request.getPath();

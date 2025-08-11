@@ -46,15 +46,18 @@ public class AccessManager {
      * @return true if the user has access to the resource, false otherwise
      */
     public static boolean hasAccess(String user, ResourceLocation resource) {
+        return hasAccess(User.getUser(user), resource);
+    }
+    public static boolean hasAccess(User user, ResourceLocation resource) {
         if (Arrays.asList(PUBLIC_SPACES).contains(resource.namespace()) || Arrays.asList(PUBLIC_LOCATIONS).contains(resource.resource())) {
             return true;
         } else if (user != null) {
-            if (resource.namespace().equals(USER_SPACE) || resource.resource().startsWith("my")) {
+            if (resource.namespace().equals(USER_SPACE) || resource.resource().startsWith("my") && !(user == User.ANONYMOUS)) {
                 return true;
             } else if (resource.namespace().equals(TEACHER_SPACE)) {
-                return User.getUser(user).isTeacher() || User.getUser(user).isAdmin();
+                return user.isTeacher() || user.isAdmin();
             } else if (resource.namespace().equals(ADMIN_SPACE) || Arrays.asList(ADMIN_LOCATIONS).contains(resource.resource())) {
-                return User.getUser(user).isAdmin();
+                return user.isAdmin();
             } else {
                 return false;
             }

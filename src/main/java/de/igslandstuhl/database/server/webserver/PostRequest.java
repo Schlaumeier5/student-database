@@ -8,6 +8,7 @@ import java.util.Map;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import de.igslandstuhl.database.api.User;
 import de.igslandstuhl.database.server.resources.ResourceLocation;
 
 /**
@@ -160,6 +161,6 @@ public class PostRequest {
      * @return a ResourceLocation object representing the path of the POST request
      */
     public ResourceLocation toResourceLocation(String username) {
-        return de.igslandstuhl.database.server.webserver.WebResourceHandler.locationFromPath(path, username);
+        return de.igslandstuhl.database.server.webserver.WebResourceHandler.locationFromPath(path, User.getUser(username));
     }
 }
