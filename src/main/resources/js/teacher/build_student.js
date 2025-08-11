@@ -8,7 +8,7 @@ function createTaskList(tasks, labelText, onClick) {
   const list = document.createElement('ul');
   tasks.forEach(task => {
     const li = document.createElement('li');
-    li.textContent = `${task.number} ${task.name} (Niveau ${task.niveau}, Gesamtanteil: ${task.ratio * 100}%)`;
+    li.textContent = `${task.number} ${task.name} (Niveau ${task.niveau}, Gesamtanteil: ${Math.round(task.ratio * 10000) / 100}%)`;
     if (typeof onClick === 'function') {
       li.style.cursor = 'pointer';
       li.addEventListener('click', () => onClick(task, li));
