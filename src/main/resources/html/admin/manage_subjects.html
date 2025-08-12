@@ -8,18 +8,27 @@
     </head>
     <body>
         <section id="subjects">
-            <h1>Fächer verwalten</h1>
-            <form id="manage-subjects-form" method="post" action="/add-subject">
-                <label for="subject-name">Fachname:</label>
-                <input type="text" id="subject-name" name="name" required>
-                <button type="submit">Fach hinzufügen</button>
-            </form>
-            <div id="subject-list">
-                <h2>Vorhandene Fächer</h2>
-                <ul id="subjectList">
-                    <!-- Dynamically populated list of subjects -->
-                </ul>
-            </div>
+            <header>
+                <h1>Fächer verwalten</h1>
+            </header>
+            <main>
+                <section id="manage-subjects">
+                    <form id="manage-subjects-form" method="post" action="/add-subject">
+                        <label for="subject-name">Fachname:</label>
+                        <input type="text" id="subject-name" name="name" required>
+                        <button type="submit">Fach hinzufügen</button>
+                    </form>
+                </section>
+                <section id="subject-list">
+                    <h2>Vorhandene Fächer</h2>
+                    <ul id="subjectList">
+                        <!-- Dynamically populated list of subjects -->
+                    </ul>
+                </section>
+            </main>
+            <nav>
+                <a href="/dashboard"><button>Zurück zum Admin-Dashboard</button></a>
+            </nav>
         </section>
         <script>
             document.addEventListener('DOMContentLoaded', function() {
