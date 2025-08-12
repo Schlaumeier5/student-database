@@ -1,12 +1,18 @@
 let studentData = null;
 
+function decodeEntities(str) {
+  const txt = document.createElement("textarea");
+  txt.innerHTML = str;
+  return txt.value;
+}
+
 function createTaskList(tasks, labelText, onClick) {
   const label = document.createElement('h4');
   label.textContent = labelText;
   const list = document.createElement('ul');
   tasks.forEach(task => {
     const li = document.createElement('li');
-    li.textContent = `${task.number} ${task.name} (Niveau ${task.niveau}, Gesamtanteil: ${Math.round(task.ratio * 10000) / 100}%)`;
+    li.textContent = `${task.number} ${decodeEntities(task.name)} (Niveau ${task.niveau}, Gesamtanteil: ${Math.round(task.ratio * 10000) / 100}%)`;
     if (typeof onClick === 'function') {
       li.style.cursor = 'pointer';
       li.addEventListener('click', () => onClick(task, li));
