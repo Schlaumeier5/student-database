@@ -9,6 +9,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -27,6 +29,28 @@ import de.igslandstuhl.database.server.Server;
  * Helper class for managing resources in the application.
  */
 public class ResourceHelper {
+
+    /**
+     * Checks if a zip entry name is safe (no path traversal, not absolute).
+     */
+    private static boolean isSafeZipEntryName(String entryName) {
+        // Reject absolute paths
+        Path path = Paths.get(entryName).normalize();
+        if (path.isAbsolute()) {
+            return false;
+        }
+        // Reject entries containing ".." as a path segment
+        for (Path part : path) {
+            if (part.toString().equals("..")) {
+                return false;
+            }
+        }
+        // Reject entries starting with "/" or "\"
+        if (entryName.startsWith("/") || entryName.startsWith("\\")) {
+            return false;
+        }
+        return true;
+    }
 
     /**
      * For all elements of java.class.path get a Collection of resources Pattern
@@ -87,6 +111,10 @@ public class ResourceHelper {
         while (e.hasMoreElements()) {
             final ZipEntry ze = e.nextElement();
             final String fileName = ze.getName();
+            if (!isSafeZipEntryName(fileName)) {
+                // Optionally log or throw, here we skip unsafe entries
+                continue;
+            }
             final boolean accept = pattern.matcher(fileName).matches();
             if (accept) {
                 retval.add(fileName);
