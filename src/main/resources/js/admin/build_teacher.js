@@ -97,6 +97,7 @@ async function populateSubjectStudentList(event) {
           <td class="student-name">${student.name}</td>
           <td class="student-help">${student.help ? "Ja" : "Nein"}</td>
           <td class="student-experiment">${student.experiment ? "Ja" : "Nein"}</td>
+          <td class="student-partner">${student.partner ? "Ja" : "Nein"}</td>
           <td class="student-test">${student.test ? "Ja" : "Nein"}</td>
           <td class="student-action"><button onclick="viewStudent(${student.id})">Bearbeiten</button></td>
       `;
