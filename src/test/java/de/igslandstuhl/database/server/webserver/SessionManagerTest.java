@@ -29,10 +29,11 @@ public class SessionManagerTest {
     void testAddSessionUser() throws SQLException {
         Session session = sessionManager.getSession(sessionRequest);
         sessionManager.addSessionUser(session, "adminUser");
+        PreConditions.setupDatabase();
         PreConditions.addSampleAdmin();
         assertNotNull(sessionManager.getSessionUser(session));
         assertNotNull(sessionManager.getSessionUser(sessionRequest));
-        assertEquals(sessionManager.getSessionUser(sessionRequest), sessionManager.getSessionUser(session));
+        assertEquals("adminUser", sessionManager.getSessionUser(session).getUsername());
         assertTrue(sessionManager.getSessionUser(session).isAdmin());
     }
     @Test

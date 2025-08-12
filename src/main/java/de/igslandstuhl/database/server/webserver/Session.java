@@ -18,7 +18,7 @@ public class Session {
     public Session(String ipAddress, String userAgent, String acceptLanguage, boolean secureConnection) {
         this.ipAddress = ipAddress;
         this.userAgent = userAgent;
-        this.acceptLanguageLocale = Locale.forLanguageTag(acceptLanguage);
+        this.acceptLanguageLocale = acceptLanguage != null ? Locale.forLanguageTag(acceptLanguage) : null;
         this.loginTime = Instant.now();
         this.secureConnection = secureConnection;
         this.deviceType = detectDeviceType(userAgent);
