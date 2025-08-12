@@ -49,6 +49,13 @@ public class UserManager {
      * @param username  The username associated with the session.
      */
     public void addSession(String sessionId, String username) {
+        // Remove all previous sessions for this user (see #51)
+        if (sessionStore.values().contains(username)) {
+            sessionStore.keySet().stream()
+            .filter((k) -> sessionStore.get(k).equals(username))
+            .toList() // Convert to list to prevent ConcurrentModificationException
+            .forEach((k) -> sessionStore.remove(k));
+        }
         sessionStore.put(sessionId, username);
     }
 }
