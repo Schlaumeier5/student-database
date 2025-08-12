@@ -477,7 +477,8 @@ public class PostRequestHandler {
                 Set<SubjectRequest> subjectRequests = student.getCurrentRequests().keySet().contains(subjectId.intValue()) ? student.getCurrentRequests().get(subjectId.intValue()) : Set.of();
                 responseBuilder.append(", \"experiment\":").append(subjectRequests.stream().anyMatch(r -> r == SubjectRequest.EXPERIMENT))
                 .append(", \"help\":").append(subjectRequests.stream().anyMatch(r -> r == SubjectRequest.HELP))
-                .append(", \"test\":").append(subjectRequests.stream().anyMatch(r -> r == SubjectRequest.EXAM));
+                .append(", \"test\":").append(subjectRequests.stream().anyMatch(r -> r == SubjectRequest.EXAM))
+                .append(", \"partner\":").append(subjectRequests.stream().anyMatch(r -> r == SubjectRequest.PARTNER));
             }
             responseBuilder.append("}");
             if (i < students.size() - 1) {
