@@ -1,7 +1,9 @@
 package de.igslandstuhl.database.server;
 
 import java.io.*;
+import java.net.InetAddress;
 import java.net.URLDecoder;
+import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
@@ -21,7 +23,7 @@ import java.util.concurrent.Executors;
 
 import de.igslandstuhl.database.server.webserver.GetRequest;
 import de.igslandstuhl.database.server.webserver.GetResponse;
-import de.igslandstuhl.database.server.webserver.PostHeader;
+import de.igslandstuhl.database.server.webserver.HttpHeader;
 import de.igslandstuhl.database.server.webserver.PostRequest;
 import de.igslandstuhl.database.server.webserver.PostRequestHandler;
 import de.igslandstuhl.database.server.webserver.PostResponse;
@@ -36,6 +38,7 @@ public class WebServer implements Runnable {
     private final SSLServerSocket serverSocket;
     private final UserManager userManager = new UserManager();
     private final ExecutorService clientPool = Executors.newCachedThreadPool();
+    private final boolean secure = true;
 
     public UserManager getUserManager() {
         return userManager;
@@ -64,9 +67,17 @@ public class WebServer implements Runnable {
 
     class ClientHandler implements Runnable {
         private final SSLSocket clientSocket;
+        private final String clientIp;
 
         ClientHandler(SSLSocket socket) {
             this.clientSocket = socket;
+            InetAddress inetAddress;
+            try {
+                inetAddress = socket != null ? socket.getInetAddress() : InetAddress.getLocalHost();
+            } catch (UnknownHostException e) {
+                inetAddress = null;
+            }
+            clientIp = inetAddress != null ? inetAddress.getHostAddress() : null;
         }
 
         @Override
@@ -106,14 +117,14 @@ public class WebServer implements Runnable {
 
         void handleGet(String headerString, PrintStream out) {
             String user = Server.getInstance().getWebServer().getUserManager().getSessionUser(headerString);
-            GetRequest get = new GetRequest(headerString);
+            GetRequest get = new GetRequest(headerString, clientIp, secure);
             GetResponse response = GetResponse.getResource(get.toResourceLocation(user), user);
             response.respond(out);
         }
 
         void handlePost(String headerString, InputStream in, PrintStream out) throws IOException {
             Map<String, String> headerMap = parseHeaders(headerString);
-            PostHeader postHeader = new PostHeader(headerString);
+            HttpHeader postHeader = new HttpHeader(headerString);
             int contentLength = headerMap.containsKey("content-length") ? Integer.parseInt(headerMap.get("content-length")) : 0;
             Charset bodyCharset = determineCharset(headerMap.get("content-type"));
             String body = null;
@@ -122,7 +133,7 @@ public class WebServer implements Runnable {
                 String raw = new String(bodyBytes, bodyCharset);
                 body = URLDecoder.decode(raw, bodyCharset.name());
             }
-            PostRequest parsedRequest = new PostRequest(postHeader, body);
+            PostRequest parsedRequest = new PostRequest(postHeader, body, clientIp, secure);
             PostResponse response = PostRequestHandler.getInstance().handlePostRequest(parsedRequest);
             response.respond(out);
         }

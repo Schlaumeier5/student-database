@@ -1,8 +1,6 @@
 package de.igslandstuhl.database.server.webserver;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import com.google.gson.Gson;
@@ -16,7 +14,7 @@ import de.igslandstuhl.database.server.resources.ResourceLocation;
  * This class is used to parse the request line and body of a POST request,
  * extracting the path, parameters, and context.
  */
-public class PostRequest {
+public class PostRequest implements HttpRequest {
     /**
      * Represents the path of the POST request.
      * This is the part of the request line that specifies the resource being requested.
@@ -43,54 +41,33 @@ public class PostRequest {
      */
     private final Cookie[] cookies;
 
+    private final String ipAddress;
+    private final String userAgent;
+    private final String acceptLanguage;
+    private final boolean secureConnection;
+
     /**
      * Constructs a new PostRequest with the given header and body.
      * @param header the header of the POST request
      * @param body the body of the POST request
      */
-    public PostRequest(String header, String body) {
-        // Example: "POST /login HTTP/1.1"
-        String[] parts = header.split(" ");
-        this.path = parts[1];
-        this.body = body != null ? body : "";
-        
-        int contentLength = 0;
-        Cookie[] cookies = new Cookie[0];
-        for (String line : header.split("\n")) {
-            if (line.startsWith("Content-Length:")) {
-                contentLength = Integer.parseInt(line.split(":")[1].trim());
-            } else if (line.startsWith("Cookie:")) {
-                String[] cookieData = line.substring(7).split(";");
-                List<Cookie> cookieList = new ArrayList<>();
-                for (String cookie : cookieData) {
-                    String[] keyValue = cookie.trim().split("=");
-                    if (keyValue.length == 2) {
-                        cookieList.add(new Cookie(keyValue[0].trim(), keyValue[1].trim()));
-                    }
-                }
-                cookies = cookieList.toArray(new Cookie[0]);
-            }
-        }
-        this.cookies = cookies;
-        this.contentLength = contentLength;
-
-        String[] extPts = path.split("\\.");
-        if (extPts.length > 1) {
-            context = extPts[1];
-        } else {
-            context = "html";
-        }
+    public PostRequest(String header, String body, String ipAddress, boolean secureConnection) {
+        this(new HttpHeader(header), body, ipAddress, secureConnection);
     }
     /**
      * Constructs a new PostRequest with the given header and body.
      * @param header the header of the POST request
      * @param body the body of the POST request
      */
-    public PostRequest(PostHeader header, String body) {
+    public PostRequest(HttpHeader header, String body, String ipAddress, boolean secureConnection) {
         this.path = header.getPath();
         this.body = body != null ? body : "";
         this.contentLength = header.getContentLength();
         this.cookies = header.getCookies();
+        this.ipAddress = ipAddress;
+        this.userAgent = header.getUserAgent();
+        this.acceptLanguage = header.getAcceptLanguage();
+        this.secureConnection = secureConnection;
         
         String[] extPts = path.split("\\.");
         if (extPts.length > 1) {
@@ -100,29 +77,37 @@ public class PostRequest {
         }
     }
 
-    /**
-     * Returns the path of the POST request.
-     * This is the part of the request line that specifies the resource being requested.
-     * @return the path of the POST request
-     */
+    @Override
     public String getPath() {
         return path;
     }
-    /**
-     * Returns the context of the POST request.
-     * This is derived from the path, typically indicating the type of resource (e.g., "html", "json").
-     * @return the context of the POST request
-     */
+    @Override
     public String getContext() {
         return context;
     }
-    /**
-     * Returns the content length of the POST request.
-     * This is used to determine the size of the request body.
-     * @return the content length of the POST request
-     */
+    @Override
     public int getContentLength() {
         return contentLength;
+    }
+    @Override
+    public Cookie[] getCookies() {
+        return cookies;
+    }
+    @Override
+    public String getIP() {
+        return ipAddress;
+    }
+    @Override
+    public String getUserAgent() {
+        return userAgent;
+    }
+    @Override
+    public String getAcceptLanguage() {
+        return acceptLanguage;
+    }
+    @Override
+    public boolean isSecureConnection() {
+        return secureConnection;
     }
 
     public Map<String, String> getFormData() {
@@ -151,9 +136,6 @@ public class PostRequest {
         java.lang.reflect.Type mapType = new TypeToken<Map<String, Object>>(){}.getType();
         Map<String, Object> json = gson.fromJson(body, mapType);
         return json;
-    }
-    public Cookie[] getCookies() {
-        return cookies;
     }
 
     /**
