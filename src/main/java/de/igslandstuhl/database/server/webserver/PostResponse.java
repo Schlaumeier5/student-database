@@ -3,6 +3,7 @@ package de.igslandstuhl.database.server.webserver;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
 
+import de.igslandstuhl.database.server.Server;
 import de.igslandstuhl.database.server.resources.ResourceLocation;
 
 /**
@@ -37,6 +38,8 @@ public class PostResponse {
 
     private final String[] headers;
 
+    private final PostRequest request;
+
     /**
      * Constructs a PostResponse with the given status code, body, and content type.
      * This constructor is used when no cookie is needed in the response.
@@ -45,12 +48,8 @@ public class PostResponse {
      * @param body The body of the response.
      * @param contentType The content type of the response.
      */
-    private PostResponse(Status statusCode, String body, ContentType contentType) {
-        this.statusCode = statusCode;
-        this.body = body;
-        this.contentType = contentType;
-        this.cookie = null;
-        this.headers = new String[0]; // Initialize headers as an empty array
+    private PostResponse(Status statusCode, String body, ContentType contentType, PostRequest request) {
+        this(statusCode, body, contentType, request, Server.getInstance().getWebServer().getSessionManager().getSession(request).createSessionCookie());
     }
     /**
      * Constructs a PostResponse with the given status code, body, content type, and cookie.
@@ -61,12 +60,13 @@ public class PostResponse {
      * @param contentType The content type of the response.
      * @param cookie The cookie to be set in the response, or null if no cookie is needed.
      */
-    private PostResponse(Status statusCode, String body, ContentType contentType, Cookie cookie) {
+    private PostResponse(Status statusCode, String body, ContentType contentType, PostRequest request, Cookie cookie) {
         this.statusCode = statusCode;
         this.body = body;
         this.contentType = contentType;
         this.cookie = cookie;
         this.headers = new String[0]; // Initialize headers as an empty array
+        this.request = request;
     }
     /**
      * Constructs a PostResponse with the given status code, body, content type, and headers.
@@ -77,11 +77,12 @@ public class PostResponse {
      * @param contentType The content type of the response.
      * @param headers Additional headers to be included in the response.
      */
-    private PostResponse(Status statusCode, String body, ContentType contentType, String[] headers) {
+    private PostResponse(Status statusCode, String body, ContentType contentType, PostRequest request, String[] headers) {
         this.statusCode = statusCode;
         this.body = body;
         this.contentType = contentType;
         this.cookie = null; // No cookie in this constructor
+        this.request = request;
         this.headers = headers != null ? headers : new String[0]; // Initialize headers, ensuring it's not null
     }
 
@@ -110,6 +111,10 @@ public class PostResponse {
         out.flush();
     }
 
+    public PostRequest getRequest() {
+        return request;
+    }
+
     /**
      * Returns a successful response for a POST request with the given body and content type.
      * This is used when the request is processed successfully and a response body is needed.
@@ -118,8 +123,8 @@ public class PostResponse {
      * @param contentType The content type of the response.
      * @return A PostResponse object representing the successful response.
      */
-    public static PostResponse ok(String body, ContentType contentType) {
-        return new PostResponse(Status.OK, body, contentType);
+    public static PostResponse ok(String body, ContentType contentType, PostRequest request) {
+        return new PostResponse(Status.OK, body, contentType, request);
     }
     /**
      * Returns a successful response for a POST request with the given body, content type, and cookie.
@@ -130,8 +135,8 @@ public class PostResponse {
      * @param cookie The cookie to be set in the response, or null if no cookie is needed.
      * @return A PostResponse object representing the successful response with a cookie.
      */
-    public static PostResponse ok(String body, ContentType contentType, Cookie cookie) {
-        return new PostResponse(Status.OK, body, contentType, cookie);
+    public static PostResponse ok(String body, ContentType contentType, PostRequest request, Cookie cookie) {
+        return new PostResponse(Status.OK, body, contentType, request, cookie);
     }
     /**
      * Returns a response for a POST request for the given resource that can be accessed via GET (for example, a teacher can do a post request to student GET data with a specific ID).
@@ -139,20 +144,20 @@ public class PostResponse {
      * @param user the user who made the request
      * @return the PostResponse object
      */
-    public static PostResponse getResource(ResourceLocation resourceLocation, String user) {
+    public static PostResponse getResource(ResourceLocation resourceLocation, String user, PostRequest request) {
         try {
             if (AccessManager.hasAccess(user, resourceLocation)) {
-                return new PostResponse(Status.OK, GetResponse.getResource(resourceLocation, user).getResponseBody(), ContentType.ofResourceLocation(resourceLocation));
+                return new PostResponse(Status.OK, GetResponse.getResource(resourceLocation, user).getResponseBody(), ContentType.ofResourceLocation(resourceLocation), request);
             } else {
-                return unauthorized("You have to be logged in to access this resource.");
+                return unauthorized("You have to be logged in to access this resource.", request);
             }
         } catch (NoWebResourceException e) {
-            return forbidden("You do not have permission to access this resource.");
+            return forbidden("You do not have permission to access this resource.", request);
         } catch (FileNotFoundException e) {
-            return notFound("The requested resource was not found: " + resourceLocation);
+            return notFound("The requested resource was not found: " + resourceLocation, request);
         } catch (Exception e) {
             e.printStackTrace();
-            return internalServerError("An error occurred while processing your request.");
+            return internalServerError("An error occurred while processing your request.", request);
         }
     }
 
@@ -162,8 +167,8 @@ public class PostResponse {
      * @param message The error message to include in the response.
      * @return A PostResponse object representing the bad request response.
      */
-    public static PostResponse badRequest(String message) {
-        return new PostResponse(Status.BAD_REQUEST, message, ContentType.TEXT_PLAIN);
+    public static PostResponse badRequest(String message, PostRequest request) {
+        return new PostResponse(Status.BAD_REQUEST, message, ContentType.TEXT_PLAIN, request);
     }
 
     /**
@@ -172,8 +177,8 @@ public class PostResponse {
      * @param message The error message to include in the response.
      * @return A PostResponse object representing the unauthorized response.
      */
-    public static PostResponse unauthorized(String message) {
-        return new PostResponse(Status.UNAUTHORIZED, message, ContentType.TEXT_PLAIN);
+    public static PostResponse unauthorized(String message, PostRequest request) {
+        return new PostResponse(Status.UNAUTHORIZED, message, ContentType.TEXT_PLAIN, request);
     }
 
     /**
@@ -182,8 +187,8 @@ public class PostResponse {
      * @param message The error message to include in the response.
      * @return A PostResponse object representing the internal server error response.
      */
-    public static PostResponse internalServerError(String message) {
-        return new PostResponse(Status.INTERNAL_SERVER_ERROR, message, ContentType.TEXT_PLAIN);
+    public static PostResponse internalServerError(String message, PostRequest request) {
+        return new PostResponse(Status.INTERNAL_SERVER_ERROR, message, ContentType.TEXT_PLAIN, request);
     }
 
     /**
@@ -192,8 +197,8 @@ public class PostResponse {
      * @param message The error message to include in the response.
      * @return A PostResponse object representing the not found response.
      */
-    public static PostResponse notFound(String message) {
-        return new PostResponse(Status.NOT_FOUND, message, ContentType.TEXT_PLAIN);
+    public static PostResponse notFound(String message, PostRequest request) {
+        return new PostResponse(Status.NOT_FOUND, message, ContentType.TEXT_PLAIN, request);
     }
 
     /**
@@ -202,11 +207,11 @@ public class PostResponse {
      * @param message The error message to include in the response.
      * @return A PostResponse object representing the forbidden response.
      */
-    public static PostResponse forbidden(String message) {
-        return new PostResponse(Status.FORBIDDEN, message, ContentType.TEXT_PLAIN);
+    public static PostResponse forbidden(String message, PostRequest request) {
+        return new PostResponse(Status.FORBIDDEN, message, ContentType.TEXT_PLAIN, request);
     }
-    public static PostResponse redirect(String location) {
-        return new PostResponse(Status.FOUND, "", ContentType.TEXT_PLAIN, new String[] {
+    public static PostResponse redirect(String location, PostRequest request) {
+        return new PostResponse(Status.FOUND, "", ContentType.TEXT_PLAIN, request, new String[] {
             "Location: " + location
         });
     }

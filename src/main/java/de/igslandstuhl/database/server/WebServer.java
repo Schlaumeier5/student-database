@@ -40,7 +40,7 @@ public class WebServer implements Runnable {
     private final ExecutorService clientPool = Executors.newCachedThreadPool();
     private final boolean secure = true;
 
-    public SessionManager getUserManager() {
+    public SessionManager getSessionManager() {
         return userManager;
     }
 
@@ -116,8 +116,8 @@ public class WebServer implements Runnable {
         }
 
         void handleGet(String headerString, PrintStream out) {
-            String user = Server.getInstance().getWebServer().getUserManager().getSessionUser(headerString);
             GetRequest get = new GetRequest(headerString, clientIp, secure);
+            String user = Server.getInstance().getWebServer().getSessionManager().getSessionUser(get).getUsername();
             GetResponse response = GetResponse.getResource(get.toResourceLocation(user), user);
             response.respond(out);
         }

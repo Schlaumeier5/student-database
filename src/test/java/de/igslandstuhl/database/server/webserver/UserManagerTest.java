@@ -24,12 +24,12 @@ public class UserManagerTest {
     }
     @Test
     void testAddSessionUser() {
-        userManager.addSession("sessionId", "testUser");
+        userManager.addSessionUser("sessionId", "testUser");
         assertEquals("testUser", userManager.getSessionUser(sessionRequest));
     }
     @Test
     void testSessionRequest() {
-        userManager.addSession("sessionId", "testUser");
+        userManager.addSessionUser("sessionId", "testUser");
         assertEquals("testUser", userManager.getSessionUser(sessionRequest));
         assertNull(userManager.getSessionUser(requestWithoutSession));
     }

@@ -2,44 +2,43 @@ package de.igslandstuhl.database.server.webserver;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
+
+import de.igslandstuhl.database.api.User;
 
 public class SessionManager {
+    private static Map<UUID,Session> sessionStore = new HashMap<>();
     /**
      * A map to store session IDs and their associated usernames.
      * This is a simple in-memory session store.
      */
-    private static Map<String, String> sessionStore = new HashMap<>();
-    /**
-     * Retrieves the username associated with the session from the request headers.
-     * It searches for a cookie named "session" and checks if it exists in the session store.
-     *
-     * @param request The raw HTTP request string.
-     * @return The username associated with the session, or null if no valid session is found.
-     */
-    public String getSessionUser(String request) {
-        // Search for cookie header
-        String[] lines = request.split("\n");
-        for (String line : lines) {
-            if (line.startsWith("Cookie:")) {
-                String[] cookies = line.substring(7).split("; ");
-                for (String cookie : cookies) {
-                    String[] keyValue = cookie.split("=");
-                    if (keyValue.length == 2 && keyValue[0].trim().equals("session")) {
-                        return sessionStore.get(keyValue[1].trim()); // Überprüfe, ob die Session existiert
-                    }
-                }
-            }
-        }
-        return null; // No valid session
+    private static Map<Session, String> sessionUsers = new HashMap<>();
+
+    public Session getSession(UUID sessionUUID) {
+        return sessionStore.get(sessionUUID);
     }
-    public String getSessionUser(PostRequest request) {
+    public Session getSession(HttpRequest request) {
         // Search for cookie header
         for (Cookie cookie : request.getCookies()) {
             if (cookie.getName().equals("session")) {
-                return sessionStore.get(cookie.getValue()); // Check if the session exists
+                Session session = sessionStore.get(UUID.fromString(cookie.getValue()));
+                // Check if the session exists
+                if (session != null) {
+                    return session;
+                }
             }
         }
-        return null; // No valid session
+        // Session does not exist yet
+        Session session = new Session(request);
+        sessionStore.put(session.getUUID(), session);
+        return session;
+    }
+    public User getSessionUser(Session session) {
+        return User.getUser(sessionUsers.get(session));
+    }
+
+    public User getSessionUser(HttpRequest request) {
+        return getSessionUser(getSession(request));
     }
     /**
      * Adds a session to the session store.
@@ -48,14 +47,14 @@ public class SessionManager {
      * @param sessionId The session ID to be added.
      * @param username  The username associated with the session.
      */
-    public void addSession(String sessionId, String username) {
+    public void addSessionUser(Session session, String username) {
         // Remove all previous sessions for this user (see #51)
-        if (sessionStore.values().contains(username)) {
-            sessionStore.keySet().stream()
-            .filter((k) -> sessionStore.get(k).equals(username))
+        if (sessionUsers.values().contains(username)) {
+            sessionUsers.keySet().stream()
+            .filter((k) -> sessionUsers.get(k).equals(username))
             .toList() // Convert to list to prevent ConcurrentModificationException
-            .forEach((k) -> sessionStore.remove(k));
+            .forEach((k) -> sessionUsers.remove(k));
         }
-        sessionStore.put(sessionId, username);
+        sessionUsers.put(session, username);
     }
 }
