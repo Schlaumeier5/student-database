@@ -3,7 +3,7 @@ package de.igslandstuhl.database.server.webserver;
 import java.util.HashMap;
 import java.util.Map;
 
-public class UserManager {
+public class SessionManager {
     /**
      * A map to store session IDs and their associated usernames.
      * This is a simple in-memory session store.

@@ -8,12 +8,12 @@ import org.junit.jupiter.api.Test;
 
 public class UserManagerTest {
     private static final String LOCALHOST = "127.0.0.1";
-    UserManager userManager;
+    SessionManager userManager;
     PostRequest sessionRequest;
     PostRequest requestWithoutSession;
     @BeforeEach
     void setup() {
-        userManager = new UserManager();
+        userManager = new SessionManager();
         sessionRequest = new PostRequest("POST /student-data HTTP/1.1\r\n" + //
                         "Cookie: test=test;session=sessionId;other=value", null, LOCALHOST, true);
         requestWithoutSession = new PostRequest("POST /login HTTP/1.1", null, LOCALHOST, true);

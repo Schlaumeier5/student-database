@@ -27,7 +27,7 @@ import de.igslandstuhl.database.server.webserver.HttpHeader;
 import de.igslandstuhl.database.server.webserver.PostRequest;
 import de.igslandstuhl.database.server.webserver.PostRequestHandler;
 import de.igslandstuhl.database.server.webserver.PostResponse;
-import de.igslandstuhl.database.server.webserver.UserManager;
+import de.igslandstuhl.database.server.webserver.SessionManager;
 
 /**
  * A simple HTTPS web server that handles various requests related to student data.
@@ -36,11 +36,11 @@ import de.igslandstuhl.database.server.webserver.UserManager;
 public class WebServer implements Runnable {
     private volatile boolean running;
     private final SSLServerSocket serverSocket;
-    private final UserManager userManager = new UserManager();
+    private final SessionManager userManager = new SessionManager();
     private final ExecutorService clientPool = Executors.newCachedThreadPool();
     private final boolean secure = true;
 
-    public UserManager getUserManager() {
+    public SessionManager getUserManager() {
         return userManager;
     }
 
