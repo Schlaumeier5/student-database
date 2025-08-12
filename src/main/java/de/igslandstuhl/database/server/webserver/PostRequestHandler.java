@@ -9,6 +9,9 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import org.owasp.html.PolicyFactory;
+import org.owasp.html.Sanitizers;
+
 import de.igslandstuhl.database.Application;
 import de.igslandstuhl.database.api.Room;
 import de.igslandstuhl.database.api.SchoolClass;
@@ -163,26 +166,13 @@ public class PostRequestHandler {
         }
                 ;
         if (sanitize) {
-            // Sanitize the input to prevent XSS attacks
-            webInput = webInput.replaceAll("<", "&lt;")
-                    .replaceAll(">", "&gt;")
-                    .replaceAll("\"", "&quot;")
-                    .replaceAll("'", "&#39;")
-                    .replaceAll("&", "&amp;");
-            // Remove any script tags
-            webInput = webInput.replaceAll("(?i)<script.*?>.*?</script>", "")
-                    .replaceAll("(?i)<script.*?/>", "")
-                    .replaceAll("(?i)<script.*?>", "")
-                    .replaceAll("(?i)</script>", "");
-            // Remove any SQL injection attempts
-            webInput = webInput.replaceAll("(?i)select", "")
-                    .replaceAll("(?i)insert", "")
-                    .replaceAll("(?i)update", "")
-                    .replaceAll("(?i)delete", "")
-                    .replaceAll("(?i)drop", "")
-                    .replaceAll("(?i)union", "")
-                    .replaceAll("(?i)exec", "")
-                    .replaceAll("(?i)execute", "");
+            // Sanitize HTML to prevent XSS attacks
+            PolicyFactory sanitizer = Sanitizers.FORMATTING
+                    .and(Sanitizers.BLOCKS)
+                    .and(Sanitizers.LINKS)
+                    .and(Sanitizers.STYLES);
+
+            webInput = sanitizer.sanitize(webInput);
         }
         return webInput;
     }
