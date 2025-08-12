@@ -28,4 +28,7 @@ public class PreConditions {
     public static void addSampleClass() throws SQLException {
         SchoolClass.addClass("5a", 5);
     }
+    public static void addSampleAdmin() throws SQLException {
+        Admin.create("adminUser", "adminPass");
+    }
 }
