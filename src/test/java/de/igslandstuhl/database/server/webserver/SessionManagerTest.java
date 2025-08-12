@@ -20,7 +20,7 @@ public class SessionManagerTest {
     PostRequest requestWithoutSession;
     @BeforeEach
     void setup() {
-        sessionManager = new SessionManager();
+        sessionManager = new SessionManager(Integer.MAX_VALUE, Integer.MAX_VALUE);
         sessionRequest = new PostRequest("POST /student-data HTTP/1.1\r\n" + //
                         "Cookie: test=test;session=" + UUID.randomUUID().toString() + ";other=value", null, LOCALHOST, true);
         requestWithoutSession = new PostRequest("POST /login HTTP/1.1", null, LOCALHOST, true);

@@ -34,9 +34,12 @@ import de.igslandstuhl.database.server.webserver.SessionManager;
  * It supports GET and POST requests for login, subject requests, current topics, tasks, and room updates.
  */
 public class WebServer implements Runnable {
+    public static final int SESSION_DURATION = 21600; // six hours
+    public static final int MAXIMUM_INACTIVITY_DURATION = 60; // An hour
+
     private volatile boolean running;
     private final SSLServerSocket serverSocket;
-    private final SessionManager userManager = new SessionManager();
+    private final SessionManager userManager = new SessionManager(SESSION_DURATION, MAXIMUM_INACTIVITY_DURATION);
     private final ExecutorService clientPool = Executors.newCachedThreadPool();
     private final boolean secure = true;
 
@@ -116,9 +119,15 @@ public class WebServer implements Runnable {
         }
 
         void handleGet(String headerString, PrintStream out) {
+            SessionManager sessionManager = Server.getInstance().getWebServer().getSessionManager();
             GetRequest get = new GetRequest(headerString, clientIp, secure);
-            String user = Server.getInstance().getWebServer().getSessionManager().getSessionUser(get).getUsername();
-            GetResponse response = GetResponse.getResource(get.toResourceLocation(user), user);
+            GetResponse response;
+            if (!sessionManager.validateSession(get)) {
+                response = GetResponse.internalServerError();
+            } else {
+                String user = sessionManager.getSessionUser(get).getUsername();
+                response = GetResponse.getResource(get.toResourceLocation(user), user);
+            }
             response.respond(out);
         }
 
@@ -134,7 +143,7 @@ public class WebServer implements Runnable {
                 body = URLDecoder.decode(raw, bodyCharset.name());
             }
             PostRequest parsedRequest = new PostRequest(postHeader, body, clientIp, secure);
-            PostResponse response = PostRequestHandler.getInstance().handlePostRequest(parsedRequest);
+            PostResponse response = Server.getInstance().getWebServer().getSessionManager().validateSession(parsedRequest) ? PostRequestHandler.getInstance().handlePostRequest(parsedRequest) : PostResponse.badRequest("Bad request: session manipulation", parsedRequest);
             response.respond(out);
         }
 
