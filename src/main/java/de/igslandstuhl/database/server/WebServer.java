@@ -35,7 +35,7 @@ import de.igslandstuhl.database.server.webserver.SessionManager;
  */
 public class WebServer implements Runnable {
     public static final int SESSION_DURATION = 21600; // six hours
-    public static final int MAXIMUM_INACTIVITY_DURATION = 60; // An hour
+    public static final int MAXIMUM_INACTIVITY_DURATION = 3600; // An hour
 
     private volatile boolean running;
     private final SSLServerSocket serverSocket;

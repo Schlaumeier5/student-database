@@ -63,6 +63,7 @@
                     a.click();
                     document.body.removeChild(a);
                     URL.revokeObjectURL(url);
+                    window.location.reload()
                 } else if (response.status === 401) {
                     alert("Nicht autorisiert! Bitte melden Sie sich an.");
                     window.location.href = "/login";

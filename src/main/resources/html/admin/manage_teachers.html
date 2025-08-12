@@ -79,6 +79,7 @@
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
+                window.location.reload()
             } else if (response.status === 400) {
                 alert('Invalid CSV format.');
             } else if (response.status == 401) {
