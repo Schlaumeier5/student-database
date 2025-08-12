@@ -8,10 +8,11 @@ import org.junit.jupiter.api.Test;
 import de.igslandstuhl.database.server.resources.ResourceLocation;
 
 public class GetRequestTest {
+    private static final String LOCALHOST = "127.0.0.1";
     GetRequest validRequest;
     @BeforeEach
     void initRequest() {
-        validRequest = new GetRequest("GET /login HTTP/1.1");
+        validRequest = new GetRequest("GET /login HTTP/1.1", LOCALHOST, true);
     }
     @Test
     void testConstructorThrows() {
@@ -22,13 +23,13 @@ public class GetRequestTest {
             "GET /login"
         };
         for (String rqString : invalidRequests) {
-            assertThrows(IllegalArgumentException.class, () -> new GetRequest(rqString));
+            assertThrows(IllegalArgumentException.class, () -> new GetRequest(rqString, LOCALHOST, true));
         }
     }
     @Test
     void testIsValid() {
         assertTrue(validRequest::isValid);
-        assertFalse(new GetRequest("GET /test.sql HTTP/1.1")::isValid);
+        assertFalse(new GetRequest("GET /test.sql HTTP/1.1", LOCALHOST, true)::isValid);
     }
 
     @Test

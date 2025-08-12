@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import com.google.gson.JsonSyntaxException;
 
 public class PostRequestTest {
+    private static final String LOCALHOST = "127.0.0.1";
     PostRequest postRequest1;
     PostRequest postRequest2;
     PostRequest postRequestJson;
@@ -23,19 +24,19 @@ public class PostRequestTest {
                         "POST /login HTTP/1.1\r\n" + //
                         "Content-Length: 37\r\n" + //
                         "Cookie:test-key=test-value", 
-                        "username=adminUser&password=adminPass");
+                        "username=adminUser&password=adminPass", LOCALHOST, true);
         postRequest2 = new PostRequest(
-                        new PostHeader("POST /login HTTP/1.1\r\n" + //
+                        new HttpHeader("POST /login HTTP/1.1\r\n" + //
                         "Content-Length: 37\r\n" + //
                         "Cookie:test-key=test-value;other=value"), 
-                        "username=adminUser&password=adminPass");
+                        "username=adminUser&password=adminPass", LOCALHOST, true);
         postRequestJson = new PostRequest(
-                        new PostHeader("POST /student-data HTTP/1.1\r\n" + //
+                        new HttpHeader("POST /student-data HTTP/1.1\r\n" + //
                         "Content-Length: 9\r\n" + //
                         "Cookie:test-key=test-value"), 
                         "{" + //
                             "\"id\": 0" + //
-                        "}");
+                        "}", LOCALHOST, true);
     }
     @Test
     void testGetBodyAsString() {

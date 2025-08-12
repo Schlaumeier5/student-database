@@ -6,11 +6,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class PostHeaderTest {
-    PostHeader postHeader;
+public class HttpHeaderTest {
+    HttpHeader postHeader;
     @BeforeEach
     void initPostHeader() {
-        postHeader = new PostHeader("POST /login HTTP/1.1\r\nContent-Length: 45\r\nCookie:test-key=test-value");
+        postHeader = new HttpHeader("POST /login HTTP/1.1\r\nContent-Length: 45\r\nCookie:test-key=test-value");
     }
 
     @Test

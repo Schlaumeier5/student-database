@@ -12,7 +12,7 @@ import de.igslandstuhl.database.server.resources.ResourceLocation;
  * It parses the request string to extract the path, query parameters, and context.
  * The context is determined by the file extension of the requested resource.
  */
-public class GetRequest {
+public class GetRequest implements HttpRequest {
     /**
      * Valid contexts for web resources.
      * These contexts are used to determine the type of resource being requested.
@@ -34,19 +34,26 @@ public class GetRequest {
      */
     private final String context;
 
+    private final int contentLength;
+    private final Cookie[] cookies;
+    private final String ip;
+    private final String userAgent;
+    private final String acceptLanguage;
+    private final boolean secureConnection;
+
     /**
      * Constructs a new GetRequest from the given request string.
      * @param request the request string to parse
      */
-    public GetRequest(String request) {
+    public GetRequest(String request, String ip, boolean secureConnection) {
         if (!request.startsWith("GET") || !request.contains("HTTP/1.1")){
             throw new IllegalArgumentException();
         }
-        String [] lines = request.split("\n");
+        HttpHeader header = new HttpHeader(request);
 
-        String url = lines[0].split(" ")[1];
+        String url = header.getPath();
         String[] urlParts = url.split("\\?");
-        path = urlParts[0];
+        this.path = urlParts[0];
         if (urlParts.length > 1) {
             String[] arg_pairs = urlParts[1].split("&");
             for (String arg: arg_pairs) {
@@ -56,10 +63,17 @@ public class GetRequest {
         }
         String[] extPts = path.split("\\.");
         if (extPts.length > 1) {
-            context = extPts[1];
+            this.context = extPts[1];
         } else {
-            context = "html";
+            this.context = "html";
         }
+
+        this.contentLength = 0;
+        this.ip = ip;
+        this.userAgent = header.getUserAgent();
+        this.acceptLanguage = header.getAcceptLanguage();
+        this.secureConnection = secureConnection;
+        this.cookies = header.getCookies();
     }
 
     /**
@@ -80,4 +94,38 @@ public class GetRequest {
     public ResourceLocation toResourceLocation(String user) {
         return WebResourceHandler.locationFromPath(path, User.getUser(user));
     }
+
+    @Override
+    public String getPath() {
+        return path;
+    }
+    @Override
+    public String getContext() {
+        return context;
+    }
+    @Override
+    public int getContentLength() {
+        return contentLength;
+    }
+    @Override
+    public Cookie[] getCookies() {
+        return cookies;
+    }
+    @Override
+    public String getIP() {
+        return ip;
+    }
+    @Override
+    public String getUserAgent() {
+        return userAgent;
+    }
+    @Override
+    public String getAcceptLanguage() {
+        return acceptLanguage;
+    }
+    @Override
+    public boolean isSecureConnection() {
+        return secureConnection;
+    }
+    
 }

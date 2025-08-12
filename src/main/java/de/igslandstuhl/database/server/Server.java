@@ -84,7 +84,7 @@ public final class Server implements AutoCloseable {
             String keystorePath = Application.getInstance().runsWebServer() ? Application.getInstance().getOptionSafe("keystore", "keys/web/keystore.jks") : null;
             String keystorePassword = Application.getInstance().runsWebServer() ? Application.getInstance().getOptionSafe("keystore-password", "changeit") : null;
             int port = 443;
-            webServer = Application.getInstance().runsWebServer() ? new WebServer(port, keystorePath, keystorePassword) : null;
+            webServer = Application.getInstance().runsWebServer() ? new WebServer(port, keystorePath, keystorePassword) : new WebServer();
         } catch (Exception e) {
             throw new IllegalStateException("Server failed on start", e);
         }

@@ -1,7 +1,9 @@
 package de.igslandstuhl.database.server;
 
 import java.io.*;
+import java.net.InetAddress;
 import java.net.URLDecoder;
+import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
@@ -21,23 +23,27 @@ import java.util.concurrent.Executors;
 
 import de.igslandstuhl.database.server.webserver.GetRequest;
 import de.igslandstuhl.database.server.webserver.GetResponse;
-import de.igslandstuhl.database.server.webserver.PostHeader;
+import de.igslandstuhl.database.server.webserver.HttpHeader;
 import de.igslandstuhl.database.server.webserver.PostRequest;
 import de.igslandstuhl.database.server.webserver.PostRequestHandler;
 import de.igslandstuhl.database.server.webserver.PostResponse;
-import de.igslandstuhl.database.server.webserver.UserManager;
+import de.igslandstuhl.database.server.webserver.SessionManager;
 
 /**
  * A simple HTTPS web server that handles various requests related to student data.
  * It supports GET and POST requests for login, subject requests, current topics, tasks, and room updates.
  */
 public class WebServer implements Runnable {
+    public static final int SESSION_DURATION = 21600; // six hours
+    public static final int MAXIMUM_INACTIVITY_DURATION = 60; // An hour
+
     private volatile boolean running;
     private final SSLServerSocket serverSocket;
-    private final UserManager userManager = new UserManager();
+    private final SessionManager userManager = new SessionManager(SESSION_DURATION, MAXIMUM_INACTIVITY_DURATION);
     private final ExecutorService clientPool = Executors.newCachedThreadPool();
+    private final boolean secure = true;
 
-    public UserManager getUserManager() {
+    public SessionManager getSessionManager() {
         return userManager;
     }
 
@@ -64,9 +70,17 @@ public class WebServer implements Runnable {
 
     class ClientHandler implements Runnable {
         private final SSLSocket clientSocket;
+        private final String clientIp;
 
         ClientHandler(SSLSocket socket) {
             this.clientSocket = socket;
+            InetAddress inetAddress;
+            try {
+                inetAddress = socket != null ? socket.getInetAddress() : InetAddress.getLocalHost();
+            } catch (UnknownHostException e) {
+                inetAddress = null;
+            }
+            clientIp = inetAddress != null ? inetAddress.getHostAddress() : null;
         }
 
         @Override
@@ -105,15 +119,21 @@ public class WebServer implements Runnable {
         }
 
         void handleGet(String headerString, PrintStream out) {
-            String user = Server.getInstance().getWebServer().getUserManager().getSessionUser(headerString);
-            GetRequest get = new GetRequest(headerString);
-            GetResponse response = GetResponse.getResource(get.toResourceLocation(user), user);
+            SessionManager sessionManager = Server.getInstance().getWebServer().getSessionManager();
+            GetRequest get = new GetRequest(headerString, clientIp, secure);
+            GetResponse response;
+            if (!sessionManager.validateSession(get)) {
+                response = GetResponse.internalServerError();
+            } else {
+                String user = sessionManager.getSessionUser(get).getUsername();
+                response = GetResponse.getResource(get.toResourceLocation(user), user);
+            }
             response.respond(out);
         }
 
         void handlePost(String headerString, InputStream in, PrintStream out) throws IOException {
             Map<String, String> headerMap = parseHeaders(headerString);
-            PostHeader postHeader = new PostHeader(headerString);
+            HttpHeader postHeader = new HttpHeader(headerString);
             int contentLength = headerMap.containsKey("content-length") ? Integer.parseInt(headerMap.get("content-length")) : 0;
             Charset bodyCharset = determineCharset(headerMap.get("content-type"));
             String body = null;
@@ -122,8 +142,8 @@ public class WebServer implements Runnable {
                 String raw = new String(bodyBytes, bodyCharset);
                 body = URLDecoder.decode(raw, bodyCharset.name());
             }
-            PostRequest parsedRequest = new PostRequest(postHeader, body);
-            PostResponse response = PostRequestHandler.getInstance().handlePostRequest(parsedRequest);
+            PostRequest parsedRequest = new PostRequest(postHeader, body, clientIp, secure);
+            PostResponse response = Server.getInstance().getWebServer().getSessionManager().validateSession(parsedRequest) ? PostRequestHandler.getInstance().handlePostRequest(parsedRequest) : PostResponse.badRequest("Bad request: session manipulation", parsedRequest);
             response.respond(out);
         }
 
