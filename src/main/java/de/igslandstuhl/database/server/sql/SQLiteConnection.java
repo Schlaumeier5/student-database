@@ -61,6 +61,7 @@ public class SQLiteConnection implements AutoCloseable, PreparedStatementSupplie
     }
     @Override
     public PreparedStatement prepareStatement(String sql) throws SQLException {
+        if (pendingStatement.get() != null && !pendingStatement.get().isClosed()) throw new SQLMultipleAccessesException("Multiple statements created at one time in one thread - use another Thread for callbacks etc.");
         PreparedStatement stmt = getSQLConnection().prepareStatement(sql);
         pendingStatement.set(stmt);
         return stmt;
@@ -101,8 +102,8 @@ public class SQLiteConnection implements AutoCloseable, PreparedStatementSupplie
         lock.writeLock().lock();
         try {
             p.execute(this);
-            closePendingStatement();
         } finally {
+            closePendingStatement();
             lock.writeLock().unlock();
         }
     }
@@ -118,7 +119,6 @@ public class SQLiteConnection implements AutoCloseable, PreparedStatementSupplie
         try {
             return p.execute(this);
         } finally {
-            closePendingStatement();
             lock.writeLock().unlock();
         }
     }
@@ -133,7 +133,6 @@ public class SQLiteConnection implements AutoCloseable, PreparedStatementSupplie
         try {
             return p.execute(this);
         } finally {
-            closePendingStatement();
             lock.readLock().unlock();
         }
     }

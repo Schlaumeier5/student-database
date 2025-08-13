@@ -13,6 +13,8 @@ public interface PreparedStatementSupplier {
      */
     PreparedStatement prepareStatement(String query) throws SQLException;
     public default void executeUpdate(String update) throws SQLException {
-        prepareStatement(update).executeUpdate();
+        PreparedStatement stmt = prepareStatement(update);
+        stmt.executeUpdate();
+        stmt.close();
     }
 }
