@@ -7,6 +7,7 @@ import java.util.List;
 import de.igslandstuhl.database.api.SerializationException;
 import de.igslandstuhl.database.api.Subject;
 import de.igslandstuhl.database.api.Topic;
+import de.igslandstuhl.database.holidays.Holiday;
 import de.igslandstuhl.database.server.Server;
 import de.igslandstuhl.database.server.commands.Command;
 import de.igslandstuhl.database.utils.CommandLineUtils;
@@ -91,6 +92,9 @@ public final class Application {
     public static void main(String[] args) throws Exception {
         instance = new Application(args);
         Server.getInstance().getConnection().createTables();
+
+        Holiday.setupCurrentSchoolYear();
+
         if (getInstance().runsWebServer()) {
             Server.getInstance().getWebServer().start();
         }
