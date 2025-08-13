@@ -26,6 +26,15 @@ function populateSubjectSelect(subjectSelect, subjects) {
     subjectSelect.appendChild(option);
   });
 }
+function populateRoomSelect(roomSelect, rooms) {
+  roomSelect.innerHTML = ""; // clear previous options if any
+  rooms.forEach(room => {
+    const option = document.createElement('option');
+    option.value = room.label;
+    option.textContent = room.label;
+    roomSelect.appendChild(option);
+  });
+}
 
 async function onClassChange(event) {
     const selectedClassId = event.target.value;
@@ -83,6 +92,29 @@ async function populateSubjectStudentList(event) {
       studentTable.appendChild(row);
   });
 }
+async function populateRoomStudentList(event) {
+  const room = event.target.value;
+
+  const students = await fetchJson("/get-students-by-room", {
+    method: 'POST',
+    body: JSON.stringify({ room }),
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+
+  const studentTable = document.getElementById("roomStudentTableBody");
+  studentTable.innerHTML = ""; // clear previous rows
+  students.forEach(student => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+          <td class="student-name">${student.name}</td>
+          <td class="student-action-required">${student.actionRequired ? "Ja" : "Nein"}</td>
+          <td class="student-action"><button onclick="viewStudent(${student.id})">Bearbeiten</button></td>
+      `;
+      studentTable.appendChild(row);
+  });
+}
 
 function viewStudent(studentId) {
     // Add studentId to session storage
@@ -105,4 +137,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   populateSubjectSelect(subjectSelect, subjects);
   subjectSelect.addEventListener('change', populateSubjectStudentList);
   populateSubjectStudentList({ target: subjectSelect }); // Trigger initial load
+  const roomSelect = document.getElementById("roomSelect");
+  const rooms = await fetchJson("/rooms");
+  populateRoomSelect(roomSelect, rooms);
+  roomSelect.addEventListener('change', populateRoomStudentList);
+  populateRoomStudentList({target: roomSelect});
 });

@@ -27,6 +27,15 @@ async function fetchSubjects() {
   });
   return subjects;
 }
+function populateRoomSelect(roomSelect, rooms) {
+  roomSelect.innerHTML = ""; // clear previous options if any
+  rooms.forEach(room => {
+    const option = document.createElement('option');
+    option.value = room.label;
+    option.textContent = room.label;
+    roomSelect.appendChild(option);
+  });
+}
 
 function populateClassSelect(classSelect, classes) {
   classSelect.innerHTML = ""; // clear previous options if any
@@ -104,6 +113,29 @@ async function populateSubjectStudentList(event) {
       studentTable.appendChild(row);
   });
 }
+async function populateRoomStudentList(event) {
+  const room = event.target.value;
+
+  const students = await fetchJson("/get-students-by-room", {
+    method: 'POST',
+    body: JSON.stringify({ room }),
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+
+  const studentTable = document.getElementById("roomStudentTableBody");
+  studentTable.innerHTML = ""; // clear previous rows
+  students.forEach(student => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+          <td class="student-name">${student.name}</td>
+          <td class="student-action-required">${student.actionRequired ? "Ja" : "Nein"}</td>
+          <td class="student-action"><button onclick="viewStudent(${student.id})">Bearbeiten</button></td>
+      `;
+      studentTable.appendChild(row);
+  });
+}
 function viewStudent(studentId) {
     // Add studentId to session storage
     sessionStorage.setItem('selectedStudentId', studentId);
@@ -130,7 +162,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   const allSubjects = await fetchJson('/subjects');
   populateSubjectSelect(editSubjectSelect, allSubjects);
 
-  const editClassSelect = document.getElementById('editClassSelect')
-  const allClasses = await fetchJson('/classes')
-  populateClassSelect(editClassSelect, allClasses)
+  const editClassSelect = document.getElementById('editClassSelect');
+  const allClasses = await fetchJson('/classes');
+  populateClassSelect(editClassSelect, allClasses);
+  const roomSelect = document.getElementById("roomSelect");
+  const rooms = await fetchJson("/rooms");
+  populateRoomSelect(roomSelect, rooms);
+  roomSelect.addEventListener('change', populateRoomStudentList);
+  populateRoomStudentList({target: roomSelect});
 });
