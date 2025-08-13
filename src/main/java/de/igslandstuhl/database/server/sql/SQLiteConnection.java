@@ -16,7 +16,7 @@ import de.igslandstuhl.database.utils.TrackingReadWriteLock;
 /**
  * Represents a connection to an SQLite database.
  */
-public class SQLiteConnection implements AutoCloseable {
+public class SQLiteConnection implements AutoCloseable, PreparedStatementSupplier {
     /**
      * The URL of the SQLite database.
      * It is constructed as "jdbc:sqlite:" + url + ".db".
@@ -34,23 +34,23 @@ public class SQLiteConnection implements AutoCloseable {
     /**
      * Current statement in this thread that need to be closed when the connection is closed.
      */
-    private ThreadLocal<Statement> pendingStatement = new ThreadLocal<>();
+    private ThreadLocal<PreparedStatement> pendingStatement = new ThreadLocal<>();
 
     private final TrackingReadWriteLock lock = new TrackingReadWriteLock();
 
     /**
      * Creates the necessary tables in the database by executing SQL scripts.
      * This method reads SQL files matching the pattern "./tables/*.sql" (regex: .*tables.+\\.sql) and executes their content.
-     * @param stmt the Statement object used to execute the SQL commands
+     * @param supplier the Statement object used to execute the SQL commands
      * @throws SQLException if an SQL error occurs during table creation
      */
-    private void createTables(Statement stmt) throws SQLException {
+    private void createTables(PreparedStatementSupplier supplier) throws SQLException {
         lock.writeLock().lock();
         try {
             for (BufferedReader in : ResourceHelper.openResourcesAsReader(Pattern.compile(".*tables.+\\.sql"))) {
                 try (in) {
                     String request = ResourceHelper.readResourceCompletely(in);
-                    stmt.execute(request);
+                    supplier.executeUpdate(request);
                 } catch (IOException e) {
                     throw new IllegalStateException(e);
                 }
@@ -59,14 +59,11 @@ public class SQLiteConnection implements AutoCloseable {
             lock.writeLock().unlock();
         }
     }
-    /**
-     * Prepares a SQL statement for execution.
-     * @param sql the SQL query to prepare
-     * @return a PreparedStatement object
-     * @throws SQLException if an SQL error occurs during preparation
-     */
+    @Override
     public PreparedStatement prepareStatement(String sql) throws SQLException {
-        return getSQLConnection().prepareStatement(sql);
+        PreparedStatement stmt = getSQLConnection().prepareStatement(sql);
+        pendingStatement.set(stmt);
+        return stmt;
     }
     /**
      * Executes a SQL statement securely, ensuring that the statement is closed after execution.
@@ -102,8 +99,9 @@ public class SQLiteConnection implements AutoCloseable {
      */
     public void executeVoidProcessSecure(SQLVoidProcess p) throws SQLException {
         lock.writeLock().lock();
-        try (Statement stmt = getSQLConnection().createStatement()) {
-            p.execute(stmt);
+        try {
+            p.execute(this);
+            closePendingStatement();
         } finally {
             lock.writeLock().unlock();
         }
@@ -116,11 +114,13 @@ public class SQLiteConnection implements AutoCloseable {
      */
     public ResultSet executeProcess(SQLProcess p) throws SQLException {
         if (p instanceof SQLQueryProcess qp) return executeProcess(qp);
-        if (pendingStatement.get() != null && !pendingStatement.get().isClosed()) throw new SQLMultipleAccessesException("Previous statement was not closed");
         lock.writeLock().lock();
-        Statement stmt = getSQLConnection().createStatement();
-        pendingStatement.set(stmt);
-        return p.execute(stmt);
+        try {
+            return p.execute(this);
+        } finally {
+            closePendingStatement();
+            lock.writeLock().unlock();
+        }
     }
     /**
      * Executes a SQL process that returns a ResultSet.
@@ -129,10 +129,13 @@ public class SQLiteConnection implements AutoCloseable {
      * @throws SQLException if an SQL error occurs during execution
      */
     public ResultSet executeProcess(SQLQueryProcess p) throws SQLException {
-        if (pendingStatement.get() != null && !pendingStatement.get().isClosed()) throw new SQLMultipleAccessesException("Previous statement was not closed");
-        Statement stmt = getSQLConnection().createStatement();
-        pendingStatement.set(stmt);
-        return p.execute(stmt);
+        lock.readLock().lock();
+        try {
+            return p.execute(this);
+        } finally {
+            closePendingStatement();
+            lock.readLock().unlock();
+        }
     }
     /**
      * Closes all pending statements that have been created during the lifetime of this connection.

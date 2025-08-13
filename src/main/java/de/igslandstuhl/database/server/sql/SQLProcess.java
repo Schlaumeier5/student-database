@@ -2,7 +2,6 @@ package de.igslandstuhl.database.server.sql;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 
 /**
  * Represents a SQL process that can be executed using a Statement.
@@ -16,5 +15,5 @@ public interface SQLProcess {
      * @return a ResultSet containing the results of the query
      * @throws SQLException if an SQL error occurs during execution
      */
-    public ResultSet execute(Statement stmt) throws SQLException;
+    public ResultSet execute(PreparedStatementSupplier supplier) throws SQLException;
 }
