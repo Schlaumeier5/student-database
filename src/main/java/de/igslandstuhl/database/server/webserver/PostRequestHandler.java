@@ -138,6 +138,8 @@ public class PostRequestHandler {
                 return handleDeleteTopics(request);
             case "/change-graduation-level":
                 return handleChangeGraduationLevel(request);
+            case "/get-students-by-room":
+                return handleGetStudentsByRoom(request);
             default:
                 return PostResponse.notFound("Unknown POST request path: " + path, request);
         }
@@ -1202,5 +1204,40 @@ public class PostRequestHandler {
         } catch (IllegalArgumentException e) {
             return PostResponse.badRequest("Invalid input: " + e.getMessage(), request);
         }
+    }
+    private PostResponse handleGetStudentsByRoom(PostRequest request) {
+        // Test if current user is admin or teacher
+        User user = Server.getInstance().getWebServer().getSessionManager().getSessionUser(request);
+        if (user == null || !(user.isAdmin() || user.isTeacher())) {
+            return PostResponse.unauthorized("Not logged in or invalid session", request);
+        }
+
+        Map<String, Object> json = request.getJson();
+        Room room = Room.getRoom((String) json.get("room"));
+
+        java.util.List<Student> students = Student.getByRoom(room);
+        StringBuilder responseBuilder = new StringBuilder("[");
+        for (int i = 0; i < students.size(); i++) {
+            Student student = students.get(i);
+            responseBuilder.append("{\"id\":").append(student.getId())
+                .append(",\"name\":\"").append(student.getFirstName()).append(" ").append(student.getLastName()).append('"')
+                .append(", \"actionRequired\":").append(student.isActionRequired())
+                .append(", \"graduationLevel\":").append(student.getGraduationLevel().getLevel())
+                .append(", \"room\":\"").append(student.getCurrentRoom() != null ? student.getCurrentRoom().getLabel() : "None").append("\"");
+            if (request.getJson().containsKey("subjectId") && request.getJson().get("subjectId") instanceof Number subjectId) {
+                Set<SubjectRequest> subjectRequests = student.getCurrentRequests().keySet().contains(subjectId.intValue()) ? student.getCurrentRequests().get(subjectId.intValue()) : Set.of();
+                responseBuilder.append(", \"experiment\":").append(subjectRequests.stream().anyMatch(r -> r == SubjectRequest.EXPERIMENT))
+                .append(", \"help\":").append(subjectRequests.stream().anyMatch(r -> r == SubjectRequest.HELP))
+                .append(", \"test\":").append(subjectRequests.stream().anyMatch(r -> r == SubjectRequest.EXAM))
+                .append(", \"partner\":").append(subjectRequests.stream().anyMatch(r -> r == SubjectRequest.PARTNER));
+            }
+            responseBuilder.append("}");
+            if (i < students.size() - 1) {
+                responseBuilder.append(", ");
+            }
+        }
+        responseBuilder.append("]");
+
+        return PostResponse.ok(responseBuilder.toString(), ContentType.JSON, request);
     }
 }

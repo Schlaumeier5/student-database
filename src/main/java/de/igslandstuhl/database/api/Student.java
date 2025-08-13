@@ -202,6 +202,11 @@ public class Student extends User {
             .filter(Objects::nonNull)
             .collect(Collectors.toList());
     }
+
+    public static List<Student> getByRoom(Room room) {
+        return students.values().stream().filter((s) -> room.equals(s.getCurrentRoom())).toList();
+    }
+
     /**
      * Registers a new student with a password.
      * This method creates a new student in the database and returns the created Student object.
