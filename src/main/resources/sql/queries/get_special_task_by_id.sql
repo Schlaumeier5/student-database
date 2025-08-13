@@ -1,3 +1,3 @@
 SELECT *
 FROM special_tasks
-WHERE id = {0}
+WHERE id = ?

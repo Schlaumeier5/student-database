@@ -1,1 +1,1 @@
-SELECT * FROM school_years WHERE id = {0}
+SELECT * FROM school_years WHERE id = ?

@@ -1,3 +1,3 @@
 UPDATE rooms
-SET minimum_level = {1}
-WHERE label = "{0}";
+SET minimum_level = ?
+WHERE label = ?;

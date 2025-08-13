@@ -561,7 +561,8 @@ public class Student extends User {
         Server.getInstance().getConnection().executeVoidProcessSecure(
             SQLHelper.getAddObjectProcess("topic_to_student",
                 String.valueOf(id),
-                String.valueOf(topic.getId())
+                String.valueOf(topic.getId()),
+                String.valueOf(topic.getSubject().getId())
             )
         );
         // Update in memory

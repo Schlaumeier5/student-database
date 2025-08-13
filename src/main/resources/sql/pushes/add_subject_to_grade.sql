@@ -1,3 +1,3 @@
 INSERT INTO gradesubjects
-VALUES ({0}, {1})
+VALUES (?, ?)
 ON CONFLICT(grade, subject) DO NOTHING;

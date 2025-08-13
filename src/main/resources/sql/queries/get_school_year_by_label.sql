@@ -1,1 +1,1 @@
-SELECT * FROM school_years WHERE label = '{0}'
+SELECT * FROM school_years WHERE label = ?

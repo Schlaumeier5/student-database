@@ -103,18 +103,21 @@ public final class Server implements AutoCloseable {
      * @throws SQLException If an error occurs while executing the SQL query.
      */
     public <T> T processSingleRequest(Function<String[],T> output, String request, String[] sqlFields, String... args) throws SQLException {
-        ResultSet result = connection.executeProcess(SQLHelper.getQueryProcess(request, args));
-        if (result.next()){
-            List<String> results = new ArrayList<>();
-            for (String columnLabel : sqlFields) {
-                results.add(result.getString(columnLabel));
+        try {
+            ResultSet result = connection.executeProcess(SQLHelper.getQueryProcess(request, args));
+            if (result.next()){
+                List<String> results = new ArrayList<>();
+                for (String columnLabel : sqlFields) {
+                    results.add(result.getString(columnLabel));
+                }
+                connection.closePendingStatement();
+                String[] resultArr = new String[results.size()];
+                return output.apply(results.toArray(resultArr));
+            } else {
+                return null;
             }
-            String[] resultArr = new String[results.size()];
+        } finally {
             connection.closePendingStatement();
-            return output.apply(results.toArray(resultArr));
-        } else {
-            connection.closePendingStatement();
-            return null;
         }
     }
     /**
@@ -129,30 +132,33 @@ public final class Server implements AutoCloseable {
      * @throws SQLException If an error occurs while executing the SQL query.
      */
     public void processRequest(Consumer<String[]> callback, String request, String[] sqlFields, String... args) throws SQLException {
-        ResultSet result = connection.executeProcess(SQLHelper.getQueryProcess(request, args));
-        Thread subroutine = new Thread(() -> {
-            try {
-                while (result.next()) {
-                    List<String> results = new LinkedList<>();
-                    for (String columnLabel : sqlFields) {
-                        results.add(result.getString(columnLabel));
+        try {
+            ResultSet result = connection.executeProcess(SQLHelper.getQueryProcess(request, args));
+            Thread subroutine = new Thread(() -> {
+                try {
+                    while (result.next()) {
+                        List<String> results = new LinkedList<>();
+                        for (String columnLabel : sqlFields) {
+                            results.add(result.getString(columnLabel));
+                        }
+                        String[] resultArr = new String[results.size()];
+                        callback.accept(results.toArray(resultArr));
                     }
-                    String[] resultArr = new String[results.size()];
-                    callback.accept(results.toArray(resultArr));
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                    throw new IllegalStateException(e);
                 }
-            } catch (SQLException e) {
+            });
+            subroutine.start();
+            try {
+                subroutine.join();
+            } catch (InterruptedException e) {
                 e.printStackTrace();
                 throw new IllegalStateException(e);
             }
-        });
-        subroutine.start();
-        try {
-            subroutine.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            throw new IllegalStateException(e);
+        } finally {
+            connection.closePendingStatement();
         }
-        connection.closePendingStatement();
     }
     public String[][] processRequest(String request, String[] sqlFields, String... args) throws SQLException {
         List<String[]> rows = new LinkedList<>();

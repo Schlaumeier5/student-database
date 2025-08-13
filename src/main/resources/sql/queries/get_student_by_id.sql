@@ -1,3 +1,3 @@
 SELECT *
 FROM students
-WHERE id = {0}
+WHERE id = ?

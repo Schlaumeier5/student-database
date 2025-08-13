@@ -1,7 +1,7 @@
 package de.igslandstuhl.database.server.sql;
 
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Statement;
 
 /**
  * Represents a SQL process that does not return any result.
@@ -11,8 +11,16 @@ import java.sql.Statement;
 public interface SQLVoidProcess {
     /**
      * Executes the SQL void process using the given Statement.
-     * @param stmt the Statement to use for execution
+     * @param supplier the Statement to use for execution
      * @throws SQLException if an SQL error occurs during execution
      */
-    public void execute(Statement stmt) throws SQLException;
+    public void execute(PreparedStatementSupplier supplier) throws SQLException;
+
+    public static SQLVoidProcess update(String query, String[] args) {
+        return (supplier) -> {
+            PreparedStatement p = supplier.prepareStatement(query);
+            SQLHelper.insertArgs(p, args);
+            p.executeUpdate();
+        };
+    }
 }

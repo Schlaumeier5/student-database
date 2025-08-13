@@ -3,7 +3,6 @@ package de.igslandstuhl.database.server.sql;
 import java.io.FileNotFoundException;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.regex.Pattern;
 
 import de.igslandstuhl.database.server.Server;
 import de.igslandstuhl.database.server.resources.ResourceHelper;
@@ -28,6 +27,17 @@ public class SQLHelper {
      * This is used to organize SQL push files.
      */
     public static final String PUSHES = "pushes";
+    public static void insertArgs(PreparedStatement s, String[] args) throws SQLException {
+        for (int i = 0; i < args.length; i++) {
+            String arg = args[i];
+            try {
+                int intArg = Integer.parseInt(arg);
+                s.setInt(i + 1, intArg);
+            } catch (NumberFormatException e) {
+                s.setString(i + 1, arg);
+            }
+        }
+    }
     /**
      * Gets an SQL query by its name and replaces placeholders with provided arguments.
      *
@@ -35,16 +45,13 @@ public class SQLHelper {
      * @param args      the arguments to replace in the query
      * @return the SQL query as a String with placeholders replaced
      */
-    public static String getSQLQuery(String queryName, String... args) {
+    public static String getSQLQuery(String queryName) {
         ResourceLocation location = new ResourceLocation(CONTEXT, QUERIES, queryName + ".sql");
         String query;
         try {
             query = ResourceHelper.readResourceCompletely(location);
         } catch (FileNotFoundException e) {
             throw new SQLCommandNotFoundException(queryName, e);
-        }
-        for (int i = 0; i < args.length; i++) {
-            query = Pattern.compile("\\{" + i + "\\}").matcher(query).replaceAll(args[i]);
         }
         return query;
     }
@@ -57,7 +64,8 @@ public class SQLHelper {
      * @throws SQLException if an error occurs while preparing the statement
      */
     public static PreparedStatement prepareSQLQuery(String queryName, String... args) throws SQLException {
-        String query = getSQLQuery(queryName, args);
+        String query = getSQLQuery(queryName);
+        // TODO: Add args
         return Server.getInstance().getConnection().prepareStatement(query);
     }
     /**
@@ -68,8 +76,8 @@ public class SQLHelper {
      * @return a SQLProcess that executes the query
      */
     public static SQLProcess getQueryProcess(String queryName, String... args) {
-        String query = getSQLQuery(queryName, args);
-        return new SQLQueryProcess(query);
+        String query = getSQLQuery(queryName);
+        return new SQLQueryProcess(query, args);
     }
 
     /**
@@ -79,16 +87,13 @@ public class SQLHelper {
      * @param args   the arguments to replace in the SQL statement
      * @return the SQL add statement as a String with placeholders replaced
      */
-    public static String getSQLAddStatement(String object, String... args) {
+    public static String getSQLAddStatement(String object) {
         ResourceLocation location = new ResourceLocation(CONTEXT, PUSHES, "add_" + object + ".sql");
         String statement;
         try {
             statement = ResourceHelper.readResourceCompletely(location);
         } catch (FileNotFoundException e) {
             throw new SQLCommandNotFoundException("add_" + object, e);
-        }
-        for (int i = 0; i < args.length; i++) {
-            statement = Pattern.compile("\\{" + i + "\\}").matcher(statement).replaceAll(args[i]);
         }
         return statement;
     }
@@ -100,7 +105,7 @@ public class SQLHelper {
      * @return a SQLVoidProcess that executes the add statement
      */
     public static SQLVoidProcess getAddObjectProcess(String object, String... args) {
-        return (stmt) -> stmt.executeUpdate(getSQLAddStatement(object, args));
+        return SQLVoidProcess.update(getSQLAddStatement(object), args);
     }
 
     /**
@@ -110,16 +115,13 @@ public class SQLHelper {
      * @param args   the arguments to replace in the SQL statement
      * @return the SQL add statement as a String with placeholders replaced
      */
-    public static String getSQLDeleteStatement(String object, String... args) {
+    public static String getSQLDeleteStatement(String object) {
         ResourceLocation location = new ResourceLocation(CONTEXT,PUSHES, "delete_" + object + ".sql");
         String statement;
         try {
             statement = ResourceHelper.readResourceCompletely(location);
         } catch (FileNotFoundException e) {
             throw new SQLCommandNotFoundException("delete_" + object, e);
-        }
-        for (int i = 0; i < args.length; i++) {
-            statement = Pattern.compile("\\{" + i + "\\}").matcher(statement).replaceAll(args[i]);
         }
         return statement;
     }
@@ -132,7 +134,7 @@ public class SQLHelper {
      * @return a SQLVoidProcess that executes the add statement
      */
     public static SQLVoidProcess getDeleteObjectProcess(String object, String... args) {
-        return (stmt) -> stmt.executeUpdate(getSQLDeleteStatement(object, args));
+        return SQLVoidProcess.update(getSQLDeleteStatement(object), args);
     }
 
         /**
@@ -142,16 +144,13 @@ public class SQLHelper {
      * @param args   the arguments to replace in the SQL statement
      * @return the SQL add statement as a String with placeholders replaced
      */
-    public static String getSQLUpdateStatement(String object, String... args) {
+    public static String getSQLUpdateStatement(String object) {
         ResourceLocation location = new ResourceLocation(CONTEXT,PUSHES, "update_" + object + ".sql");
         String statement;
         try {
             statement = ResourceHelper.readResourceCompletely(location);
         } catch (FileNotFoundException e) {
             throw new SQLCommandNotFoundException("update_" + object, e);
-        }
-        for (int i = 0; i < args.length; i++) {
-            statement = Pattern.compile("\\{" + i + "\\}").matcher(statement).replaceAll(args[i]);
         }
         return statement;
     }
@@ -164,6 +163,6 @@ public class SQLHelper {
      * @return a SQLVoidProcess that executes the add statement
      */
     public static SQLVoidProcess getUpdateObjectProcess(String object, String... args) {
-        return (stmt) -> stmt.executeUpdate(getSQLUpdateStatement(object, args));
+        return SQLVoidProcess.update(getSQLUpdateStatement(object), args);
     }
 }

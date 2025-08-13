@@ -1,2 +1,2 @@
 SELECT * FROM tasks
-WHERE name = "{0}"
+WHERE name = ?
