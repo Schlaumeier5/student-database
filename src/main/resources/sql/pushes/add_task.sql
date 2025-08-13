@@ -1,4 +1,4 @@
 INSERT INTO tasks (topic, name, niveau)
-VALUES ({0}, "{1}", {2})
+VALUES (?, ?, ?)
 ON CONFLICT(topic, name) DO UPDATE SET
     niveau = excluded.niveau;

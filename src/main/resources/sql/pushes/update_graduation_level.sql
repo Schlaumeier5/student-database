@@ -1,3 +1,3 @@
 UPDATE students
-SET graduation_level = {1}
-WHERE id = {0}
+SET graduation_level = ?
+WHERE id = ?

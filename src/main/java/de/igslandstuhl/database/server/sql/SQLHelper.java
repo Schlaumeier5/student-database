@@ -32,9 +32,9 @@ public class SQLHelper {
             String arg = args[i];
             try {
                 int intArg = Integer.parseInt(arg);
-                s.setInt(i, intArg);
+                s.setInt(i + 1, intArg);
             } catch (NumberFormatException e) {
-                s.setString(i, arg);
+                s.setString(i + 1, arg);
             }
         }
     }

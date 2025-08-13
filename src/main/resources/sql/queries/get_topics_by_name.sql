@@ -1,3 +1,3 @@
 SELECT *
 FROM topics
-WHERE name = "{0}"
+WHERE name = ?

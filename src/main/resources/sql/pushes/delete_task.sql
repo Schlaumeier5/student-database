@@ -1,2 +1,2 @@
 DELETE FROM tasks
-WHERE id = {0}
+WHERE id = ?

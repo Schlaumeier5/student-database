@@ -1,3 +1,3 @@
 SELECT *
 FROM taskstats
-WHERE student={0} AND status=2
+WHERE student=? AND status=2

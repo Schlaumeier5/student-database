@@ -1,3 +1,3 @@
 UPDATE teachers
-SET password = "{0}"
-WHERE id = {1}
+SET password = ?
+WHERE id = ?

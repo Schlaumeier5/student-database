@@ -1,2 +1,2 @@
 SELECT * FROM student_topics
-WHERE student_id = {0}
+WHERE student_id = ?

@@ -1,3 +1,3 @@
 INSERT INTO classes (label, grade)
-VALUES ("{0}", {1})
+VALUES (?, ?)
 ON CONFLICT(label, grade) DO NOTHING;

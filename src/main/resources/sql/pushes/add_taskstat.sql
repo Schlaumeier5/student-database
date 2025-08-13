@@ -1,4 +1,4 @@
 INSERT INTO taskstats (student, task, status)
-VALUES ({0}, {1}, {2})
+VALUES (?, ?, ?)
 ON CONFLICT(student, task) DO UPDATE SET
     status = excluded.status;

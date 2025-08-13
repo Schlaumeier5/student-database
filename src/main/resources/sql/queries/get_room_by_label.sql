@@ -1,3 +1,3 @@
 SELECT *
 FROM rooms
-WHERE label="{0}"
+WHERE label=?

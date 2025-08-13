@@ -1,2 +1,2 @@
 SELECT * FROM tasks
-WHERE topic = {0}
+WHERE topic = ?

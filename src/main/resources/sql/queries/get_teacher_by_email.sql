@@ -1,3 +1,3 @@
 SELECT *
 FROM teachers
-WHERE email = "{0}"
+WHERE email = ?
