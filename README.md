@@ -24,9 +24,9 @@ Students can view their progress, and teachers can assign them topics, based on 
 
 To get a copy of the project up and running on your local machine for development and testing purposes, follow these steps:
 
-### Building from source
+### 🏗️ Building from source
 
-#### Prerequisites
+#### 🥖 Prerequisites
 
 Ensure you have the following installed:
 
@@ -34,7 +34,7 @@ Ensure you have the following installed:
 - [Git](https://git-scm.com/)
 
 
-#### Installation
+#### 🧙 Installation
 
 1. Clone the repository:
     ```bash
@@ -51,6 +51,25 @@ Ensure you have the following installed:
      ```bash
      keytool -genkey -keyalg RSA -keystore keys/web/keystore.jks -storetype JKS
      ```
+
+### ⬇️ Download latest release
+
+#### 🥖 Prerequisites
+
+Ensure you have the following installed:
+
+- [Java 17 or higher](https://www.oracle.com/java/technologies/javase-jdk17-downloads.html)
+
+#### 🧙 Installation
+
+1. Download the fat jar from the latest release
+2. Move it in the folder you want the server files in
+3. Run the jar using
+       ```bash
+       java -jar [name of the jar].jar
+       ```
+
+You can also add command line arguments (see below), or create a shell script.
 
 ## 📄 Usage
 
