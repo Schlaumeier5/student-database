@@ -521,7 +521,7 @@ public class PostRequestHandler {
         if (contentLength <= 0) {
             return PostResponse.badRequest("Missing or invalid Content-Length!", request);
         }
-        String csv = prepare(request.getBodyAsString().replaceFirst("csv=", ""));
+        String csv = prepare(request.getBodyAsString().replaceFirst("csv=", ""), false);
         try {
             StudentGenerationResult[] results = Student.generateStudentsFromCSV(csv);
             StringBuilder responseBuilder = new StringBuilder();
@@ -606,7 +606,7 @@ public class PostRequestHandler {
         if (contentLength <= 0) {
             return PostResponse.badRequest("Missing or invalid Content-Length!", request);
         }
-        String csv = prepare(request.getBodyAsString().replaceFirst("csv=", ""));
+        String csv = prepare(request.getBodyAsString().replaceFirst("csv=", ""), false);
         try {
             TeacherGenerationResult[] teachers = Teacher.generateTeachersFromCSV(csv);
             StringBuilder responseBuilder = new StringBuilder();
