@@ -368,6 +368,11 @@ public class Student extends User {
      */
     public Map<Integer, Set<SubjectRequest>> getCurrentRequests() { return currentRequests; }
 
+    public Set<SubjectRequest> getCurrentRequests(Subject subject) {
+        Set<SubjectRequest> subjectRequests = currentRequests.get(subject.getId());
+        return subjectRequests == null ? Set.of() : subjectRequests;
+    }
+
     /**
      * Returns the student's password hash.
      * @return password hash
