@@ -59,7 +59,7 @@
                 if (response.ok) {
                     const blob = await response.blob();
                     // Try to get filename from Content-Disposition header
-                    let filename = "schüler.json";
+                    let filename = "schüler.csv";
                     const disposition = response.headers.get('Content-Disposition');
                     if (disposition && disposition.includes('filename=')) {
                         filename = disposition.split('filename=')[1].replace(/["']/g, "");

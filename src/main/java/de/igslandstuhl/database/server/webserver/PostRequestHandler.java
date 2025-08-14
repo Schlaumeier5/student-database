@@ -524,19 +524,18 @@ public class PostRequestHandler {
         String csv = prepare(request.getBodyAsString().replaceFirst("csv=", ""));
         try {
             StudentGenerationResult[] results = Student.generateStudentsFromCSV(csv);
-            StringBuilder responseBuilder = new StringBuilder("[\n");
+            StringBuilder responseBuilder = new StringBuilder();
             for (int i = 0; i < results.length; i++) {
                 StudentGenerationResult result = results[i];
-                responseBuilder.append("    {\"id\":").append(result.getStudent().getId())
-                    .append(",\"firstName\":\"").append(result.getStudent().getFirstName()).append('"')
-                    .append(",\"lastName\":\"").append(result.getStudent().getLastName()).append('"')
-                    .append(",\"email\":\"").append(result.getStudent().getEmail()).append('"')
-                    .append(",\"password\":\"").append(result.getPassword()).append("\"}");
+                responseBuilder.append(result.getStudent().getId()).append(",")
+                    .append(result.getStudent().getFirstName()).append(",")
+                    .append(result.getStudent().getLastName()).append(",")
+                    .append(result.getStudent().getEmail()).append(",")
+                    .append(result.getPassword());
                 if (i < results.length - 1) {
-                    responseBuilder.append(",\n");
+                    responseBuilder.append("\n");
                 }
             }
-            responseBuilder.append("\n]");
             return PostResponse.ok(responseBuilder.toString(), ContentType.JSON, request);
         } catch (java.sql.SQLException e) {
             return PostResponse.internalServerError("Database error: " + e.getMessage(), request);
@@ -610,19 +609,18 @@ public class PostRequestHandler {
         String csv = prepare(request.getBodyAsString().replaceFirst("csv=", ""));
         try {
             TeacherGenerationResult[] teachers = Teacher.generateTeachersFromCSV(csv);
-            StringBuilder responseBuilder = new StringBuilder("[\n");
+            StringBuilder responseBuilder = new StringBuilder();
             for (int i = 0; i < teachers.length; i++) {
                 TeacherGenerationResult result = teachers[i];
-                responseBuilder.append("    {\"id\":").append(result.getId())
-                        .append(",\"firstName\":\"").append(result.getFirstName()).append('"')
-                        .append(",\"lastName\":\"").append(result.getLastName()).append('"')
-                        .append(",\"email\":\"").append(result.getEmail()).append('"')
-                        .append(",\"password\":\"").append(result.getPassword()).append("\"}");
+                responseBuilder.append(result.getId()).append(",")
+                        .append(result.getFirstName()).append(",")
+                        .append(result.getLastName()).append(",")
+                        .append(result.getEmail()).append(",")
+                        .append(result.getPassword());
                 if (i < teachers.length - 1) {
-                    responseBuilder.append(",\n");
+                    responseBuilder.append("\n");
                 }
             }
-            responseBuilder.append("\n]");
             return PostResponse.ok(responseBuilder.toString(), ContentType.JSON, request);
         } catch (java.sql.SQLException e) {
             return PostResponse.internalServerError("Database error: " + e.getMessage(), request);
