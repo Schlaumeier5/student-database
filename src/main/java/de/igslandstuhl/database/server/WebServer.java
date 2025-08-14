@@ -2,6 +2,7 @@ package de.igslandstuhl.database.server;
 
 import java.io.*;
 import java.net.InetAddress;
+import java.net.SocketException;
 import java.net.URLDecoder;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
@@ -36,10 +37,11 @@ import de.igslandstuhl.database.server.webserver.SessionManager;
 public class WebServer implements Runnable {
     public static final int SESSION_DURATION = 21600; // six hours
     public static final int MAXIMUM_INACTIVITY_DURATION = 3600; // An hour
+    public static final int RATELIMIT = 60;
 
     private volatile boolean running;
     private final SSLServerSocket serverSocket;
-    private final SessionManager userManager = new SessionManager(SESSION_DURATION, MAXIMUM_INACTIVITY_DURATION);
+    private final SessionManager userManager = new SessionManager(SESSION_DURATION, MAXIMUM_INACTIVITY_DURATION, RATELIMIT);
     private final ExecutorService clientPool = Executors.newCachedThreadPool();
     private final boolean secure = true;
 
@@ -85,37 +87,44 @@ public class WebServer implements Runnable {
 
         @Override
         public void run() {
-            try (BufferedOutputStream rawOut = new BufferedOutputStream(clientSocket.getOutputStream())) {
-                PrintStream out = new PrintStream(rawOut, true, StandardCharsets.UTF_8);
+            try {
+                BufferedOutputStream rawOut = new BufferedOutputStream(clientSocket.getOutputStream());
+                PrintStream out = new PrintStream(rawOut, false, StandardCharsets.UTF_8);
                 try (BufferedInputStream bis = new BufferedInputStream(clientSocket.getInputStream())) {
                     String headerString = readHeadersAsString(bis);
                     if (headerString == null) {
-                        GetResponse.internalServerError().respond(out);
-                        return;
+                        rawOut.close();
                     }
-                    if (headerString.startsWith("GET")) {
-                        handleGet(headerString, out);
-                    } else if (headerString.startsWith("POST")) {
-                        handlePost(headerString, bis, out);
-                    } else {
-                        GetResponse.internalServerError().respond(out);
+                    try {
+                        if (headerString.startsWith("GET")) {
+                            handleGet(headerString, out);
+                        } else if (headerString.startsWith("POST")) {
+                            handlePost(headerString, bis, out);
+                        } else {
+                            rawOut.close();
+                            // TODO: response with "Unsupported Method"
+                        }
+                        out.flush();
+                    } catch (SocketException e) {
+                        Thread.currentThread().interrupt();
                     }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                try {
-                    PrintStream out = new PrintStream(clientSocket.getOutputStream(), true);
-                    GetResponse.internalServerError().respond(out);
-                } catch (IOException ignored) {}
             } finally {
                 try { clientSocket.close(); } catch (IOException ignored) {}
             }
         }
 
         String readHeadersAsString(InputStream in) throws IOException {
-            byte[] headerBytes = readUntilDoubleCRLF(in);
-            if (headerBytes == null || headerBytes.length == 0) return null;
-            return new String(headerBytes, StandardCharsets.ISO_8859_1);
+            try {
+                byte[] headerBytes = readUntilDoubleCRLF(in);
+                if (headerBytes == null || headerBytes.length == 0) return null;
+                return new String(headerBytes, StandardCharsets.ISO_8859_1);
+            } catch (SocketException|SSLHandshakeException e) {
+                Thread.currentThread().interrupt();
+                return ""; // not accessible
+            }
         }
 
         void handleGet(String headerString, PrintStream out) {
@@ -123,10 +132,10 @@ public class WebServer implements Runnable {
             GetRequest get = new GetRequest(headerString, clientIp, secure);
             GetResponse response;
             if (!sessionManager.validateSession(get)) {
-                response = GetResponse.internalServerError();
+                response = GetResponse.forbidden(get);
             } else {
                 String user = sessionManager.getSessionUser(get).getUsername();
-                response = GetResponse.getResource(get.toResourceLocation(user), user);
+                response = GetResponse.getResource(get, get.toResourceLocation(user), user);
             }
             response.respond(out);
         }
@@ -143,7 +152,7 @@ public class WebServer implements Runnable {
                 body = URLDecoder.decode(raw, bodyCharset.name());
             }
             PostRequest parsedRequest = new PostRequest(postHeader, body, clientIp, secure);
-            PostResponse response = Server.getInstance().getWebServer().getSessionManager().validateSession(parsedRequest) ? PostRequestHandler.getInstance().handlePostRequest(parsedRequest) : PostResponse.badRequest("Bad request: session manipulation", parsedRequest);
+            PostResponse response = Server.getInstance().getWebServer().getSessionManager().validateSession(parsedRequest) ? PostRequestHandler.getInstance().handlePostRequest(parsedRequest) : PostResponse.forbidden("Forbidden: session manipulation or ratelimit", parsedRequest);
             response.respond(out);
         }
 

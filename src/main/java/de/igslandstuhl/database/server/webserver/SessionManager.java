@@ -15,16 +15,19 @@ public class SessionManager {
      */
     private Map<Session, String> sessionUsers = new HashMap<>();
     private Map<Session, Instant> lastActivity = new HashMap<>();
+    private Map<Session, Integer> requestCount = new HashMap<>();
 
     /**
      * After this duration, sessions expire (are removed from the session store). It is measured in seconds.
      */
     private final int sessionExpireDuration;
     private final int maximumInactivityDuration;
+    private final int maxRequests;
 
-    public SessionManager(int sessionExpireDuration, int maximumInactivityDuration) {
+    public SessionManager(int sessionExpireDuration, int maximumInactivityDuration, int maxRequests) {
         this.sessionExpireDuration = sessionExpireDuration;
         this.maximumInactivityDuration = maximumInactivityDuration;
+        this.maxRequests = maxRequests;
         new Thread(this::cleanSecondsJob, "Session Expiring").start();
     }
 
@@ -51,8 +54,9 @@ public class SessionManager {
             )
             .toList().stream() // Convert to list to avoid ConcurrentModificationException
             .forEach(this::removeSession);
+            requestCount.clear();
             try {
-                Thread.sleep(10000);
+                Thread.sleep(60000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -62,6 +66,16 @@ public class SessionManager {
     public boolean validateSession(HttpRequest request) {
         Session session = getSession(request);
         lastActivity.put(session, Instant.now());
+
+        Integer requests = requestCount.get(session);
+        int count = requests == null ? 0 : requests;
+        count++;
+        requestCount.put(session, count);
+        if (count > maxRequests) {
+            System.out.println("Ratelimit!");
+            return false;
+        }
+
         return true;
     }
 

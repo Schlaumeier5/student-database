@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.PrintStream;
 
+import de.igslandstuhl.database.server.Server;
 import de.igslandstuhl.database.server.resources.ResourceHelper;
 import de.igslandstuhl.database.server.resources.ResourceLocation;
 
@@ -12,48 +13,32 @@ import de.igslandstuhl.database.server.resources.ResourceLocation;
  */
 public class GetResponse {
     /**
-     * Represents a response for a GET request that was not found.
-     */
-    private static final GetResponse NOT_FOUND = new GetResponse(Status.NOT_FOUND, new ResourceLocation("html", "errors", "404.html"), ContentType.HTML, "");
-    /**
      * Returns a response for a GET request that was not found.
      * @return the GetResponse object
      */
-    public static GetResponse notFound() {
-        return NOT_FOUND;
+    public static GetResponse notFound(HttpRequest request) {
+        return new GetResponse(request, Status.NOT_FOUND, new ResourceLocation("html", "errors", "404.html"), ContentType.HTML, "");
     }
-    /**
-     * Represents a response for a GET request that resulted in an internal error.
-     */
-    private static final GetResponse INTERNAL_ERROR = new GetResponse(Status.INTERNAL_SERVER_ERROR, new ResourceLocation("html", "errors", "500.html"), ContentType.HTML, "");
     /**
      * Returns a response for a GET request that resulted in an internal error.
      * @return the GetResponse object
      */
-    public static GetResponse internalServerError() {
-        return INTERNAL_ERROR;
+    public static GetResponse internalServerError(HttpRequest request) {
+        return new GetResponse(request, Status.INTERNAL_SERVER_ERROR, new ResourceLocation("html", "errors", "500.html"), ContentType.HTML, "");
     }
-    /**
-     * Represents a response for a GET request the user has no access to.
-     */
-    private static final GetResponse FORBIDDEN = new GetResponse(Status.FORBIDDEN, new ResourceLocation("html", "errors", "403.html"), ContentType.HTML, "");
     /**
      * Returns a response for a GET request the user has no access to.
-     * @return the GetRequest object
+     * @return the HttpRequest object
      */
-    public static GetResponse forbidden() {
-        return FORBIDDEN;
+    public static GetResponse forbidden(HttpRequest request) {
+        return new GetResponse(request, Status.FORBIDDEN, new ResourceLocation("html", "errors", "403.html"), ContentType.HTML, "");
     }
-    /**
-     * Represents a response for a GET request the user must be logged in for.
-     */
-    private static final GetResponse UNAUTHORIZED = new GetResponse(Status.UNAUTHORIZED, new ResourceLocation("html", "errors", "401.html"), ContentType.HTML, "");
     /**
      * Returns a response for a GET request the user must be logged in for.
      * @return the GetResponse object
      */
-    public static GetResponse unauthorized() {
-        return UNAUTHORIZED;
+    public static GetResponse unauthorized(HttpRequest request) {
+        return new GetResponse(request, Status.UNAUTHORIZED, new ResourceLocation("html", "errors", "401.html"), ContentType.HTML, "");
     }
     /**
      * The HTTP status of this response
@@ -79,6 +64,7 @@ public class GetResponse {
      * This is used to check access permissions.
      */
     private final String user;
+    private final HttpRequest request;
 
     /**
      * Creates a new GetResponse with the given parameters.
@@ -88,11 +74,12 @@ public class GetResponse {
      * @param contentType the HTTP content type of the resource
      * @param user the user who made the request
      */
-    public GetResponse(Status status, ResourceLocation resourceLocation, ContentType contentType, String user) {
+    public GetResponse(HttpRequest request, Status status, ResourceLocation resourceLocation, ContentType contentType, String user) {
         this.status = status;
         this.resourceLocation = resourceLocation;
         this.contentType = contentType;
         this.user = user;
+        this.request = request;
     }
     /**
      * Returns a response for a GET request for the given resource.
@@ -100,15 +87,15 @@ public class GetResponse {
      * @param user the user who made the request
      * @return the GetResponse object
      */
-    public static GetResponse getResource(ResourceLocation resourceLocation, String user) {
+    public static GetResponse getResource(HttpRequest request, ResourceLocation resourceLocation, String user) {
         try {
             if (AccessManager.hasAccess(user, resourceLocation)) {
-                return new GetResponse(Status.OK, resourceLocation, ContentType.ofResourceLocation(resourceLocation), user);
+                return new GetResponse(request, Status.OK, resourceLocation, ContentType.ofResourceLocation(resourceLocation), user);
             } else {
-                return unauthorized();
+                return unauthorized(request);
             }
         } catch (NoWebResourceException e) {
-            return forbidden();
+            return forbidden(request);
         }
     }
 
@@ -126,6 +113,7 @@ public class GetResponse {
                     out.print("; charset=");out.print(charset);
                 }
                 out.println();
+                out.println("Set-Cookie: " + Server.getInstance().getWebServer().getSessionManager().getSession(request).createSessionCookie());
             }
             out.println(); // <--- This line is important: seperates Header and Body!
             if (contentType.isText()) {
@@ -145,11 +133,11 @@ public class GetResponse {
                 }
             }
         } catch (FileNotFoundException e) {
-            notFound().respond(out);
+            notFound(request).respond(out);
         } catch (Exception e) {
             e.printStackTrace();
             if (status != Status.INTERNAL_SERVER_ERROR) {
-                internalServerError().respond(out);
+                internalServerError(request).respond(out);
             } else {
                 throw new IllegalStateException("Uncaught exception", e);
             }
