@@ -23,10 +23,11 @@ async function populateSubjectStudentList(event) {
         body: JSON.stringify({ subjectId })
     })).id;
     const classId = (await studentData).schoolClass.id;
+    const studentId = (await studentData).id;
 
     const students = await fetchJson("/search-partner", {
         method: 'POST',
-        body: JSON.stringify({ subjectId, topicId, classId }),
+        body: JSON.stringify({ subjectId, topicId, classId, studentId }),
         headers: {
             'Content-Type': 'application/json'
         }

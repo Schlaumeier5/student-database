@@ -1250,16 +1250,20 @@ public class PostRequestHandler {
         SchoolClass schoolClass = SchoolClass.get(((Number)json.get("classId")).intValue());
         Subject subject = Subject.get(((Number) json.get("subjectId")).intValue());
         Topic topic = Topic.get(((Number) json.get("topicId")).intValue());
+        Student student = Student.get(((Number)json.get("studentId")).intValue());
 
-        List<Student> students = schoolClass.getStudents().stream().filter((s) -> s.getCurrentTopic(subject).equals(topic)
+        List<Student> students = Student.getAll().stream()
+                                    .filter((s) -> s.getSchoolClass().getGrade() == schoolClass.getGrade())
+                                    .filter((s) -> s.getCurrentTopic(subject).equals(topic)
+                                         && s.getSelectedTasks().stream().filter((t) -> t.getTopic().equals(topic)).anyMatch((t) -> student.getSelectedTasks().contains(t))
                                          && s.getCurrentRequests(subject).stream().anyMatch((r) -> r == SubjectRequest.PARTNER))
                                          .toList();
         StringBuilder responseBuilder = new StringBuilder("[");
         for (int i = 0; i < students.size(); i++) {
-            Student student = students.get(i);
-            responseBuilder.append("{\"id\":").append(student.getId())
-                .append(",\"name\":\"").append(student.getFirstName()).append(" ").append(student.getLastName()).append('"')
-                .append(", \"room\":\"").append(student.getCurrentRoom() != null ? student.getCurrentRoom().getLabel() : "None").append("\"");
+            Student partner = students.get(i);
+            responseBuilder.append("{\"id\":").append(partner.getId())
+                .append(",\"name\":\"").append(partner.getFirstName()).append(" ").append(partner.getLastName()).append('"')
+                .append(", \"room\":\"").append(partner.getCurrentRoom() != null ? partner.getCurrentRoom().getLabel() : "None").append("\"");
             responseBuilder.append("}");
             if (i < students.size() - 1) {
                 responseBuilder.append(", ");
