@@ -5,9 +5,9 @@ plugins {
 }
 
 group = "igs-landstuhl"
-version = "1.0-SNAPSHOT"
+version = "1.0"
 application {
-    mainClass.set("de.igslandstuhl.database.Application") // update to your actual main class if different
+    mainClass.set("de.igslandstuhl.database.Application")
 }
 
 repositories {
@@ -34,7 +34,7 @@ tasks.jar {
 }
 tasks.shadowJar {
     archiveBaseName.set("student-database")
-    archiveClassifier.set("fat") // no "-all" suffix, makes it the default jar
+    archiveClassifier.set("fat")
     archiveVersion.set(project.version.toString())    // omit version in filename if you want
     manifest {
         attributes["Main-Class"] = application.mainClass.get()

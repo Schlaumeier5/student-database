@@ -71,7 +71,7 @@ public class SessionManager {
         int count = requests == null ? 0 : requests;
         count++;
         requestCount.put(session, count);
-        if (count > maxRequests) {
+        if (count > maxRequests && !getSessionUser(request).isAdmin()) {
             System.out.println("Ratelimit!");
             return false;
         }
@@ -102,7 +102,8 @@ public class SessionManager {
     }
     public User getSessionUser(Session session) {
         synchronized (sessionUsers) {
-            return User.getUser(sessionUsers.get(session));
+            User user = User.getUser(sessionUsers.get(session));
+            return user == null ? User.ANONYMOUS : user;
         }
     }
 
