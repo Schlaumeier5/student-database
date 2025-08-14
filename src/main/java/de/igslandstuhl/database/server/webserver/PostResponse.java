@@ -147,7 +147,7 @@ public class PostResponse {
     public static PostResponse getResource(ResourceLocation resourceLocation, String user, PostRequest request) {
         try {
             if (AccessManager.hasAccess(user, resourceLocation)) {
-                return new PostResponse(Status.OK, GetResponse.getResource(resourceLocation, user).getResponseBody(), ContentType.ofResourceLocation(resourceLocation), request);
+                return new PostResponse(Status.OK, GetResponse.getResource(request, resourceLocation, user).getResponseBody(), ContentType.ofResourceLocation(resourceLocation), request);
             } else {
                 return unauthorized("You have to be logged in to access this resource.", request);
             }
