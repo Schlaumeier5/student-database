@@ -1,15 +1,22 @@
-package de.igslandstuhl.database.server.webserver;
+package de.igslandstuhl.database.server.webserver.responses;
 
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
 
 import de.igslandstuhl.database.server.Server;
 import de.igslandstuhl.database.server.resources.ResourceLocation;
+import de.igslandstuhl.database.server.webserver.AccessManager;
+import de.igslandstuhl.database.server.webserver.ContentType;
+import de.igslandstuhl.database.server.webserver.Cookie;
+import de.igslandstuhl.database.server.webserver.NoWebResourceException;
+import de.igslandstuhl.database.server.webserver.Status;
+import de.igslandstuhl.database.server.webserver.requests.HttpRequest;
+import de.igslandstuhl.database.server.webserver.requests.PostRequest;
 
 /**
  * Represents a response to a POST request in the web server.
  */
-public class PostResponse {
+public class PostResponse implements HttpResponse {
     /**
      * The HTTP status code of this response.
      * This code indicates the result of processing the POST request.
@@ -214,5 +221,17 @@ public class PostResponse {
         return new PostResponse(Status.FOUND, "", ContentType.TEXT_PLAIN, request, new String[] {
             "Location: " + location
         });
+    }
+    @Override
+    public Status getStatus() {
+        return statusCode;
+    }
+    @Override
+    public HttpRequest getHttpRequest() {
+        return request;
+    }
+    @Override
+    public ContentType getContentType() {
+        return contentType;
     }
 }

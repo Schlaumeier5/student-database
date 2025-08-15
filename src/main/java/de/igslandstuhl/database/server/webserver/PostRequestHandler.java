@@ -27,6 +27,8 @@ import de.igslandstuhl.database.api.User;
 import de.igslandstuhl.database.api.results.StudentGenerationResult;
 import de.igslandstuhl.database.api.results.TeacherGenerationResult;
 import de.igslandstuhl.database.server.Server;
+import de.igslandstuhl.database.server.webserver.requests.PostRequest;
+import de.igslandstuhl.database.server.webserver.responses.PostResponse;
 
 public class PostRequestHandler {
     /**

@@ -6,6 +6,9 @@ import java.io.PrintStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import de.igslandstuhl.database.server.webserver.requests.PostRequest;
+import de.igslandstuhl.database.server.webserver.responses.PostResponse;
+
 public class PostResponseTest {
     PostRequest initialRequest;
     @BeforeEach

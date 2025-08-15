@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import de.igslandstuhl.database.server.resources.ResourceLocation;
+import de.igslandstuhl.database.server.webserver.requests.GetRequest;
 
 public class GetRequestTest {
     private static final String LOCALHOST = "127.0.0.1";

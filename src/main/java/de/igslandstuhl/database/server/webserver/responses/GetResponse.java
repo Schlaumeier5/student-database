@@ -1,4 +1,4 @@
-package de.igslandstuhl.database.server.webserver;
+package de.igslandstuhl.database.server.webserver.responses;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -7,11 +7,16 @@ import java.io.PrintStream;
 import de.igslandstuhl.database.server.Server;
 import de.igslandstuhl.database.server.resources.ResourceHelper;
 import de.igslandstuhl.database.server.resources.ResourceLocation;
+import de.igslandstuhl.database.server.webserver.AccessManager;
+import de.igslandstuhl.database.server.webserver.ContentType;
+import de.igslandstuhl.database.server.webserver.NoWebResourceException;
+import de.igslandstuhl.database.server.webserver.Status;
+import de.igslandstuhl.database.server.webserver.requests.HttpRequest;
 
 /**
  * Represents a response to a GET request in the web server.
  */
-public class GetResponse {
+public class GetResponse implements HttpResponse {
     /**
      * Returns a response for a GET request that was not found.
      * @return the GetResponse object
@@ -153,5 +158,17 @@ public class GetResponse {
             }
         }
         return "";
+    }
+    @Override
+    public Status getStatus() {
+        return status;
+    }
+    @Override
+    public ContentType getContentType() {
+        return contentType;
+    }
+    @Override
+    public HttpRequest getHttpRequest() {
+        return request;
     }
 }
