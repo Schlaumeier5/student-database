@@ -50,6 +50,16 @@ public class SpecialTask extends Task {
                 '}';
     }
 
+    @Override
+    public String toJSON() {
+        return "{" +
+                "\"id\":" + getId() +
+                ", \"name\": \"" + getName() + '"' +
+                ", \"ratio\":" + ratio +
+                ", \"subject\": \"" + subject.getName() + '"' +
+                '}';
+    }
+
     /**
      * Creates a SpecialTask object from SQL query result fields.
      * This method is used to convert the result of a database query into a SpecialTask object.

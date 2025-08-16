@@ -15,7 +15,7 @@ import de.igslandstuhl.database.server.sql.SQLHelper;
  * Represents a topic in the student database.
  * Topics are associated with subjects and contain tasks of varying difficulty levels.
  */
-public class Topic {
+public class Topic implements APIObject {
     /**
      * SQL fields for the Topic table.
      * Used for database queries to retrieve topic information.
@@ -297,6 +297,11 @@ public class Topic {
 
     @Override
     public String toString() {
+        return "{\"id\":" + id + ", \"name\": \"" + name + "\", \"subject\": " + subject + ", \"ratio\": " + ratio + ", \"grade\": " + grade
+                + ", \"tasks\": " + getTaskIds() + ", \"number\": " + number + "}";
+    }
+    @Override
+    public String toJSON() {
         return "{\"id\":" + id + ", \"name\": \"" + name + "\", \"subject\": " + subject + ", \"ratio\": " + ratio + ", \"grade\": " + grade
                 + ", \"tasks\": " + getTaskIds() + ", \"number\": " + number + "}";
     }

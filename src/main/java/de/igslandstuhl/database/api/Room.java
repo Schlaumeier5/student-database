@@ -13,7 +13,7 @@ import de.igslandstuhl.database.server.sql.SQLHelper;
  * Represents a room in the system.
  * Each room has a label and a minimum level required for students to access it.
  */
-public class Room {
+public class Room implements APIObject {
     private static final String[] SQL_FIELDS = {"label", "minimum_level"};
     /**
      * A map to store all rooms, keyed by their label.
@@ -228,6 +228,10 @@ public class Room {
         if (minimumLevel != other.minimumLevel)
             return false;
         return true;
+    }
+    @Override
+    public String toJSON() {
+        return "{\"label\": \""+label+ "\", \"minimumLevel\": \"" + minimumLevel + "\"}";
     }
     
 }

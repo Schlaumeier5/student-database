@@ -9,7 +9,7 @@ import de.igslandstuhl.database.server.sql.SQLHelper;
  * Represents a school year with its associated properties and methods to manage it.
  * Provides functionality to retrieve, add, and update school years in the database.
  */
-public class SchoolYear {
+public class SchoolYear implements APIObject {
     /**
      * SQL fields for the SchoolYear table.
      * Used for database queries to retrieve school year information.
@@ -239,5 +239,10 @@ public class SchoolYear {
         } else if (!label.equals(other.label))
             return false;
         return true;
+    }
+
+    @Override
+    public String toJSON() {
+        return "{\"id\":" + id + ",\"label\":\"" + label + "\",\"weekCount\":" + weekCount + ",\"currentWeek\":" + currentWeek + "}";
     }
 }
