@@ -40,7 +40,7 @@ public class HttpHandler<Rq extends HttpRequest> {
         }
     }
 
-    public static void registerPostRequestHandler(String path, AccessLevel accessLevel, Function<PostRequest, HttpResponse> handler) {
+    public static void registerPostRequestHandler(String path, AccessLevel accessLevel, Function<APIPostRequest, HttpResponse> handler) {
         Registry.postRequestHandlerRegistry().register(path, new HttpHandler<>(path, accessLevel, handler));
     }
     public static void registerGetRequestHandler(String path, AccessLevel accessLevel, Function<GetRequest, HttpResponse> handler) {

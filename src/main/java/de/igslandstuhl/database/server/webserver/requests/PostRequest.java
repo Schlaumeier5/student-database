@@ -7,9 +7,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 
-import de.igslandstuhl.database.api.Student;
 import de.igslandstuhl.database.api.User;
-import de.igslandstuhl.database.server.Server;
 import de.igslandstuhl.database.server.resources.ResourceLocation;
 import de.igslandstuhl.database.server.webserver.Cookie;
 import de.igslandstuhl.database.server.webserver.HttpHeader;
@@ -161,17 +159,14 @@ public class PostRequest implements HttpRequest {
             return data.get(key);
         }
     }
-    public Student getCurrentStudent() {
-        User user = Server.getInstance().getWebServer().getSessionManager().getSessionUser(this);
-        if (user == null || user == User.ANONYMOUS) {
-            return null; // User is not logged in
+    public boolean getBoolean(String key) {
+        try {
+            Map<String, Object> json = getJson();
+            return json.containsKey(key) && (boolean) json.get(key);
+        } catch (JsonSyntaxException e) {
+            Map<String, String> data = getFormData();
+            return Boolean.parseBoolean(data.get(key));
         }
-        if (user instanceof Student student) {
-            return student;
-        } else if ((user.isTeacher() || user.isAdmin()) && getJson().containsKey("studentId")) {
-            return Student.get(getInt("studentId"));
-        }
-        return null;
     }
 
     /**
