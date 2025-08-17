@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "igs-landstuhl"
-version = "1.0"
+version = "v1.0-PATCH-0"
 application {
     mainClass.set("de.igslandstuhl.database.Application")
 }
