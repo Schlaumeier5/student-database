@@ -59,4 +59,39 @@ public interface HttpResponse {
             
         };
     }
+    public static HttpResponse internalServerError(HttpRequest request, Throwable cause) {
+        Status errorStatus = Status.INTERNAL_SERVER_ERROR;
+        return new HttpResponse() {
+            @Override
+            public Status getStatus() {
+                return errorStatus;
+            }
+            @Override
+            public HttpRequest getHttpRequest() {
+                return request;
+            }
+            @Override
+            public void respond(PrintStream out) {
+                out.print("HTTP/1.1 ");errorStatus.write(out);out.println();
+                out.print("Content-Type: text/html");
+                out.print("; charset=UTF8");
+                out.println();
+                out.println("Set-Cookie: " + Server.getInstance().getWebServer().getSessionManager().getSession(request).createSessionCookie());
+                out.println(); // <--- This line is important: seperates Header and Body!
+                ResourceLocation resourceLocation = new ResourceLocation("html", "errors", errorStatus.getCode() + ".html");
+                String resource;
+                try {
+                    resource = ResourceHelper.readResourceCompletely(resourceLocation);
+                    out.println(resource);
+                } catch (Exception e) {
+                    throw new IllegalStateException(e);
+                }
+            }
+            @Override
+            public ContentType getContentType() {
+                return ContentType.HTML;
+            }
+            
+        };
+    }
 }

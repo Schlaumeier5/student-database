@@ -1,20 +1,19 @@
 package de.igslandstuhl.database.server.webserver.requests;
 
-import java.util.function.Function;
-
 import de.igslandstuhl.database.Registry;
 import de.igslandstuhl.database.server.Server;
 import de.igslandstuhl.database.server.webserver.AccessLevel;
 import de.igslandstuhl.database.server.webserver.SessionManager;
 import de.igslandstuhl.database.server.webserver.Status;
 import de.igslandstuhl.database.server.webserver.responses.HttpResponse;
+import de.igslandstuhl.database.utils.ThrowingFunction;
 
 public class HttpHandler<Rq extends HttpRequest> {
     private final String path;
     private final AccessLevel accessLevel;
-    private final Function<Rq, HttpResponse> handler;
+    private final ThrowingFunction<Rq, HttpResponse> handler;
 
-    private HttpHandler(String path, AccessLevel accessLevel, Function<Rq, HttpResponse> handler) {
+    private HttpHandler(String path, AccessLevel accessLevel, ThrowingFunction<Rq, HttpResponse> handler) {
         this.accessLevel = accessLevel;
         this.handler = handler;
         this.path = path;
@@ -40,10 +39,10 @@ public class HttpHandler<Rq extends HttpRequest> {
         }
     }
 
-    public static void registerPostRequestHandler(String path, AccessLevel accessLevel, Function<APIPostRequest, HttpResponse> handler) {
+    public static void registerPostRequestHandler(String path, AccessLevel accessLevel, ThrowingFunction<APIPostRequest, HttpResponse> handler) {
         Registry.postRequestHandlerRegistry().register(path, new HttpHandler<>(path, accessLevel, handler));
     }
-    public static void registerGetRequestHandler(String path, AccessLevel accessLevel, Function<GetRequest, HttpResponse> handler) {
+    public static void registerGetRequestHandler(String path, AccessLevel accessLevel, ThrowingFunction<GetRequest, HttpResponse> handler) {
         Registry.getRequestHandlerRegistry().register(path, new HttpHandler<>(path, accessLevel, handler));
     }
 }
