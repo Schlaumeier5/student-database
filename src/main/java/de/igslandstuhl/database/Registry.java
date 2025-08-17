@@ -6,11 +6,22 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import de.igslandstuhl.database.server.commands.Command;
+import de.igslandstuhl.database.server.webserver.requests.GetRequest;
+import de.igslandstuhl.database.server.webserver.requests.HttpHandler;
+import de.igslandstuhl.database.server.webserver.requests.PostRequest;
 
 public class Registry<K, V> implements Closeable {
     private static final Registry<String,Command> COMMAND_REGISTRY = new Registry<>();
+    private static final Registry<String,HttpHandler<PostRequest>> POST_HANDLER_REGISTRY = new Registry<>();
+    private static final Registry<String,HttpHandler<GetRequest>> GET_HANDLER_REGISTRY = new Registry<>();
     public static Registry<String,Command> commandRegistry() {
         return COMMAND_REGISTRY;
+    }
+    public static Registry<String, HttpHandler<PostRequest>> postRequestHandlerRegistry() {
+        return POST_HANDLER_REGISTRY;
+    }
+    public static Registry<String, HttpHandler<GetRequest>> getRequestHandlerRegistry() {
+        return GET_HANDLER_REGISTRY;
     }
 
     private final Map<K,V> objects = new HashMap<>();

@@ -2,6 +2,9 @@ package de.igslandstuhl.database.server.webserver.responses;
 
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
+import java.util.List;
+
+import com.google.gson.Gson;
 
 import de.igslandstuhl.database.server.Server;
 import de.igslandstuhl.database.server.resources.ResourceLocation;
@@ -221,6 +224,10 @@ public class PostResponse implements HttpResponse {
         return new PostResponse(Status.FOUND, "", ContentType.TEXT_PLAIN, request, new String[] {
             "Location: " + location
         });
+    }
+    public static PostResponse json(Object json, PostRequest request) {
+        Gson gson = new Gson();
+        return new PostResponse(Status.OK, gson.toJson(json), ContentType.JSON, request);
     }
     @Override
     public Status getStatus() {

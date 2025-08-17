@@ -4,9 +4,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 
+import de.igslandstuhl.database.api.Student;
 import de.igslandstuhl.database.api.User;
+import de.igslandstuhl.database.server.Server;
 import de.igslandstuhl.database.server.resources.ResourceLocation;
 import de.igslandstuhl.database.server.webserver.Cookie;
 import de.igslandstuhl.database.server.webserver.HttpHeader;
@@ -138,6 +141,37 @@ public class PostRequest implements HttpRequest {
         java.lang.reflect.Type mapType = new TypeToken<Map<String, Object>>(){}.getType();
         Map<String, Object> json = gson.fromJson(body, mapType);
         return json;
+    }
+
+    public int getInt(String key) {
+        try {
+            Map<String, Object> json = getJson();
+            return ((Number)json.get(key)).intValue();
+        } catch (JsonSyntaxException e) {
+            Map<String, String> data = getFormData();
+            return Integer.parseInt(data.get(key));
+        }
+    }
+    public String getString(String key) {
+        try {
+            Map<String, Object> json = getJson();
+            return (String)json.get(key);
+        } catch (JsonSyntaxException e) {
+            Map<String, String> data = getFormData();
+            return data.get(key);
+        }
+    }
+    public Student getCurrentStudent() {
+        User user = Server.getInstance().getWebServer().getSessionManager().getSessionUser(this);
+        if (user == null || user == User.ANONYMOUS) {
+            return null; // User is not logged in
+        }
+        if (user instanceof Student student) {
+            return student;
+        } else if ((user.isTeacher() || user.isAdmin()) && getJson().containsKey("studentId")) {
+            return Student.get(getInt("studentId"));
+        }
+        return null;
     }
 
     /**

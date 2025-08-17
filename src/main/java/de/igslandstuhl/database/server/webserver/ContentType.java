@@ -11,7 +11,8 @@ public enum ContentType {
     JAVASCRIPT ("text/javascript"),
     CSS ("text/css"),
     PNG ("image/png"),
-    JSON ("text/json")
+    JSON ("text/json"),
+    CSV ("text/csv")
     ;
     /**
      * The name of the content type, used in HTTP headers.
