@@ -1,9 +1,11 @@
 package de.igslandstuhl.database.utils;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 import com.google.gson.Gson;
 
@@ -61,5 +63,14 @@ public class JSONUtils {
             })
             .reduce("", (s1, s2) -> s1 + ",\n    " + s2)
             .replaceFirst(",", "") + "\n]";
+    }
+    public static <T> String toJON(List<T> list, Function<T, String> jsonHandler) {
+        return "[" + list.stream()
+            .map(jsonHandler)
+            .reduce("", (s1, s2) -> s1 + ",\n    " + s2)
+            .replaceFirst(",", "") + "\n]";
+    }
+    public static String toJSON(int[] arr) {
+        return Arrays.toString(arr);
     }
 }

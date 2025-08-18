@@ -2,7 +2,6 @@ package de.igslandstuhl.database.server.webserver.responses;
 
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
-import java.util.List;
 
 import com.google.gson.Gson;
 
@@ -189,6 +188,14 @@ public class PostResponse implements HttpResponse {
      */
     public static PostResponse unauthorized(String message, PostRequest request) {
         return new PostResponse(Status.UNAUTHORIZED, message, ContentType.TEXT_PLAIN, request);
+    }
+    /**
+     * Returns a response indicating that the user is unauthorized to access the requested resource.
+     * This is used when the user is not authenticated or does not have permission to access the resource.
+     * @return A PostResponse object representing the unauthorized response.
+     */
+    public static PostResponse unauthorized(PostRequest rq) {
+        return unauthorized("Not logged in or invalid session", rq);
     }
 
     /**

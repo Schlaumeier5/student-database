@@ -389,6 +389,7 @@ public class Student extends User {
      * Adds a subject request for this student.
      * @param subjectId the subject ID
      * @param type the request type
+     * @deprecated Use addSubjectRequest(Subject, SubjectRequest) instead
      */
     public void addSubjectRequest(int subjectId, String type) {
         currentRequests.computeIfPresent(subjectId, (key, value) -> {
@@ -398,15 +399,32 @@ public class Student extends User {
         currentRequests.computeIfAbsent(subjectId, key -> new HashSet<>()).add(SubjectRequest.fromGermanTranslation(type));
     }
     /**
+     * Adds a subject request for this student.
+     * @param subject the corresponding subject
+     * @param subjectRequest the request
+     */
+    public void addSubjectRequest(Subject subject, SubjectRequest subjectRequest) {
+        addSubjectRequest(subject.getId(), subjectRequest.getGermanTranslation());
+    }
+    /**
      * Removes a subject request for this student.
      * @param subjectId the subject ID
      * @param type the request type to remove
+     * @deprecated Use removeSubjectRequest(Subject, SubjectRequest) instead
      */
     public void removeSubjectRequest(int subjectId, String type) {
         currentRequests.computeIfPresent(subjectId, (key, value) -> {
             value.remove(SubjectRequest.fromGermanTranslation(type));
             return value;
         });
+    }
+    /**
+     * Removes a subject request from this student.
+     * @param subject the corresponding subject
+     * @param subjectRequest the request
+     */
+    public void removeSubjectRequest(Subject subject, SubjectRequest subjectRequest) {
+        removeSubjectRequest(subject.getId(), subjectRequest.getGermanTranslation());
     }
 
     public void beginTask(Task task) throws SQLException {

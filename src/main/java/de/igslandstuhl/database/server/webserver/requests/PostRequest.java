@@ -1,6 +1,7 @@
 package de.igslandstuhl.database.server.webserver.requests;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.google.gson.Gson;
@@ -48,6 +49,7 @@ public class PostRequest implements HttpRequest {
     private final String userAgent;
     private final String acceptLanguage;
     private final boolean secureConnection;
+    private final HttpHeader header;
 
     /**
      * Constructs a new PostRequest with the given header and body.
@@ -71,6 +73,7 @@ public class PostRequest implements HttpRequest {
         this.userAgent = header.getUserAgent();
         this.acceptLanguage = header.getAcceptLanguage();
         this.secureConnection = secureConnection;
+        this.header = header;
         
         String[] extPts = path.split("\\.");
         if (extPts.length > 1) {
@@ -111,6 +114,9 @@ public class PostRequest implements HttpRequest {
     @Override
     public boolean isSecureConnection() {
         return secureConnection;
+    }
+    public HttpHeader getHeader() {
+        return header;
     }
 
     public Map<String, String> getFormData() {
@@ -166,6 +172,22 @@ public class PostRequest implements HttpRequest {
         } catch (JsonSyntaxException e) {
             Map<String, String> data = getFormData();
             return Boolean.parseBoolean(data.get(key));
+        }
+    }
+    public List<?> getList(String key) {
+        return (List<?>) getJson().get(key);
+    }
+    public boolean containsKey(String key) {
+        try {
+            Map<String, Object> json = getJson();
+            return json.containsKey(key);
+        } catch (JsonSyntaxException e) {
+            try {
+                Map<String, String> data = getFormData();
+                return data.containsKey(key);
+            } catch (IllegalArgumentException e2) {
+                return false;
+            }
         }
     }
 
