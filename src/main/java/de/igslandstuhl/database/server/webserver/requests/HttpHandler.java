@@ -27,13 +27,14 @@ public class HttpHandler<Rq extends HttpRequest> {
         }
         if (!accessLevel.hasAccess(sessionManager.getSessionUser(request))) {
             return HttpResponse.error(request, Status.UNAUTHORIZED);
-        } else if (path != request.getPath().split("\\?")[0]) {
+        } else if (!path.equals(request.getPath().split("\\?")[0])) {
             System.err.println("Wrong path for HTTP handler: " + handler + ", path: " + request.getPath());
             return HttpResponse.error(request, Status.INTERNAL_SERVER_ERROR);
         } else {
             try {
                 return handler.apply(request);
             } catch (Throwable t) {
+                t.printStackTrace();
                 return HttpResponse.error(request, Status.INTERNAL_SERVER_ERROR);
             }
         }

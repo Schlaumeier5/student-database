@@ -7,7 +7,7 @@ public enum AccessLevel {
 
     public boolean hasAccess(User user) {
         if (this == PUBLIC) return true;
-        else if (user != null && user != User.ANONYMOUS) return false;
+        else if (user == null || user == User.ANONYMOUS) return false;
         else if (this == USER || this == STUDENT) return true;
         else if (user.isStudent()) return false;
         else if (this == TEACHER) return true;
