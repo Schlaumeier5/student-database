@@ -13,6 +13,8 @@ import org.junit.jupiter.api.Test;
 
 import com.google.gson.JsonSyntaxException;
 
+import de.igslandstuhl.database.server.webserver.requests.PostRequest;
+
 public class PostRequestTest {
     private static final String LOCALHOST = "127.0.0.1";
     PostRequest postRequest1;

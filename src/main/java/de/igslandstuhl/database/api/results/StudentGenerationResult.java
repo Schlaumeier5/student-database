@@ -9,4 +9,12 @@ public class StudentGenerationResult extends GenerationResult<Student> {
     public Student getStudent() {
         return getEntity();
     }
+    @Override
+    public String toCSVRow() {
+        return new StringBuilder().append(this.getStudent().getId()).append(",")
+            .append(this.getStudent().getFirstName()).append(",")
+            .append(this.getStudent().getLastName()).append(",")
+            .append(this.getStudent().getEmail()).append(",")
+            .append(this.getPassword()).toString();
+    }
 }

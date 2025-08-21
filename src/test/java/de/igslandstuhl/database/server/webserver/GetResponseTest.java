@@ -9,6 +9,8 @@ import java.io.PrintStream;
 import org.junit.jupiter.api.Test;
 
 import de.igslandstuhl.database.server.resources.ResourceLocation;
+import de.igslandstuhl.database.server.webserver.requests.GetRequest;
+import de.igslandstuhl.database.server.webserver.responses.GetResponse;
 
 public class GetResponseTest {
     GetRequest request = new GetRequest("GET / HTTP/1.1", "127.0.0.1", true);

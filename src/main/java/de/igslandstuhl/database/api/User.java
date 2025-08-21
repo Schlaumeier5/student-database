@@ -11,7 +11,7 @@ import de.igslandstuhl.database.utils.CommonUtils;
  * Abstract class representing a user in the system.
  * This class provides methods to check user roles, retrieve password hashes, and convert user data to JSON format.
  */
-public abstract class User {
+public abstract class User implements APIObject {
     public static final User ANONYMOUS = new User() {
         @Override
         public boolean isTeacher() {

@@ -13,7 +13,7 @@ import de.igslandstuhl.database.server.sql.SQLHelper;
  * Represents a school class with its associated subjects and students.
  * Provides methods to fetch subjects and students from the database.
  */
-public class SchoolClass {
+public class SchoolClass implements APIObject {
     /**
      * SQL fields for the SchoolClass table.
      * Used for database queries to retrieve class information.
@@ -320,6 +320,11 @@ public class SchoolClass {
         if (grade != other.grade)
             return false;
         return true;
+    }
+
+    @Override
+    public String toJSON() {
+        return "{\"id\": " + id + ", \"label\": \"" + label + "\", \"grade\": " + grade + "}";
     }
     
 }

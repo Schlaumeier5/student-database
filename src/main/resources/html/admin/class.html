@@ -16,7 +16,7 @@
                 <section id="editData">
                     <h2>Daten bearbeiten</h2>
                     <form id="editClassForm" method="post" action="/edit-class">
-                        <input type="hidden" class="classId" id="classId" name="id">
+                        <input type="hidden" class="classId" id="classId" name="classId">
                         <label for="className">Name der Klasse:</label>
                         <input type="text" id="className" name="name" required>
                         <label for="classGrade">Stufe:</label>
@@ -38,7 +38,7 @@
                         <form id="addSubjectForm" method="post" action="/add-subject-to-class">
                             <input type="hidden" class="classId" id="subjectClassId" name="classId">
                             <label for="subjectName">Fachname:</label>
-                            <select id="subjectSelect" name="subject" value="Mathematik"></select>
+                            <select id="subjectSelect" name="subjectId" value="Mathematik"></select>
                             <button type="submit">Fach hinzufügen</button>
                         </form>
                     </section>

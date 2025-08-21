@@ -23,4 +23,13 @@ public class TeacherGenerationResult extends GenerationResult<Teacher> {
     public String getEmail() {
         return getTeacher().getEmail();
     }
+
+    @Override
+    public String toCSVRow() {
+        return new StringBuilder().append(this.getId()).append(",")
+                .append(this.getFirstName()).append(",")
+                .append(this.getLastName()).append(",")
+                .append(this.getEmail()).append(",")
+                .append(this.getPassword()).toString();
+    }
 }

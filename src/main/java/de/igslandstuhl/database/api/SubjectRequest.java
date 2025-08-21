@@ -1,6 +1,6 @@
 package de.igslandstuhl.database.api;
 
-public enum SubjectRequest {
+public enum SubjectRequest implements APIObject {
     HELP ("hilfe"),
     PARTNER ("partner"),
     EXPERIMENT ("betreuung"),
@@ -22,5 +22,10 @@ public enum SubjectRequest {
             }
         }
         throw new IllegalArgumentException("No matching SubjectRequest for translation: " + translation);
+    }
+
+    @Override
+    public String toJSON() {
+        return '"' + germanTranslation + '"';
     }
 }

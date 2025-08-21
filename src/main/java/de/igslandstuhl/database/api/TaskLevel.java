@@ -5,7 +5,7 @@ package de.igslandstuhl.database.api;
  * Each level has a specific ratio that indicates the proportion of the progress
  * that can be achieved at that level.
  */
-public enum TaskLevel {
+public enum TaskLevel implements APIObject {
     LEVEL1 (1, "Niveau 1"),
     LEVEL2 (2, "Niveau 2"),
     LEVEL3 (3, "Niveau 3"),
@@ -72,5 +72,10 @@ public enum TaskLevel {
     @Override
     public String toString() {
         return this == SPECIAL ? "Special" : String.valueOf(number);
+    }
+
+    @Override
+    public String toJSON() {
+        return this == SPECIAL ? "\"Special\"" : String.valueOf(number);
     }
 }

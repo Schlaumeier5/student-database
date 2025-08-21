@@ -1,6 +1,6 @@
 package de.igslandstuhl.database.api.results;
 
-public class GenerationResult<T> {
+public abstract class GenerationResult<T> {
     private final T entity;
     private final String password;
 
@@ -16,4 +16,6 @@ public class GenerationResult<T> {
     public String getPassword() {
         return password;
     }
+
+    public abstract String toCSVRow();
 }

@@ -5,6 +5,8 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
 
+import de.igslandstuhl.database.server.webserver.requests.HttpRequest;
+
 public class Session {
     private final UUID uuid = UUID.randomUUID();
     
