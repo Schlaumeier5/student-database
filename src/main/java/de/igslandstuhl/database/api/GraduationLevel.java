@@ -1,6 +1,6 @@
 package de.igslandstuhl.database.api;
 
-public enum GraduationLevel {
+public enum GraduationLevel implements APIObject {
     LEVEL0 (0, "Neustarter"),
     LEVEL1 (1, "Starter"),
     LEVEL2 (2, "Durchstarter"),
@@ -45,5 +45,10 @@ public enum GraduationLevel {
 
     public static GraduationLevel initialValue() {
         return LEVEL1;
+    }
+
+    @Override
+    public String toJSON() {
+        return String.valueOf(level);
     }
 }

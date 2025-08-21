@@ -53,7 +53,7 @@ function createRequestButton(subject, type, label) {
       await fetch('/subject-request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subjectId: subject.id, type, remove: true, studentId })
+        body: JSON.stringify({ subjectId: subject.id, subjectRequest: type, remove: true, studentId })
       });
       // Update local state
       if (studentData.currentRequests[subject.id]) {
@@ -67,7 +67,7 @@ function createRequestButton(subject, type, label) {
       await fetch('/subject-request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subjectId: subject.id, type, studentId })
+        body: JSON.stringify({ subjectId: subject.id, subjectRequest: type, studentId })
       });
       // Update local state
       if (!studentData.currentRequests[subject.id]) {

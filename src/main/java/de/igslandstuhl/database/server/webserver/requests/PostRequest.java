@@ -1,13 +1,17 @@
-package de.igslandstuhl.database.server.webserver;
+package de.igslandstuhl.database.server.webserver.requests;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 
 import de.igslandstuhl.database.api.User;
 import de.igslandstuhl.database.server.resources.ResourceLocation;
+import de.igslandstuhl.database.server.webserver.Cookie;
+import de.igslandstuhl.database.server.webserver.HttpHeader;
 
 /**
  * Represents a POST request in the web server.
@@ -45,6 +49,7 @@ public class PostRequest implements HttpRequest {
     private final String userAgent;
     private final String acceptLanguage;
     private final boolean secureConnection;
+    private final HttpHeader header;
 
     /**
      * Constructs a new PostRequest with the given header and body.
@@ -68,6 +73,7 @@ public class PostRequest implements HttpRequest {
         this.userAgent = header.getUserAgent();
         this.acceptLanguage = header.getAcceptLanguage();
         this.secureConnection = secureConnection;
+        this.header = header;
         
         String[] extPts = path.split("\\.");
         if (extPts.length > 1) {
@@ -109,6 +115,9 @@ public class PostRequest implements HttpRequest {
     public boolean isSecureConnection() {
         return secureConnection;
     }
+    public HttpHeader getHeader() {
+        return header;
+    }
 
     public Map<String, String> getFormData() {
         if (body == null || body.isEmpty()) return Map.of();
@@ -136,6 +145,50 @@ public class PostRequest implements HttpRequest {
         java.lang.reflect.Type mapType = new TypeToken<Map<String, Object>>(){}.getType();
         Map<String, Object> json = gson.fromJson(body, mapType);
         return json;
+    }
+
+    public int getInt(String key) {
+        try {
+            Map<String, Object> json = getJson();
+            return ((Number)json.get(key)).intValue();
+        } catch (JsonSyntaxException e) {
+            Map<String, String> data = getFormData();
+            return Integer.parseInt(data.get(key));
+        }
+    }
+    public String getString(String key) {
+        try {
+            Map<String, Object> json = getJson();
+            return (String)json.get(key);
+        } catch (JsonSyntaxException e) {
+            Map<String, String> data = getFormData();
+            return data.get(key);
+        }
+    }
+    public boolean getBoolean(String key) {
+        try {
+            Map<String, Object> json = getJson();
+            return json.containsKey(key) && (boolean) json.get(key);
+        } catch (JsonSyntaxException e) {
+            Map<String, String> data = getFormData();
+            return Boolean.parseBoolean(data.get(key));
+        }
+    }
+    public List<?> getList(String key) {
+        return (List<?>) getJson().get(key);
+    }
+    public boolean containsKey(String key) {
+        try {
+            Map<String, Object> json = getJson();
+            return json.containsKey(key);
+        } catch (JsonSyntaxException e) {
+            try {
+                Map<String, String> data = getFormData();
+                return data.containsKey(key);
+            } catch (IllegalArgumentException e2) {
+                return false;
+            }
+        }
     }
 
     /**

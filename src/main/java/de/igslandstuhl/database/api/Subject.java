@@ -16,7 +16,7 @@ import de.igslandstuhl.database.server.sql.SQLHelper;
  * Represents a subject in the student database.
  * Subjects can be added to grades and have associated topics.
  */
-public class Subject {
+public class Subject implements APIObject {
     /**
      * A map to cache subjects by their unique identifier.
      * This helps avoid repeated database queries for the same subject.
@@ -281,6 +281,11 @@ public class Subject {
         } else if (!name.equals(other.name))
             return false;
         return true;
+    }
+
+    @Override
+    public String toJSON() {
+        return "{\"id\": " + id + ", \"name\": \"" + name + "\"}";
     }
     
 }

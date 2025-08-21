@@ -10,6 +10,7 @@ import de.igslandstuhl.database.api.Topic;
 import de.igslandstuhl.database.holidays.Holiday;
 import de.igslandstuhl.database.server.Server;
 import de.igslandstuhl.database.server.commands.Command;
+import de.igslandstuhl.database.server.webserver.PostRequestHandler;
 import de.igslandstuhl.database.utils.CommandLineUtils;
 
 /**
@@ -94,6 +95,7 @@ public final class Application {
         Server.getInstance().getConnection().createTables();
 
         Holiday.setupCurrentSchoolYear();
+        PostRequestHandler.registerHandlers();
 
         if (getInstance().runsWebServer()) {
             Server.getInstance().getWebServer().start();

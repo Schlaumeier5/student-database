@@ -1,15 +1,24 @@
-package de.igslandstuhl.database.server.webserver;
+package de.igslandstuhl.database.server.webserver.responses;
 
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
 
+import com.google.gson.Gson;
+
 import de.igslandstuhl.database.server.Server;
 import de.igslandstuhl.database.server.resources.ResourceLocation;
+import de.igslandstuhl.database.server.webserver.AccessManager;
+import de.igslandstuhl.database.server.webserver.ContentType;
+import de.igslandstuhl.database.server.webserver.Cookie;
+import de.igslandstuhl.database.server.webserver.NoWebResourceException;
+import de.igslandstuhl.database.server.webserver.Status;
+import de.igslandstuhl.database.server.webserver.requests.HttpRequest;
+import de.igslandstuhl.database.server.webserver.requests.PostRequest;
 
 /**
  * Represents a response to a POST request in the web server.
  */
-public class PostResponse {
+public class PostResponse implements HttpResponse {
     /**
      * The HTTP status code of this response.
      * This code indicates the result of processing the POST request.
@@ -180,6 +189,14 @@ public class PostResponse {
     public static PostResponse unauthorized(String message, PostRequest request) {
         return new PostResponse(Status.UNAUTHORIZED, message, ContentType.TEXT_PLAIN, request);
     }
+    /**
+     * Returns a response indicating that the user is unauthorized to access the requested resource.
+     * This is used when the user is not authenticated or does not have permission to access the resource.
+     * @return A PostResponse object representing the unauthorized response.
+     */
+    public static PostResponse unauthorized(PostRequest rq) {
+        return unauthorized("Not logged in or invalid session", rq);
+    }
 
     /**
      * Returns a response indicating that the server encountered an internal error while processing the request.
@@ -214,5 +231,21 @@ public class PostResponse {
         return new PostResponse(Status.FOUND, "", ContentType.TEXT_PLAIN, request, new String[] {
             "Location: " + location
         });
+    }
+    public static PostResponse json(Object json, PostRequest request) {
+        Gson gson = new Gson();
+        return new PostResponse(Status.OK, gson.toJson(json), ContentType.JSON, request);
+    }
+    @Override
+    public Status getStatus() {
+        return statusCode;
+    }
+    @Override
+    public HttpRequest getHttpRequest() {
+        return request;
+    }
+    @Override
+    public ContentType getContentType() {
+        return contentType;
     }
 }

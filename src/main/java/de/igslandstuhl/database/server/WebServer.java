@@ -22,13 +22,14 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import de.igslandstuhl.database.server.webserver.GetRequest;
-import de.igslandstuhl.database.server.webserver.GetResponse;
 import de.igslandstuhl.database.server.webserver.HttpHeader;
-import de.igslandstuhl.database.server.webserver.PostRequest;
 import de.igslandstuhl.database.server.webserver.PostRequestHandler;
-import de.igslandstuhl.database.server.webserver.PostResponse;
 import de.igslandstuhl.database.server.webserver.SessionManager;
+import de.igslandstuhl.database.server.webserver.requests.GetRequest;
+import de.igslandstuhl.database.server.webserver.requests.PostRequest;
+import de.igslandstuhl.database.server.webserver.responses.GetResponse;
+import de.igslandstuhl.database.server.webserver.responses.HttpResponse;
+import de.igslandstuhl.database.server.webserver.responses.PostResponse;
 
 /**
  * A simple HTTPS web server that handles various requests related to student data.
@@ -152,7 +153,7 @@ public class WebServer implements Runnable {
                 body = URLDecoder.decode(raw, bodyCharset.name());
             }
             PostRequest parsedRequest = new PostRequest(postHeader, body, clientIp, secure);
-            PostResponse response = Server.getInstance().getWebServer().getSessionManager().validateSession(parsedRequest) ? PostRequestHandler.getInstance().handlePostRequest(parsedRequest) : PostResponse.forbidden("Forbidden: session manipulation or ratelimit", parsedRequest);
+            HttpResponse response = Server.getInstance().getWebServer().getSessionManager().validateSession(parsedRequest) ? PostRequestHandler.getInstance().handlePostRequest(parsedRequest) : PostResponse.forbidden("Forbidden: session manipulation or ratelimit", parsedRequest);
             response.respond(out);
         }
 

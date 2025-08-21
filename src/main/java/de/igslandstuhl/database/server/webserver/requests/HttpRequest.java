@@ -1,4 +1,6 @@
-package de.igslandstuhl.database.server.webserver;
+package de.igslandstuhl.database.server.webserver.requests;
+
+import de.igslandstuhl.database.server.webserver.Cookie;
 
 public interface HttpRequest {
      /**

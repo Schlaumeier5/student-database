@@ -14,16 +14,16 @@
             <main>
                 <section id="edit-teacher">
                     <h2>Lehrer bearbeiten</h2>
-                    <form id="addSubjectToTeacherForm" method="POST">
+                    <form id="addSubjectToTeacherForm" method="POST" action="/add-subject-to-teacher">
                         <label for="editSubjectSelect">Fach auswählen:</label>
                         <input type="hidden" name="teacherId" class="teacherId">
-                        <select id="editSubjectSelect" name="subject" required></select>
+                        <select id="editSubjectSelect" name="subjectId" required></select>
                         <button type="submit">Fach hinzufügen</button>
                     </form>
                     <form id="addClassToTeacherForm" method="POST" action="/add-class-to-teacher">
                         <input type="hidden" name="teacherId" class="teacherId">
-                        <label for="classId">Klasse auswählen:</label>
-                        <select id="editClassSelect" name="class" required></select>
+                        <label for="editClassSelect">Klasse auswählen:</label>
+                        <select id="editClassSelect" name="classId" required></select>
                         <button type="submit">Klasse hinzufügen</button>
                     </form>
                 </section>

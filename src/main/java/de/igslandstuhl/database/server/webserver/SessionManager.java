@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import de.igslandstuhl.database.api.User;
+import de.igslandstuhl.database.server.webserver.requests.HttpRequest;
 
 public class SessionManager {
     private Map<UUID,Session> sessionStore = new HashMap<>();

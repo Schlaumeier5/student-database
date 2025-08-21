@@ -16,7 +16,7 @@ import de.igslandstuhl.database.server.sql.SQLHelper;
  * Represents a task in the student database.
  * Tasks are associated with topics and have different levels of difficulty.
  */
-public class Task {
+public class Task implements APIObject {
     public static final int STATUS_NOT_STARTED = 0;
     public static final int STATUS_IN_PROGRESS = 1;
     public static final int STATUS_COMPLETED = 2;
@@ -284,6 +284,11 @@ public class Task {
         String name = parts[0];
         TaskLevel level = TaskLevel.get(Integer.parseInt(parts[1]));
         return addTask(topic, name, level);
+    }
+
+    @Override
+    public String toJSON() {
+        return "{\"id\": " + id + ", \"topic\": " + topic + ", \"name\": \"" + name + "\", \"niveau\": " + niveau + ", \"number\": \"" + getNumber() + "\", \"ratio\": " + getRatio() + "}";
     }
     
 }

@@ -1,4 +1,4 @@
-package de.igslandstuhl.database.server.webserver;
+package de.igslandstuhl.database.server.webserver.requests;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -6,6 +6,9 @@ import java.util.Map;
 
 import de.igslandstuhl.database.api.User;
 import de.igslandstuhl.database.server.resources.ResourceLocation;
+import de.igslandstuhl.database.server.webserver.Cookie;
+import de.igslandstuhl.database.server.webserver.HttpHeader;
+import de.igslandstuhl.database.server.webserver.WebResourceHandler;
 
 /**
  * Represents a GET request in the web server.
