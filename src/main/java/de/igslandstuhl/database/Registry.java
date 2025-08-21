@@ -6,9 +6,9 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import de.igslandstuhl.database.server.commands.Command;
+import de.igslandstuhl.database.server.webserver.handlers.HttpHandler;
 import de.igslandstuhl.database.server.webserver.requests.APIPostRequest;
 import de.igslandstuhl.database.server.webserver.requests.GetRequest;
-import de.igslandstuhl.database.server.webserver.requests.HttpHandler;
 
 public class Registry<K, V> implements Closeable {
     private static final Registry<String,Command> COMMAND_REGISTRY = new Registry<>();

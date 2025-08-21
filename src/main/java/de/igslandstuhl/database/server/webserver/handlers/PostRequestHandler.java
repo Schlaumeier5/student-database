@@ -1,4 +1,4 @@
-package de.igslandstuhl.database.server.webserver;
+package de.igslandstuhl.database.server.webserver.handlers;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -31,8 +31,9 @@ import de.igslandstuhl.database.api.Topic;
 import de.igslandstuhl.database.api.User;
 import de.igslandstuhl.database.api.results.GenerationResult;
 import de.igslandstuhl.database.server.Server;
+import de.igslandstuhl.database.server.webserver.AccessLevel;
+import de.igslandstuhl.database.server.webserver.ContentType;
 import de.igslandstuhl.database.server.webserver.requests.APIPostRequest;
-import de.igslandstuhl.database.server.webserver.requests.HttpHandler;
 import de.igslandstuhl.database.server.webserver.requests.PostRequest;
 import de.igslandstuhl.database.server.webserver.responses.HttpResponse;
 import de.igslandstuhl.database.server.webserver.responses.PostResponse;
