@@ -11,7 +11,6 @@ import com.google.gson.reflect.TypeToken;
 import de.igslandstuhl.database.api.User;
 import de.igslandstuhl.database.server.resources.ResourceLocation;
 import de.igslandstuhl.database.server.webserver.Cookie;
-import de.igslandstuhl.database.server.webserver.HttpHeader;
 
 /**
  * Represents a POST request in the web server.

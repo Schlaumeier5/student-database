@@ -7,7 +7,6 @@ import java.util.Map;
 import de.igslandstuhl.database.api.User;
 import de.igslandstuhl.database.server.resources.ResourceLocation;
 import de.igslandstuhl.database.server.webserver.Cookie;
-import de.igslandstuhl.database.server.webserver.HttpHeader;
 import de.igslandstuhl.database.server.webserver.WebResourceHandler;
 
 /**
