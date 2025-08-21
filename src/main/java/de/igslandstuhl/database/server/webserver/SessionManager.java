@@ -14,9 +14,9 @@ public class SessionManager {
      * A map to store session IDs and their associated usernames.
      * This is a simple in-memory session store.
      */
-    private Map<Session, String> sessionUsers = new HashMap<>();
-    private Map<Session, Instant> lastActivity = new HashMap<>();
-    private Map<Session, Integer> requestCount = new HashMap<>();
+    private SessionStorage<String> sessionUsers = new SessionStorage<>();
+    private SessionStorage<Instant> lastActivity = new SessionStorage<>();
+    private SessionStorage<Integer> requestCount = new SessionStorage<>();
 
     /**
      * After this duration, sessions expire (are removed from the session store). It is measured in seconds.
@@ -65,15 +65,25 @@ public class SessionManager {
     }
 
     public boolean validateSession(HttpRequest request) {
-        Session session = getSession(request);
-        lastActivity.put(session, Instant.now());
+        lastActivity.set(request, Instant.now());
 
-        Integer requests = requestCount.get(session);
+        Integer requests = requestCount.get(request);
         int count = requests == null ? 0 : requests;
         count++;
-        requestCount.put(session, count);
+        requestCount.set(request, count);
         if (count > maxRequests && !getSessionUser(request).isAdmin()) {
             System.out.println("Ratelimit!");
+            return false;
+        }
+
+        String userAgent = request.getUserAgent();
+        if (!getSession(request).getUserAgent().equals(userAgent)) {
+            System.err.println("SEVERE WARNING: POTENTIAL ATTACK: faked session id (device changed), for user " + getSessionUser(request));
+            return false;
+        }
+        String ip = request.getIP();
+        if (!getSession(request).getIpAddress().equals(ip)) {
+            System.err.println("SEVERE WARNING: POTENTIAL ATTACK: faked session id (ip address changed) for user " + getSessionUser(request));
             return false;
         }
 
@@ -120,12 +130,9 @@ public class SessionManager {
      */
     public void addSessionUser(Session session, String username) {
         // Remove all previous sessions for this user (see #51)
-        if (sessionUsers.values().contains(username)) {
-            sessionUsers.keySet().stream()
-            .filter((k) -> sessionUsers.get(k).equals(username))
-            .toList() // Convert to list to prevent ConcurrentModificationException
-            .forEach((k) -> sessionUsers.remove(k));
+        if (sessionUsers.contains(username)) {
+            sessionUsers.remove(username);
         }
-        sessionUsers.put(session, username);
+        sessionUsers.set(session, username);
     }
 }
