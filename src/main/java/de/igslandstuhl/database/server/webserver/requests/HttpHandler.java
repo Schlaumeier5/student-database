@@ -3,9 +3,9 @@ package de.igslandstuhl.database.server.webserver.requests;
 import de.igslandstuhl.database.Registry;
 import de.igslandstuhl.database.server.Server;
 import de.igslandstuhl.database.server.webserver.AccessLevel;
-import de.igslandstuhl.database.server.webserver.SessionManager;
 import de.igslandstuhl.database.server.webserver.Status;
 import de.igslandstuhl.database.server.webserver.responses.HttpResponse;
+import de.igslandstuhl.database.server.webserver.sessions.SessionManager;
 import de.igslandstuhl.database.utils.ThrowingFunction;
 
 public class HttpHandler<Rq extends HttpRequest> {

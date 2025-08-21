@@ -24,12 +24,12 @@ import java.util.concurrent.Executors;
 
 import de.igslandstuhl.database.server.webserver.HttpHeader;
 import de.igslandstuhl.database.server.webserver.PostRequestHandler;
-import de.igslandstuhl.database.server.webserver.SessionManager;
 import de.igslandstuhl.database.server.webserver.requests.GetRequest;
 import de.igslandstuhl.database.server.webserver.requests.PostRequest;
 import de.igslandstuhl.database.server.webserver.responses.GetResponse;
 import de.igslandstuhl.database.server.webserver.responses.HttpResponse;
 import de.igslandstuhl.database.server.webserver.responses.PostResponse;
+import de.igslandstuhl.database.server.webserver.sessions.SessionManager;
 
 /**
  * A simple HTTPS web server that handles various requests related to student data.
