@@ -329,7 +329,7 @@ public class PostRequestHandler {
         HttpHandler.registerPostRequestHandler("/grade-list", AccessLevel.PUBLIC, (rq) -> {
             return PostResponse.ok(JSONUtils.toJSON(rq.getSubject().getGrades()), ContentType.JSON, rq);
         });
-        HttpHandler.registerPostRequestHandler("/topic-list", AccessLevel.ADMIN, (rq) -> {
+        HttpHandler.registerPostRequestHandler("/topic-list", AccessLevel.STUDENT, (rq) -> {
             return PostResponse.ok(JSONUtils.toJSON(rq.getSubject().getTopics(rq.getInt("grade"))), ContentType.JSON, rq);
         });
         HttpHandler.registerPostRequestHandler("/class-subjects", AccessLevel.ADMIN, (rq) -> {
