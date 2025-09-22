@@ -166,7 +166,9 @@ public class PostRequestHandler {
     public static void registerHandlers() {
         HttpHandler.registerPostRequestHandler("/login", AccessLevel.PUBLIC, (rq) -> {
             String username = prepare(rq.getString("username"), false);
-            String password = prepare(rq.getString("password"), false);
+            // Do not sanitize / url-decode password to allow special characters like %
+            // This is safe as we calculate the hash value anyways
+            String password = rq.getString("password");
             // Check login credentials in the database
             if (Server.getInstance().isValidUser(username, password)) {
                 SessionManager manager = Server.getInstance().getWebServer().getSessionManager();
