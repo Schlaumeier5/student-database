@@ -169,7 +169,9 @@ public class PostRequestHandler {
     public static void registerHandlers() {
         HttpHandler.registerPostRequestHandler("/login", AccessLevel.PUBLIC, (rq) -> {
             String username = prepare(rq.getString("username"), false);
-            String password = prepare(rq.getString("password"), false);
+            // Do not sanitize / url-decode password to allow special characters like %
+            // This is safe as we calculate the hash value anyways
+            String password = rq.getString("password");
             // Check login credentials in the database
             if (Server.getInstance().isValidUser(username, password)) {
                 SessionManager manager = Server.getInstance().getWebServer().getSessionManager();
@@ -332,7 +334,7 @@ public class PostRequestHandler {
         HttpHandler.registerPostRequestHandler("/grade-list", AccessLevel.PUBLIC, (rq) -> {
             return PostResponse.ok(JSONUtils.toJSON(rq.getSubject().getGrades()), ContentType.JSON, rq);
         });
-        HttpHandler.registerPostRequestHandler("/topic-list", AccessLevel.ADMIN, (rq) -> {
+        HttpHandler.registerPostRequestHandler("/topic-list", AccessLevel.STUDENT, (rq) -> {
             return PostResponse.ok(JSONUtils.toJSON(rq.getSubject().getTopics(rq.getInt("grade"))), ContentType.JSON, rq);
         });
         HttpHandler.registerPostRequestHandler("/class-subjects", AccessLevel.ADMIN, (rq) -> {

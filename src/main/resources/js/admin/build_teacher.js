@@ -82,7 +82,7 @@ async function onClassChange(event) {
 }
 async function populateSubjectStudentList(event) {
   const subjectSelect = document.getElementById('subjectSelect');
-  const classSelect = document.getElementById('classSelect');
+  const classSelect = document.getElementById('classSelectSubject');
   const selectedClassId = classSelect.value;
 
   if (!selectedClassId) {
