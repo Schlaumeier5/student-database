@@ -2,6 +2,7 @@ package de.igslandstuhl.database.server.commands;
 
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 
 import de.igslandstuhl.database.Registry;
@@ -353,5 +354,8 @@ public interface Command {
     }
     private static String argsPart(String[] args, int start, int end) {
         return Arrays.stream(Arrays.copyOfRange(args, start, end)).reduce("", (s1,s2) -> s1+" "+s2).replaceFirst(" ", "");
+    }
+    public static List<String> getAllCommandNames() {
+        return Registry.commandRegistry().keyStream().toList();
     }
 }
