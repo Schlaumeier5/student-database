@@ -102,7 +102,9 @@ public class Topic implements APIObject {
         Subject subject = Subject.get(Integer.parseInt(fields[2]));
         int grade = Integer.parseInt(fields[3]);
         int number = Integer.parseInt(fields[4]);
-        Semester semester = Semester.get(Integer.parseInt(fields[5]));
+        Semester semester = fields[5] == null || fields[5].isBlank()
+            ? null
+            : Semester.get(Integer.parseInt(fields[5]));
         return new Topic(id, name, subject, grade, number, semester);
     }
     /**
