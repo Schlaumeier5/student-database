@@ -44,7 +44,7 @@ public class ServerTest {
     public void testValidUser() throws SQLException {
         server.getConnection().createTables(); // Ensure tables are created before testing user validation
         SchoolClass.addClass("5a", 5);
-        Student.registerStudentWithPassword(0, "Max", "Mustermann", "max@muster.mann", "12345", SchoolClass.get(1), GraduationLevel.LEVEL1);
+        Student.registerStudentWithPassword(0, "Max", "Mustermann", "max@muster.mann", "12345", SchoolClass.get(1), GraduationLevel.of(1));
         assertFalse(server.isValidUser("anamethatnostudentwillevergetbecauseitistoolongtoputintotheloginfield", "password"));
         assertFalse(server.isValidUser("max@muster.mann", "123456")); // Test student set up by StudentTest
         assertTrue(server.isValidUser("max@muster.mann", "12345"));
