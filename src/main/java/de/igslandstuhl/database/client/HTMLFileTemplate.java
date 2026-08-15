@@ -21,16 +21,34 @@ public class HTMLFileTemplate implements HTMLTemplate {
 
         return resolved.getFileName().toString();
     }
-    private final String templateString;
+    private final ResourceLocation file;
+
     public HTMLFileTemplate(ResourceLocation file) throws FileNotFoundException {
-        templateString = Server.getInstance().getResourceManager().readResourceCompletely(file);
+        Server.getInstance().getResourceManager().readResourceCompletely(file);
+        this.file = file;
     }
     public HTMLFileTemplate(String file) throws FileNotFoundException {
         this(new ResourceLocation("templates", "html", sanitizeTemplateName(file)));
     }
     @Override
     public String fill(Map<String, String> args) {
+        final String templateString;
+
+        try {
+            templateString = Server.getInstance()
+                .getResourceManager()
+                .readResourceCompletely(file);
+        } catch (FileNotFoundException e) {
+            HTMLTemplate.LOGGER.error(
+                "Failed to reload html template '{}'",
+                file,
+                e
+            );
+            return "";
+        }
+
         if (templateString == null || templateString.isEmpty()) return "";
+
         Pattern p = Pattern.compile("%\\{([^}]+)\\}");
         Matcher m = p.matcher(templateString);
         StringBuffer sb = new StringBuffer();
