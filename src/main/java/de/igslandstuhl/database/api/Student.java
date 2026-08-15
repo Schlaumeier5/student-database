@@ -79,6 +79,11 @@ public class Student extends User {
     private final Set<Task> lockedTasks = new HashSet<>();
 
     /**
+     * Number of attempts per task, indexed by task ID.
+     */
+    private final Map<Integer, Integer> taskAttempts = new HashMap<>();
+
+    /**
      * The current requests of the student, mapped by subject ID.
      */
     private final Map<Integer, Set<SubjectRequest>> currentRequests = new ConcurrentHashMap<>();
@@ -149,6 +154,12 @@ public class Student extends User {
             IndividualTask st = IndividualTask.get(Integer.parseInt(t[0]));
             if (st != null) completedTasks.add(st);
         }, "get_completed_individual_tasks_by_student", INTERESTING_SPECIAL_TASK_STAT_FIELDS, String.valueOf(id));
+
+        Server.getInstance().processRequest((t) -> {
+            int taskId = Integer.parseInt(t[0]);
+            int attempts = Integer.parseInt(t[1]);
+            taskAttempts.put(taskId, attempts);
+        }, "get_task_attempts_by_student", new String[] {"task", "attempts"}, String.valueOf(id));
 
         // Defensive cleanup: ensure no nulls remained
         selectedTasks.removeIf(Objects::isNull);
@@ -363,6 +374,28 @@ public class Student extends User {
     public Set<Task> getLockedTasks() { return new HashSet<>(lockedTasks); }
 
     /**
+     * Returns the number of attempts for a task.
+     *
+     * @param task task to look up
+     * @return attempt count, or 0 if the task has never been started
+     */
+    public int getTaskAttempts(Task task) {
+        if (task == null) {
+            throw new IllegalArgumentException("Task cannot be null");
+        }
+        return taskAttempts.getOrDefault(task.getId(), 0);
+    }
+
+    /**
+     * Returns all task attempt counters, indexed by task ID.
+     *
+     * @return copy of the attempt counters
+     */
+    public Map<Integer, Integer> getTaskAttempts() {
+        return new HashMap<>(taskAttempts);
+    }
+
+    /**
      * Returns the current requests.
      * @return current requests
      */
@@ -439,24 +472,16 @@ public class Student extends User {
     }
 
     public void beginTask(Task task) throws SQLException {
-        if (task == null) {
-            throw new IllegalArgumentException("Task cannot be null");
-        }
-        // Update in DB
-        Server.getInstance().getConnection().executeVoidProcessSecure(
-            SQLHelper.getAddObjectProcess("taskstat",
-                String.valueOf(id),
-                String.valueOf(task.getId()),
-                "1" // 1 indicates the task is in progress
-            )
-        );
-        // Update in memory
-        selectedTasks.add(task);
+        changeTaskStatus(task, Task.STATUS_IN_PROGRESS);
     }
     public void changeTaskStatus(Task task, int newStatus) throws SQLException {
         if (task == null) {
             throw new IllegalArgumentException("Task cannot be null");
         }
+        boolean startsNewAttempt =
+            newStatus == Task.STATUS_IN_PROGRESS
+            && !selectedTasks.contains(task);
+
         // Update in memory
         if (newStatus == Task.STATUS_COMPLETED) {
             selectedTasks.remove(task);
@@ -478,13 +503,23 @@ public class Student extends User {
             throw new IllegalArgumentException("Invalid task status: " + newStatus);
         }
         // Update in DB
-        Server.getInstance().getConnection().executeVoidProcessSecure(
-            SQLHelper.getAddObjectProcess("taskstat",
-                String.valueOf(id),
-                String.valueOf(task.getId()),
-                String.valueOf(newStatus)
-            )
-        );
+        if (startsNewAttempt) {
+            Server.getInstance().getConnection().executeVoidProcessSecure(
+                SQLHelper.getAddObjectProcess("taskstat_begin",
+                    String.valueOf(id),
+                    String.valueOf(task.getId())
+                )
+            );
+            taskAttempts.merge(task.getId(), 1, Integer::sum);
+        } else {
+            Server.getInstance().getConnection().executeVoidProcessSecure(
+                SQLHelper.getAddObjectProcess("taskstat",
+                    String.valueOf(id),
+                    String.valueOf(task.getId()),
+                    String.valueOf(newStatus)
+                )
+            );
+        }
     }
     public Student changeGraduationLevel(int graduationLevel) throws SQLException {
         Server.getInstance().getConnection().executeVoidProcessSecure(SQLHelper.getUpdateObjectProcess("graduation_level", String.valueOf(graduationLevel), String.valueOf(id)));
@@ -535,6 +570,12 @@ public class Student extends User {
         .append("\"selectedTasks\": ").append(selectedTasks).append(",\n")
         .append("\"completedTasks\": ").append(completedTasks).append(",\n")
         .append("\"lockedTasks\": ").append(lockedTasks).append(",\n")
+        .append("\"taskAttempts\": {")
+        .append(taskAttempts.entrySet().stream()
+            .map(entry -> "\"" + entry.getKey() + "\": " + entry.getValue())
+            .reduce((a, b) -> a + ", " + b)
+            .orElse(""))
+        .append("},\n")
         .append("\"currentRequests\": {").append(currentRequests.entrySet().stream()
             .map(entry -> "\"" + entry.getKey() + "\": " + entry.getValue().stream().map((r) -> '"' + r.getGermanTranslation() + '"').toList())
             .reduce((a, b) -> a + ", " + b).orElse("")).append("},\n")
