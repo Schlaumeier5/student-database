@@ -34,6 +34,10 @@ public abstract class RegistryEnum<T extends RegistryEnum<T>> {
         return values(registry);
     }
 
+    protected Registry<String,T> registry() {
+        return registry;
+    }
+
     protected abstract void initValues();
 
     protected abstract T initValue(Registry<String, T> registry, String key);
