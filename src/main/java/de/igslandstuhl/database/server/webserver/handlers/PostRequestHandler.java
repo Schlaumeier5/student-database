@@ -329,9 +329,10 @@ public class PostRequestHandler {
             Student student = rq.getCurrentStudent();
 
             List<Student> students = Student.getAll().stream()
-                                        .filter((s) -> s.getSchoolClass().getGrade() == schoolClass.getGrade())
-                                        .filter((s) -> s.getCurrentTopic(subject).equals(topic)
-                                            && s.getSelectedTasks().stream().filter((t) -> t.getTopic().equals(topic)).anyMatch((t) -> student.getSelectedTasks().contains(t))
+                                        .filter((s) -> s.getId() != student.getId())
+                                        .filter((s) -> s.getSchoolClass() != null && s.getSchoolClass().getGrade() == schoolClass.getGrade())
+                                        .filter((s) -> topic != null && topic.equals(s.getCurrentTopic(subject))
+                                            && s.getSelectedTasks().stream().filter((t) -> topic.equals(t.getTopic())).anyMatch((t) -> student.getSelectedTasks().contains(t))
                                             && s.getCurrentRequests(subject).stream().anyMatch((r) -> r == SubjectRequest.PARTNER))
                                             .toList();
             return PostResponse.ok(JSONUtils.toJSON(students, (partner, builder) -> {
