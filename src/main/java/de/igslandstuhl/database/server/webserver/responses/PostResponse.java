@@ -118,7 +118,11 @@ public class PostResponse implements HttpResponse {
         }
         out.print("\r\n");
         if (body != null) {
-            WebServer.LOGGER.debug("Response body: {}", body);
+            WebServer.LOGGER.debug(
+                    "HTTP response: status={}, contentType={}, bodyLength={}",
+                    statusCode,
+                    contentType.getName(),
+                    body.getBytes(java.nio.charset.StandardCharsets.UTF_8).length);
             out.print(body);
         }
         out.flush();
