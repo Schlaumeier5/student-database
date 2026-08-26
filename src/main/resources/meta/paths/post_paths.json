@@ -155,7 +155,7 @@
         "namespaces": [],
         "access_level": "admin"
     },
-    "/search-partners": {
+    "/search-partner": {
         "type": "POST",
         "handler_type": "PostRequestHandler",
         "namespaces": [],
