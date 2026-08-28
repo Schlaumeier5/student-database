@@ -393,7 +393,12 @@ function createList(items, textBuilder, labelText, onClick) {
     return { label, list };
 }
 function createTaskList(tasks, titleText, onClick) {
-    return createList(tasks, task => `${task.number} ${decodeEntities(task.name)} (Niveau ${task.niveau}, Gesamtanteil: ${Math.round(task.ratio * 10000) / 100}%)`, titleText, onClick);
+    return createList(
+        tasks,
+        task => `${task.number} ${decodeEntities(task.name)} (Niveau ${task.niveau}, Gesamtanteil: ${Math.round(task.ratio * 10000) / 100}%, Versuche: ${task.attempts ?? 0})`,
+        titleText,
+        onClick
+    );
 }
 async function buildTeacherDashboard(classes, subjects) {
     async function onClassChange(event) {
@@ -563,6 +568,14 @@ function createSubjectPanel(subject, studentData, teacherPerms) {
         if (Array.isArray(topic.tasks) && topic.tasks.length > 0) {
             allTasks = await fetchTasks(topic.tasks, studentId);
         }
+
+        const attemptCount = task =>
+            Number(studentData.taskAttempts?.[task.id] ?? 0);
+
+        [...selectedTasks, ...completedTasks, ...lockedTasks, ...allTasks]
+            .forEach(task => {
+                task.attempts = attemptCount(task);
+            });
 
         const otherTasks = allTasks.filter(
             task =>

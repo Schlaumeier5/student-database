@@ -2,6 +2,7 @@ CREATE TABLE IF NOT EXISTS taskstats (
     student INTEGER NOT NULL,
     task INTEGER NOT NULL,
     status INTEGER NOT NULL,
+    attempts INTEGER NOT NULL DEFAULT 0,
     last_updated TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (student, task),
     FOREIGN KEY (student) REFERENCES students(id) ON DELETE CASCADE,
