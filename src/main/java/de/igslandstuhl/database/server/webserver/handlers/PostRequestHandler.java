@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
@@ -113,6 +115,38 @@ public class PostRequestHandler {
         }
         return webInput;
     }
+    static Path resolveTemplatePath(String filename) {
+        if (filename == null || filename.isBlank()) {
+            throw new IllegalArgumentException(
+                "Template filename is required"
+            );
+        }
+
+        if (!filename.endsWith(".html")) {
+            throw new IllegalArgumentException(
+                "Only .html template files can be edited"
+            );
+        }
+
+        Path base = Path.of(
+            "resources",
+            "templates",
+            "html"
+        ).toAbsolutePath().normalize();
+
+        Path target = base.resolve(filename).normalize();
+
+        if (!target.startsWith(base)
+                || target.getParent() == null
+                || !target.getParent().equals(base)) {
+            throw new IllegalArgumentException(
+                "Invalid template filename"
+            );
+        }
+
+        return target;
+    }
+
     private static PostResponse handleStudentGetData(APIPostRequest request) {
         String path = request.getPath().replace("student-", "my");
         Student student = request.getCurrentStudent();
@@ -191,6 +225,24 @@ public class PostRequestHandler {
             }
         });
         HttpHandler.registerPostRequestHandler("/editor", AccessLevel.ADMIN, (rq) -> {
+            String filename = prepare(rq.getString("filename"), false);
+            String content = prepare(rq.getString("content"), false);
+
+            final Path target;
+
+            try {
+                target = resolveTemplatePath(filename);
+            } catch (IllegalArgumentException e) {
+                return PostResponse.badRequest(e.getMessage(), rq);
+            }
+
+            Files.createDirectories(target.getParent());
+            Files.writeString(
+                target,
+                content,
+                StandardCharsets.UTF_8
+            );
+
             return PostResponse.redirect("/editor", rq);
         });
 
